@@ -1,10 +1,10 @@
 @extends('layouts.customer_app')
 
 @section('content')
-<div class="container-fluid py-2" style="background: #f4faf4; min-height: 100vh;">
+<div class="container-fluid py-1" style="background: #f4faf4; min-height: 100vh;">
 
     <!-- Promoted Products Carousel -->
-    <div class="mx-auto mb-3" style="max-width: 1000px;">
+    <div class="mx-auto mb-2" style="max-width: 1000px;">
         <div class="bg-white rounded-3 p-2 position-relative shadow-sm">
             <div id="promotedCarousel" class="carousel slide" data-bs-ride="carousel">
                 <button class="btn btn-link text-success p-0 position-absolute" data-bs-target="#promotedCarousel" data-bs-slide="prev" style="left: 8px; top: 50%; transform: translateY(-50%); z-index: 10;"><i class="bi bi-chevron-left" style="font-size: 1.5rem;"></i></button>
@@ -141,6 +141,16 @@
                 </div>
                 @endforelse
         </div>
+        
+        <!-- Pagination -->
+        @if($products->hasPages())
+            <x-pagination 
+                :currentPage="$products->currentPage()" 
+                :totalPages="$products->lastPage()" 
+                :baseUrl="request()->url()" 
+                :queryParams="request()->query()" 
+            />
+        @endif
     </div>
     @include('customer.products.modal')
 </div>

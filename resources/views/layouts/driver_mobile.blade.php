@@ -69,5 +69,7 @@
             overlay.style.display = 'none';
         };
     </script>
+    <!-- Auto Capitalization Script -->
+    <script src="{{ asset('js/auto-capitalization.js') }}"></script>
 </body>
 </html> 

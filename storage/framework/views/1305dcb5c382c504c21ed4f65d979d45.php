@@ -1,8 +1,8 @@
 <?php $__env->startSection('content'); ?>
-<div class="container-fluid py-2" style="background: #f4faf4; min-height: 100vh;">
+<div class="container-fluid py-1" style="background: #f4faf4; min-height: 100vh;">
 
     <!-- Promoted Products Carousel -->
-    <div class="mx-auto mb-3" style="max-width: 1000px;">
+    <div class="mx-auto mb-2" style="max-width: 1000px;">
         <div class="bg-white rounded-3 p-2 position-relative shadow-sm">
             <div id="promotedCarousel" class="carousel slide" data-bs-ride="carousel">
                 <button class="btn btn-link text-success p-0 position-absolute" data-bs-target="#promotedCarousel" data-bs-slide="prev" style="left: 8px; top: 50%; transform: translateY(-50%); z-index: 10;"><i class="bi bi-chevron-left" style="font-size: 1.5rem;"></i></button>
@@ -140,6 +140,30 @@
                 </div>
                 <?php endif; ?>
         </div>
+        
+        <!-- Pagination -->
+        <?php if($products->hasPages()): ?>
+            <?php if (isset($component)) { $__componentOriginal41032d87daf360242eb88dbda6c75ed1 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal41032d87daf360242eb88dbda6c75ed1 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.pagination','data' => ['currentPage' => $products->currentPage(),'totalPages' => $products->lastPage(),'baseUrl' => request()->url(),'queryParams' => request()->query()]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('pagination'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['currentPage' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($products->currentPage()),'totalPages' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($products->lastPage()),'baseUrl' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(request()->url()),'queryParams' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(request()->query())]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal41032d87daf360242eb88dbda6c75ed1)): ?>
+<?php $attributes = $__attributesOriginal41032d87daf360242eb88dbda6c75ed1; ?>
+<?php unset($__attributesOriginal41032d87daf360242eb88dbda6c75ed1); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal41032d87daf360242eb88dbda6c75ed1)): ?>
+<?php $component = $__componentOriginal41032d87daf360242eb88dbda6c75ed1; ?>
+<?php unset($__componentOriginal41032d87daf360242eb88dbda6c75ed1); ?>
+<?php endif; ?>
+        <?php endif; ?>
     </div>
     <?php echo $__env->make('customer.products.modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 </div>

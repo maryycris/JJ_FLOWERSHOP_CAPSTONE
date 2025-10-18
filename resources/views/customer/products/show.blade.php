@@ -120,6 +120,18 @@
             alert('Change Delivery functionality would go here!');
         });
 
+        // Test alert function
+        console.log('Testing alert function...');
+        if (typeof showAlert === 'function') {
+            console.log('showAlert function is available');
+            // Test the alert
+            setTimeout(() => {
+                showAlert('Test alert - this should appear!', 'success');
+            }, 1000);
+        } else {
+            console.error('showAlert function is NOT available');
+        }
+
         // Add to Cart Button functionality
         document.querySelector('.add-to-cart-btn').addEventListener('click', function() {
             const productId = {{ $product->id }};
@@ -129,27 +141,37 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify({ product_id: productId, quantity: quantity })
             })
             .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                console.log('Response redirected:', response.redirected);
+                
                 if (response.redirected) {
+                    console.log('Redirecting to:', response.url);
                     window.location.href = response.url; // Redirect to the new URL
                 } else if (!response.ok) {
                     // If response is not OK (e.g., 4xx or 5xx status), parse as JSON for error message
                     return response.json().then(errorData => {
-                        alert('Failed to add product to cart: ' + (errorData.message || 'Unknown error'));
+                        console.log('Error data:', errorData);
+                        showAlert('Failed to add product to cart: ' + (errorData.message || 'Unknown error'), 'error');
                         throw new Error('Server error'); // Propagate error for catch block
                     });
                 } else {
-                    // If successful but not redirected, something unexpected happened or cart is on the same page
-                    alert('Product added to cart!');
+                    // If successful but not redirected, parse JSON response
+                    return response.json().then(data => {
+                        console.log('Success data:', data);
+                        showAlert(data.message || 'Product added to cart!', 'success');
+                    });
                 }
             })
             .catch(error => {
                 console.error('Error adding to cart:', error);
-                alert('An error occurred while adding product to cart.');
+                showAlert('An error occurred while adding product to cart.', 'error');
             });
         });
     });

@@ -105,6 +105,98 @@
     width: 50px !important;
     flex: 1 1 50px;
 }
+
+/* Search bar styling */
+#productSearchInput {
+    border: 2px solid #e9ecef;
+    border-radius: 8px 0 0 8px;
+    transition: border-color 0.3s ease;
+    background: #fff;
+}
+
+#productSearchInput:focus {
+    border-color: #27ae60;
+    box-shadow: 0 0 0 0.2rem rgba(39, 174, 96, 0.25);
+}
+
+#productFilterBtn {
+    border: 2px solid #27ae60;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    transition: all 0.3s ease;
+}
+
+#productFilterBtn:hover {
+    background-color: #27ae60;
+    color: white;
+}
+
+#productFilterPanel {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+#productFilterMin, #productFilterMax {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+}
+
+#productFilterMin:focus, #productFilterMax:focus {
+    border-color: #27ae60;
+    box-shadow: 0 0 0 0.2rem rgba(39, 174, 96, 0.25);
+}
+
+/* Product Change Cards Styling */
+.product-card[data-change-id] {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.product-card[data-change-id]:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.product-card[data-change-id] .badge {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Action badge positioning */
+.product-card .position-absolute .badge {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Delete overlay styling */
+.product-card .position-absolute .fa-trash {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Modal styling */
+#productChangeDetailsContent .table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+#productChangeDetailsContent .table td {
+    vertical-align: middle;
+}
+
+/* Badge colors for different actions */
+.badge.bg-primary {
+    background-color: #007bff !important;
+}
+
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
 </style>
 <?php $__env->stopPush(); ?>
 
@@ -154,7 +246,38 @@
             </div>
         </div>
     </div>
-</div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mx-auto mb-3" style="max-width: 1000px;">
+        <div class="p-0">
+            <div class="row g-2 align-items-end">
+                <div class="col-12">
+                    <div class="input-group">
+                        <input id="productSearchInput" type="text" class="form-control" placeholder="Search products..." aria-label="Search" value="<?php echo e(request('search', '')); ?>">
+                        <button id="productFilterBtn" class="btn btn-outline-success" type="button" title="Filter"><i class="bi bi-funnel"></i></button>
+                    </div>
+                </div>
+            </div>
+            <!-- Advanced Filter Panel -->
+            <div id="productFilterPanel" class="card p-3 mt-2" style="display:none;">
+                <div class="row g-2 align-items-end">
+                    <div class="col-6 col-md-3">
+                        <label class="form-label mb-1">Min Price</label>
+                        <input id="productFilterMin" type="number" min="0" class="form-control form-control-sm" placeholder="0" value="<?php echo e(request('min_price', '')); ?>">
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label mb-1">Max Price</label>
+                        <input id="productFilterMax" type="number" min="0" class="form-control form-control-sm" placeholder="9999" value="<?php echo e(request('max_price', '')); ?>">
+                    </div>
+                    <div class="col-12 col-md-6 d-flex gap-2">
+                        <button id="productFilterApply" class="btn btn-success btn-sm">Apply Filters</button>
+                        <button id="productFilterClear" class="btn btn-outline-secondary btn-sm">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Category Tabs -->
     <div class="mx-auto" style="max-width: 1000px;">
@@ -197,6 +320,32 @@
                         <span class="visually-hidden">Loading...</span>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Pagination -->
+            <div id="paginationContainer">
+                <?php if($products->hasPages()): ?>
+                    <?php if (isset($component)) { $__componentOriginal41032d87daf360242eb88dbda6c75ed1 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal41032d87daf360242eb88dbda6c75ed1 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.pagination','data' => ['currentPage' => $products->currentPage(),'totalPages' => $products->lastPage(),'baseUrl' => request()->url(),'queryParams' => request()->query()]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('pagination'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['currentPage' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($products->currentPage()),'totalPages' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($products->lastPage()),'baseUrl' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(request()->url()),'queryParams' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(request()->query())]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal41032d87daf360242eb88dbda6c75ed1)): ?>
+<?php $attributes = $__attributesOriginal41032d87daf360242eb88dbda6c75ed1; ?>
+<?php unset($__attributesOriginal41032d87daf360242eb88dbda6c75ed1); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal41032d87daf360242eb88dbda6c75ed1)): ?>
+<?php $component = $__componentOriginal41032d87daf360242eb88dbda6c75ed1; ?>
+<?php unset($__componentOriginal41032d87daf360242eb88dbda6c75ed1); ?>
+<?php endif; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -431,8 +580,367 @@
             </div>
         </div>
     </div>
-</div>
-</div>
+    </div>
+    </div>
+
+    <!-- Product Change Details Modal -->
+    <div class="modal fade" id="productChangeDetailsModal" tabindex="-1" aria-labelledby="productChangeDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="productChangeDetailsModalLabel">Product Change Request Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="productChangeDetailsContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" id="approveFromModal">
+                        <i class="bi bi-check-circle"></i> Approve
+                    </button>
+                    <button type="button" class="btn btn-danger" id="rejectFromModal">
+                        <i class="bi bi-x-circle"></i> Reject
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Search Functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('productSearchInput');
+    const filterBtn = document.getElementById('productFilterBtn');
+    const filterPanel = document.getElementById('productFilterPanel');
+    const filterApply = document.getElementById('productFilterApply');
+    const filterClear = document.getElementById('productFilterClear');
+    const filterMin = document.getElementById('productFilterMin');
+    const filterMax = document.getElementById('productFilterMax');
+
+    function performSearch() {
+        const searchTerm = searchInput ? searchInput.value : '';
+        // preserve current category from URL (default to 'all')
+        const currentUrl = new URL(window.location.href);
+        const category = (currentUrl.searchParams.get('category') || 'all');
+        const minPrice = filterMin && filterMin.value ? filterMin.value : '';
+        const maxPrice = filterMax && filterMax.value ? filterMax.value : '';
+
+        // Build URL with search parameters
+        const url = new URL(window.location.href);
+        url.searchParams.set('search', searchTerm);
+        url.searchParams.set('category', category);
+        if (minPrice) url.searchParams.set('min_price', minPrice);
+        if (maxPrice) url.searchParams.set('max_price', maxPrice);
+
+        // Redirect to the same page with search parameters
+        window.location.href = url.toString();
+    }
+
+    function clearFilters() {
+        if (searchInput) searchInput.value = '';
+        if (filterMin) filterMin.value = '';
+        if (filterMax) filterMax.value = '';
+        
+        // Redirect to clean URL
+        const url = new URL(window.location.href);
+        url.searchParams.delete('search');
+        url.searchParams.delete('min_price');
+        url.searchParams.delete('max_price');
+        window.location.href = url.toString();
+    }
+
+    // Event listeners
+    if (filterBtn && filterPanel) {
+        filterBtn.addEventListener('click', function() {
+            filterPanel.style.display = (filterPanel.style.display === 'none' || !filterPanel.style.display) ? 'block' : 'none';
+        });
+        
+        // Close filter panel when clicking outside
+        document.addEventListener('click', function(e){
+            if (filterPanel.style.display === 'block') {
+                const within = filterPanel.contains(e.target) || filterBtn.contains(e.target);
+                if (!within) filterPanel.style.display = 'none';
+            }
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+        // Optional: live typing debounce search
+        clearTimeout(searchInput.__t);
+        searchInput.addEventListener('input', function(){
+            clearTimeout(searchInput.__t);
+            searchInput.__t = setTimeout(performSearch, 400);
+        });
+    }
+
+    if (filterApply) {
+        filterApply.addEventListener('click', function(){
+            performSearch();
+            if (filterPanel) filterPanel.style.display = 'none';
+        });
+    }
+
+    if (filterClear) {
+        filterClear.addEventListener('click', clearFilters);
+    }
+
+    // Product Change Details Modal Event Listeners
+    document.getElementById('approveFromModal').addEventListener('click', function() {
+        if (currentChangeId) {
+            approveProductChange(currentChangeId);
+            bootstrap.Modal.getInstance(document.getElementById('productChangeDetailsModal')).hide();
+        }
+    });
+
+    document.getElementById('rejectFromModal').addEventListener('click', function() {
+        if (currentChangeId) {
+            rejectProductChange(currentChangeId);
+            bootstrap.Modal.getInstance(document.getElementById('productChangeDetailsModal')).hide();
+        }
+    });
+
+    // Add click event listener for product change cards
+    document.addEventListener('click', function(e) {
+        const productCard = e.target.closest('.product-card[data-change-id]');
+        if (productCard && !e.target.closest('button')) {
+            const changeId = productCard.getAttribute('data-change-id');
+            if (changeId) {
+                viewProductChangeDetails(changeId);
+            }
+        }
+    });
+});
+
+// Pending Product Changes Functions
+async function approveProductChange(changeId) {
+    if (!confirm('Are you sure you want to approve this product change?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/api/product-changes/${changeId}/approve`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                admin_notes: ''
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert(result.message, 'success');
+            // Reload the page to refresh all content
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('Error approving change: ' + error.message, 'error');
+    }
+}
+
+async function rejectProductChange(changeId) {
+    if (!confirm('Are you sure you want to reject this product change?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/api/product-changes/${changeId}/reject`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                admin_notes: ''
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert(result.message, 'success');
+            // Reload the page to refresh all content
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('Error rejecting change: ' + error.message, 'error');
+    }
+}
+
+let currentChangeId = null;
+
+async function viewProductChangeDetails(changeId) {
+    currentChangeId = changeId;
+    
+    try {
+        const response = await fetch(`/admin/api/product-changes/${changeId}/details`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const change = result.change;
+            const modal = new bootstrap.Modal(document.getElementById('productChangeDetailsModal'));
+            const content = document.getElementById('productChangeDetailsContent');
+            
+            // Build the detailed content
+            let html = `
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <img src="/storage/${change.product.image || 'images/logo.png'}" class="img-fluid rounded" alt="${change.product.name}" style="max-height: 200px;">
+                        </div>
+                        <div class="text-center">
+                            <span class="badge ${change.action === 'edit' ? 'bg-primary' : 'bg-danger'} fs-6">
+                                ${change.action === 'edit' ? 'EDIT REQUEST' : 'DELETE REQUEST'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <h5 class="mb-3">${change.product.name}</h5>
+                        <div class="row mb-3">
+                            <div class="col-sm-6">
+                                <strong>Current Price:</strong> ₱${parseFloat(change.product.price).toFixed(2)}
+                            </div>
+                            <div class="col-sm-6">
+                                <strong>Category:</strong> ${change.product.category}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-6">
+                                <strong>Requested by:</strong> ${change.requested_by.name}
+                            </div>
+                            <div class="col-sm-6">
+                                <strong>Date:</strong> ${new Date(change.created_at).toLocaleString()}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Reason:</strong>
+                            <p class="text-muted mt-1">${change.reason}</p>
+                        </div>
+            `;
+            
+            if (change.action === 'edit' && change.changes) {
+                html += `
+                    <div class="mb-3">
+                        <strong>Proposed Changes:</strong>
+                        <div class="table-responsive mt-2">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Field</th>
+                                        <th>Current Value</th>
+                                        <th>New Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                Object.entries(change.changes).forEach(([key, value]) => {
+                    if (key !== 'compositions' && key !== 'image') {
+                        const currentValue = change.product[key] || 'N/A';
+                        const fieldName = key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' ');
+                        html += `
+                            <tr>
+                                <td><strong>${fieldName}</strong></td>
+                                <td>${currentValue}</td>
+                                <td class="text-primary"><strong>${value}</strong></td>
+                            </tr>
+                        `;
+                    }
+                });
+                
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                
+                // Handle image changes
+                if (change.changes.image) {
+                    html += `
+                        <div class="mb-3">
+                            <strong>New Image:</strong>
+                            <div class="mt-2">
+                                <img src="/storage/${change.changes.image}" class="img-fluid rounded" alt="New Image" style="max-height: 150px;">
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Handle composition changes
+                if (change.changes.compositions) {
+                    html += `
+                        <div class="mb-3">
+                            <strong>New Compositions:</strong>
+                            <div class="table-responsive mt-2">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Component</th>
+                                            <th>Category</th>
+                                            <th>Quantity</th>
+                                            <th>Unit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+                    
+                    change.changes.compositions.forEach(comp => {
+                        html += `
+                            <tr>
+                                <td>${comp.component_name}</td>
+                                <td>${comp.category}</td>
+                                <td>${comp.quantity}</td>
+                                <td>${comp.unit}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            modal.show();
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('Error fetching details: ' + error.message, 'error');
+    }
+}
+</script>
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startPush('styles'); ?>
@@ -672,12 +1180,12 @@
                             // Refresh the page to update carousel
                             window.location.reload();
                         } else {
-                            alert('Error deleting banner');
+                            showAlert('Error deleting banner', 'error');
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('Error deleting banner');
+                        showAlert('Error deleting banner', 'error');
                     });
                 }
             }
@@ -1252,38 +1760,131 @@
             const products = await response.json();
             console.log('Pending products loaded:', products);
             
+            // Load pending products as cards with ADD REQUEST badge
             const grid = document.getElementById('pendingProductsGrid');
             const count = document.getElementById('pendingCount');
             
-            count.textContent = products.length;
+            // Also load pending changes
+            let changes = [];
+            try {
+                const changesResponse = await fetch('/admin/api/product-changes/pending', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                if (changesResponse.ok) {
+                    changes = await changesResponse.json();
+                }
+            } catch (error) {
+                console.log('No pending changes found or error loading changes:', error);
+            }
             
-            if (products.length === 0) {
-                grid.innerHTML = '<div class="col-12 text-center py-4"><p class="text-muted">No products pending approval</p></div>';
+            if (products.length === 0 && changes.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center py-4"><p class="text-muted">No pending products to approve.</p></div>';
+                if (count) count.textContent = '0';
                 return;
             }
             
-            grid.innerHTML = products.map(product => `
+            // Create product cards for new product approvals (ADD)
+            const productCards = products.map(product => `
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="card product-card h-100" data-product-id="${product.id}">
-                        <img src="/storage/${product.image}" class="card-img-top product-image" alt="${product.name}">
-                        <div class="card-body text-center">
-                            <h6 class="card-title mb-1">${product.name}</h6>
-                            <p class="card-text product-price">₱${parseFloat(product.price).toFixed(2)}</p>
-                            <div class="d-flex justify-content-center gap-2 mt-2">
-                                <button class="btn btn-sm action-btn approve-btn approve-product-btn" title="Approve" data-product-id="${product.id}"><i class="bi bi-check-circle"></i></button>
-                                <button class="btn btn-sm action-btn review-btn review-product-btn" title="Review" data-product-id="${product.id}"><i class="bi bi-eye"></i></button>
-                                <button class="btn btn-sm action-btn delete-btn disapprove-product-btn" title="Delete" data-product-id="${product.id}"><i class="bi bi-trash3"></i></button>
+                    <div class="card product-card h-100 position-relative" data-product-id="${product.id}" style="border: 2px solid #ffc107;">
+                        <!-- Action Badge -->
+                        <div class="position-absolute" style="top: 8px; right: 8px; z-index: 10;">
+                            <span class="badge bg-warning text-dark" style="font-size: 0.6rem; padding: 0.25rem 0.5rem;">
+                                ADD
+                            </span>
+                        </div>
+                        
+                        <!-- Product Image -->
+                        <img src="/storage/${product.image}" class="card-img-top product-image" alt="${product.name}" style="height: 120px; object-fit: cover;">
+                        
+                        <!-- Product Info -->
+                        <div class="card-body text-center p-2">
+                            <h6 class="card-title mb-1" style="font-size: 0.9rem;">${product.name}</h6>
+                            <p class="card-text product-price mb-1" style="font-size: 0.8rem;">₱${parseFloat(product.price).toFixed(2)}</p>
+                            <p class="text-muted small mb-2" style="font-size: 0.7rem;">
+                                <strong>Category:</strong> ${product.category}
+                            </p>
+                            
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-center gap-1 mt-1">
+                                <button class="btn btn-success btn-sm approve-product-btn" title="Approve" data-product-id="${product.id}" style="padding: 0.25rem 0.4rem; font-size: 0.7rem;">
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                                <button class="btn btn-info btn-sm review-product-btn" title="Review" data-product-id="${product.id}" style="padding: 0.25rem 0.4rem; font-size: 0.7rem;">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm disapprove-product-btn" title="Delete" data-product-id="${product.id}" style="padding: 0.25rem 0.4rem; font-size: 0.7rem;">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             `).join('');
             
+            // Create product cards for pending changes (EDIT/DELETE)
+            const changeCards = changes.map(change => `
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card product-card h-100 position-relative" data-change-id="${change.id}" style="border: 2px solid ${change.action === 'edit' ? '#007bff' : '#dc3545'};">
+                        <!-- Action Badge -->
+                        <div class="position-absolute" style="top: 8px; right: 8px; z-index: 10;">
+                            <span class="badge ${change.action === 'edit' ? 'bg-primary' : 'bg-danger'}" style="font-size: 0.6rem; padding: 0.25rem 0.5rem;">
+                                ${change.action === 'edit' ? 'EDIT' : 'DELETE'}
+                            </span>
+                        </div>
+                        
+                        <!-- Product Image -->
+                        <div style="position: relative;">
+                            <img src="/storage/${change.product.image || 'images/logo.png'}" class="card-img-top product-image" alt="${change.product.name}" style="height: 120px; object-fit: cover;">
+                            ${change.action === 'delete' ? '<div class="position-absolute" style="top: 0; left: 0; right: 0; bottom: 0; background: rgba(220, 53, 69, 0.3); display: flex; align-items: center; justify-content: center;"><i class="fas fa-trash fa-2x text-white"></i></div>' : ''}
+                        </div>
+                        
+                        <!-- Product Info -->
+                        <div class="card-body text-center p-2">
+                            <h6 class="card-title mb-1" style="font-size: 0.9rem;">${change.product.name}</h6>
+                            <p class="card-text product-price mb-1" style="font-size: 0.8rem;">₱${parseFloat(change.product.price).toFixed(2)}</p>
+                            <p class="text-muted small mb-1" style="font-size: 0.7rem;">
+                                <strong>By:</strong> ${change.requested_by.name}
+                            </p>
+                            <p class="text-muted small mb-2" style="font-size: 0.7rem;">
+                                ${new Date(change.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </p>
+                            
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-center gap-1 mt-1">
+                                <button class="btn btn-success btn-sm" onclick="approveProductChange(${change.id})" title="Approve" style="padding: 0.25rem 0.4rem; font-size: 0.7rem;">
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="rejectProductChange(${change.id})" title="Reject" style="padding: 0.25rem 0.4rem; font-size: 0.7rem;">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                                <button class="btn btn-info btn-sm" onclick="viewProductChangeDetails(${change.id})" title="View Details" style="padding: 0.25rem 0.4rem; font-size: 0.7rem;">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Combine all cards in the same grid
+            grid.innerHTML = changeCards + productCards;
+            
+            if (count) count.textContent = products.length + changes.length;
+            
         } catch (error) {
             console.error('Error loading pending products:', error);
             document.getElementById('pendingProductsGrid').innerHTML = '<div class="col-12 text-center py-4"><p class="text-danger">Error loading products: ' + error.message + '</p></div>';
         }
     }
+
 
     // Load approved products
     async function loadApprovedProducts() {
@@ -1307,8 +1908,11 @@
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
-            const products = await response.json();
+            const data = await response.json();
+            const products = data.products || data;
+            const productAvailability = data.productAvailability || {};
             console.log('Approved products loaded:', products);
+            console.log('Product availability loaded:', productAvailability);
             
             const grid = document.getElementById('approvedProductsGrid');
             
@@ -1321,13 +1925,19 @@
                 </div>
             `;
             
-            grid.innerHTML = addProductCard + products.map(product => `
+            grid.innerHTML = addProductCard + products.map(product => {
+                const isOutOfStock = productAvailability && productAvailability[product.id] && !productAvailability[product.id].can_fulfill;
+                return `
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="card product-card h-100" data-product-id="${product.id}">
-                        <img src="/storage/${product.image}" class="card-img-top product-image" alt="${product.name}">
+                    <div class="card product-card h-100" data-product-id="${product.id}" style="${isOutOfStock ? 'opacity: 0.6;' : ''}">
+                        <div style="position: relative;">
+                            <img src="/storage/${product.image}" class="card-img-top product-image" alt="${product.name}" style="${isOutOfStock ? 'filter: grayscale(50%);' : ''}">
+                            ${isOutOfStock ? '<div class="position-absolute" style="top: 10px; right: 10px; z-index: 10;"><span class="badge bg-danger" style="font-size: 0.7rem;">OUT OF STOCK</span></div>' : ''}
+                        </div>
                         <div class="card-body text-center">
                             <h6 class="card-title mb-1">${product.name}</h6>
                             <p class="card-text product-price">₱${parseFloat(product.price).toFixed(2)}</p>
+                            ${isOutOfStock ? '<small class="text-muted" style="font-size: 0.7rem;">Insufficient materials</small>' : ''}
                             <div class="d-flex justify-content-center gap-2 mt-2">
                                 <button class="btn btn-sm action-btn edit-btn edit-product-btn" title="Edit" data-bs-toggle="modal" data-bs-target="#editProductModal" data-product='${JSON.stringify(product)}'><i class="bi bi-pencil-square"></i></button>
                                 <form action="/admin/products/${product.id}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this product and its images?');">
@@ -1339,7 +1949,8 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
             
         } catch (error) {
             console.error('Error loading approved products:', error);
@@ -1425,15 +2036,17 @@
             const result = await response.json();
             
             if (result.success) {
-                alert('Product approved successfully!');
-                await loadPendingProducts();
-                await loadApprovedProducts();
+                showAlert('Product approved successfully!', 'success');
+                // Reload the page to refresh all content
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             } else {
-                alert('Error: ' + result.message);
+                showAlert('Error: ' + result.message, 'error');
             }
         } catch (error) {
             console.error('Error approving product:', error);
-            alert('Error approving product');
+            showAlert('Error approving product', 'error');
         }
     }
 
@@ -1451,15 +2064,17 @@
             const result = await response.json();
             
             if (result.success) {
-                alert('Product disapproved and deleted successfully!');
-                await loadPendingProducts();
-                await loadApprovedProducts();
+                showAlert('Product disapproved and deleted successfully!', 'success');
+                // Reload the page to refresh all content
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             } else {
-                alert('Error: ' + result.message);
+                showAlert('Error: ' + result.message, 'error');
             }
         } catch (error) {
             console.error('Error disapproving product:', error);
-            alert('Error disapproving product');
+            showAlert('Error disapproving product', 'error');
         }
     }
 
@@ -1516,11 +2131,11 @@
                 
                 modal.show();
             } else {
-                alert('Error: ' + result.message);
+                showAlert('Error: ' + result.message, 'error');
             }
         } catch (error) {
             console.error('Error reviewing product:', error);
-            alert('Error loading product details');
+            showAlert('Error loading product details', 'error');
         }
     }
 
@@ -1573,11 +2188,11 @@
                 
                 modal.show();
             } else {
-                alert('Error: ' + result.message);
+                showAlert('Error: ' + result.message, 'error');
             }
         } catch (error) {
             console.error('Error loading product info:', error);
-            alert('Error loading product details');
+            showAlert('Error loading product details', 'error');
         }
     }
 
@@ -1710,6 +2325,7 @@
             }
         }
     }
+
 </script>
 <?php $__env->stopPush(); ?>
 

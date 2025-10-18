@@ -1,7 +1,7 @@
 @extends('layouts.customer_app')
 
 @section('content')
-<div class="pt-2 pb-4" style="background: #f4faf4; min-height: 100vh;">
+<div class="pt-1" style="background: #f4faf4; height: 85vh; overflow: hidden;">
     <div class="container" style="max-width: 1400px;">
     <form action="{{ route('customer.checkout.payment_method') }}" method="GET" id="checkoutForm">
         @csrf
@@ -22,9 +22,9 @@
                 <input type="hidden" name="selected_items[]" value="{{ $itemId }}">
             @endforeach
         @endif
-        <div class="row justify-content-center mt-2">
-            <div class="col-12 col-lg-8 col-xl-6" style="max-width: 1200px;">
-                <div class="bg-white rounded-3 p-3 mb-4 scrollable-content" style="box-shadow: none; max-height: 85vh; overflow-y: auto;">
+        <div class="row justify-content-center mt-2" style="height: calc(100vh - 110px);">
+            <div class="col-12 col-lg-8 col-xl-6" style="max-width: 1200px; display: flex; flex-direction: column; height: 100%;">
+                <div class="bg-white rounded-3 p-3 mb-4 scrollable-content" style="box-shadow: none; height: 100%; overflow-y: auto;">
                     <div class="mb-3">
                         <a href="{{ url('/cart') }}" class="btn btn-outline-success">
                             &larr; Back
@@ -62,7 +62,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @enderror
-                    <div id="recipientFields" class="mb-3">
+                    <div id="recipientFields" class="mb-3" style="display: block;">
                         <h6 class="fw-bold text-success mb-3">
                             <i class="fas fa-user me-2"></i>Recipient Information
                         </h6>
@@ -152,21 +152,27 @@
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-lg-4 col-xl-4">
-                <div class="bg-white rounded-3 p-3 mb-4" style="box-shadow: none;">
-                    <div class="mb-3" style="font-weight: 600; font-size: 1.15rem;">Purchase Summary:</div>
-                    @foreach($cartItems as $item)
-                    <div class="d-flex align-items-center mb-3">
-                        <img src="{{ asset('storage/' . $item->product->image) }}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 8px;">
-                        <div class="flex-grow-1 ms-2">
-                            <div style="font-weight: 500;">{{ $item->product->name }}</div>
+            <div class="col-12 col-lg-4 col-xl-4" style="display: flex; flex-direction: column; height: 100%;">
+                <div class="bg-white rounded-3 p-3 mb-4" style="box-shadow: none; height: 100%; display: flex; flex-direction: column;">
+                    <!-- Sticky Purchase Summary Section -->
+                    <div class="sticky-purchase-summary" style="position: sticky; top: 0; background: white; z-index: 10; padding-bottom: 1rem; border-bottom: 1px solid #e9ecef; margin-bottom: 1rem;">
+                        <div class="mb-3" style="font-weight: 600; font-size: 1.15rem;">Purchase Summary:</div>
+                        @foreach($cartItems as $item)
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="{{ asset('storage/' . $item->product->image) }}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 8px;">
+                            <div class="flex-grow-1 ms-2">
+                                <div style="font-weight: 500;">{{ $item->product->name }}</div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success" style="font-size: 0.9rem; padding: 8px 12px;">{{ $item->quantity }}</span>
+                            </div>
+                            <div class="ms-3" style="font-weight: 500; font-size: 1.08rem;">₱{{ number_format($item->quantity * $item->product->price, 2) }}</div>
                         </div>
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-success" style="font-size: 0.9rem; padding: 8px 12px;">{{ $item->quantity }}</span>
-                        </div>
-                        <div class="ms-3" style="font-weight: 500; font-size: 1.08rem;">₱{{ number_format($item->quantity * $item->product->price, 2) }}</div>
+                        @endforeach
                     </div>
-                    @endforeach
+                    
+                    <!-- Scrollable Content Area -->
+                    <div class="scrollable-right-content" style="flex: 1; overflow-y: auto;">
                     {{-- Loyalty Stamps Section --}}
                     <div class="mb-3 mt-3">
                         <div class="card" style="border: 2px solid #e8f5e8; background: linear-gradient(135deg, #f8f9fa, #e8f5e8);">
@@ -283,6 +289,7 @@
                     <button type="submit" class="btn btn-success w-100" id="proceedBtn" style="border-radius: 25px; font-weight: 600; font-size: 1.08rem;">
                         <i class="fas fa-arrow-right me-2"></i>Proceed to Payment Method
                     </button>
+                    </div> <!-- End scrollable right content -->
                 </div>
             </div>
         </div>
@@ -311,11 +318,31 @@
     .form-control[readonly] {
         background: #f4faf4;
     }
-    .recipient-btn.active, .recipient-btn:focus {
-        background: #cbe7cb !important;
-        color: #222 !important;
+    .recipient-btn {
+        border: 2px solid #7bb47b;
+        color: #7bb47b;
+        background: white;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .recipient-btn:hover {
+        background: #f0f8f0;
+        border-color: #5a9c5a;
+        color: #5a9c5a;
+    }
+    
+    .recipient-btn.active {
+        background: #7bb47b !important;
+        color: white !important;
         border-color: #7bb47b !important;
         font-weight: 600;
+        box-shadow: 0 2px 4px rgba(123, 180, 123, 0.3);
+    }
+    
+    .recipient-btn.active:hover {
+        background: #5a9c5a !important;
+        border-color: #5a9c5a !important;
     }
     
     /* Disabled delivery address field styling */
@@ -533,61 +560,130 @@ function updateShippingFeeDisplay(fee) {
     console.log('Updated shipping fee:', fee, 'Total:', total);
 }
 
-// Recipient type toggle (visual only)
-const btnSomeone = document.getElementById('btnSomeone');
-const btnSelf = document.getElementById('btnSelf');
-btnSomeone.onclick = function() {
-    btnSomeone.classList.add('active');
-    btnSelf.classList.remove('active');
-    document.getElementById('recipientType').value = 'someone';
-    // Show recipient fields, require inputs
-    document.getElementById('recipientFields').style.display = '';
-    document.getElementById('recipientName').required = true;
-    document.getElementById('recipientPhone').required = true;
-    // Hide self fields and remove required from self phone
-    document.getElementById('selfFields').style.display = 'none';
-    document.getElementById('selfPhone').required = false;
+// Recipient type toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const btnSomeone = document.getElementById('btnSomeone');
+    const btnSelf = document.getElementById('btnSelf');
     
-    // Enable delivery address field and clear it when someone else will receive
-    const deliveryAddressInput = document.getElementById('deliveryAddressInput');
-    const geocodeBtn = document.getElementById('geocodeBtn');
-    if (deliveryAddressInput) {
-        deliveryAddressInput.value = '';
-        deliveryAddressInput.disabled = false;
-        deliveryAddressInput.readOnly = false;
-        deliveryAddressInput.style.backgroundColor = '';
-        deliveryAddressInput.style.cursor = '';
+    if (!btnSomeone || !btnSelf) {
+        console.error('Recipient toggle buttons not found!');
+        return;
     }
-    // Keep Find button enabled for shipping fee calculation
-    if (geocodeBtn) {
-        geocodeBtn.disabled = false;
-        geocodeBtn.style.opacity = '';
-        geocodeBtn.style.cursor = '';
-    }
-};
-btnSelf.onclick = function() {
-    btnSelf.classList.add('active');
-    btnSomeone.classList.remove('active');
-    document.getElementById('recipientType').value = 'self';
-    // Hide recipient fields, remove required
-    document.getElementById('recipientFields').style.display = 'none';
-    document.getElementById('recipientName').required = false;
-    document.getElementById('recipientPhone').required = false;
-    // Show self fields and make phone required
-    document.getElementById('selfFields').style.display = '';
-    document.getElementById('selfPhone').required = true;
     
-    // Auto-populate default address when "I will receive" is selected
-    populateDefaultAddress();
+    console.log('Recipient toggle buttons found, setting up event listeners');
     
-    // Ensure Find button remains enabled for shipping fee calculation
-    const geocodeBtn = document.getElementById('geocodeBtn');
-    if (geocodeBtn) {
-        geocodeBtn.disabled = false;
-        geocodeBtn.style.opacity = '';
-        geocodeBtn.style.cursor = '';
+    // Set initial state
+    const recipientFields = document.getElementById('recipientFields');
+    const selfFields = document.getElementById('selfFields');
+    
+    console.log('Initial state - recipientFields:', recipientFields ? 'found' : 'not found');
+    console.log('Initial state - selfFields:', selfFields ? 'found' : 'not found');
+    
+    if (recipientFields) {
+        console.log('Recipient fields display:', recipientFields.style.display);
     }
-};
+    if (selfFields) {
+        console.log('Self fields display:', selfFields.style.display);
+    }
+    
+    btnSomeone.onclick = function() {
+        console.log('Someone will receive clicked');
+        btnSomeone.classList.add('active');
+        btnSelf.classList.remove('active');
+        document.getElementById('recipientType').value = 'someone';
+        
+        // Show recipient fields, require inputs
+        const recipientFields = document.getElementById('recipientFields');
+        const recipientName = document.getElementById('recipientName');
+        const recipientPhone = document.getElementById('recipientPhone');
+        
+        if (recipientFields) {
+            recipientFields.style.display = 'block';
+            console.log('Showing recipient fields');
+        }
+        if (recipientName) {
+            recipientName.required = true;
+        }
+        if (recipientPhone) {
+            recipientPhone.required = true;
+        }
+        
+        // Hide self fields and remove required from self phone
+        const selfFields = document.getElementById('selfFields');
+        const selfPhone = document.getElementById('selfPhone');
+        
+        if (selfFields) {
+            selfFields.style.display = 'none';
+            console.log('Hiding self fields');
+        }
+        if (selfPhone) {
+            selfPhone.required = false;
+        }
+        
+        // Enable delivery address field and clear it when someone else will receive
+        const deliveryAddressInput = document.getElementById('deliveryAddressInput');
+        const geocodeBtn = document.getElementById('geocodeBtn');
+        if (deliveryAddressInput) {
+            deliveryAddressInput.value = '';
+            deliveryAddressInput.disabled = false;
+            deliveryAddressInput.readOnly = false;
+            deliveryAddressInput.style.backgroundColor = '';
+            deliveryAddressInput.style.cursor = '';
+        }
+        // Keep Find button enabled for shipping fee calculation
+        if (geocodeBtn) {
+            geocodeBtn.disabled = false;
+            geocodeBtn.style.opacity = '';
+            geocodeBtn.style.cursor = '';
+        }
+    };
+    
+    btnSelf.onclick = function() {
+        console.log('I will receive clicked');
+        btnSelf.classList.add('active');
+        btnSomeone.classList.remove('active');
+        document.getElementById('recipientType').value = 'self';
+        
+        // Hide recipient fields, remove required
+        const recipientFields = document.getElementById('recipientFields');
+        const recipientName = document.getElementById('recipientName');
+        const recipientPhone = document.getElementById('recipientPhone');
+        
+        if (recipientFields) {
+            recipientFields.style.display = 'none';
+            console.log('Hiding recipient fields');
+        }
+        if (recipientName) {
+            recipientName.required = false;
+        }
+        if (recipientPhone) {
+            recipientPhone.required = false;
+        }
+        
+        // Show self fields and make phone required
+        const selfFields = document.getElementById('selfFields');
+        const selfPhone = document.getElementById('selfPhone');
+        
+        if (selfFields) {
+            selfFields.style.display = 'block';
+            console.log('Showing self fields');
+        }
+        if (selfPhone) {
+            selfPhone.required = true;
+        }
+        
+        // Auto-populate default address when "I will receive" is selected
+        populateDefaultAddress();
+        
+        // Ensure Find button remains enabled for shipping fee calculation
+        const geocodeBtn = document.getElementById('geocodeBtn');
+        if (geocodeBtn) {
+            geocodeBtn.disabled = false;
+            geocodeBtn.style.opacity = '';
+            geocodeBtn.style.cursor = '';
+        }
+    };
+});
 
 // Loyalty redemption functionality
 document.addEventListener('DOMContentLoaded', function() {
@@ -626,6 +722,8 @@ function updateTotals() {
 
 // Auto-scroll to error field if validation fails
 document.addEventListener('DOMContentLoaded', function() {
+    // Auto capitalization is now handled by the global script
+
     // Reset button state if there are validation errors
     const submitBtn = document.getElementById('proceedBtn');
     if (submitBtn) {
@@ -676,7 +774,7 @@ document.getElementById('checkoutForm').addEventListener('submit', function(e) {
 }
 
 .scrollable-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: transparent;
     border-radius: 4px;
 }
 
@@ -692,7 +790,73 @@ document.getElementById('checkoutForm').addEventListener('submit', function(e) {
 /* For Firefox */
 .scrollable-content {
     scrollbar-width: thin;
-    scrollbar-color: #8ACB88 #f1f1f1;
+    scrollbar-color: #8ACB88 transparent;
+}
+
+/* Custom scrollbar styling for the right content area */
+.scrollable-right-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollable-right-content::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+}
+
+.scrollable-right-content::-webkit-scrollbar-thumb {
+    background: #8ACB88;
+    border-radius: 4px;
+}
+
+.scrollable-right-content::-webkit-scrollbar-thumb:hover {
+    background: #7bb47b;
+}
+
+/* For Firefox */
+.scrollable-right-content {
+    scrollbar-width: thin;
+    scrollbar-color: #8ACB88 transparent;
+}
+
+/* Sticky purchase summary styling */
+.sticky-purchase-summary {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 1rem;
+}
+
+/* Ensure equal height columns */
+.row.justify-content-center {
+    align-items: stretch;
+}
+
+/* Make sure both columns have equal height */
+.col-12.col-lg-8.col-xl-6,
+.col-12.col-lg-4.col-xl-4 {
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* Proper capitalization for text inputs */
+.form-control[type="text"]:not([name*="phone"]):not([name*="email"]):not([name*="address"]) {
+    text-transform: capitalize;
+}
+
+.form-control[type="text"][name*="name"] {
+    text-transform: capitalize;
+}
+
+.form-control[type="text"][name*="instructions"] {
+    text-transform: capitalize;
+}
+
+.form-control[type="text"][name*="message"] {
+    text-transform: capitalize;
 }
 </style>
     </div>

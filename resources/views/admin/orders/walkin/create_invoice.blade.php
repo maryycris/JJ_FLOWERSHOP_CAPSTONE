@@ -19,7 +19,7 @@
                                 <small class="text-muted">Deliver</small>
                                 <span class="badge bg-primary">1</span>
                             </div>
-                            <a href="{{ route('admin.orders.walkin.validate', $order->id) }}" class="btn btn-success">Send Invoice</a>
+                            <a href="{{ route('admin.orders.walkin.validate.confirm', $order->id) }}" class="btn btn-success">Send Invoice</a>
                             <button class="btn btn-sm btn-outline-secondary">Cancel</button>
                         </div>
                     </div>

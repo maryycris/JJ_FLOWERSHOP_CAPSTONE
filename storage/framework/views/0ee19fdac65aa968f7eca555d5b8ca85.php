@@ -1,6 +1,6 @@
 
 
-<?php $__env->startSection('admin_content'); ?>
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-lg-10">
@@ -143,11 +143,11 @@
 
             <!-- Action Buttons -->
             <div class="d-flex justify-content-between">
-                <a href="<?php echo e(route('admin.orders.index')); ?>" class="btn btn-outline-secondary">
+                <a href="<?php echo e(route('clerk.orders.index')); ?>" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Back to Orders
                 </a>
                 <div>
-                    <a href="<?php echo e(route('admin.orders.show', $order->id)); ?>" class="btn btn-primary me-2">
+                    <a href="<?php echo e(route('clerk.orders.show', $order->id)); ?>" class="btn btn-primary me-2">
                         <i class="fas fa-eye me-2"></i>View Full Invoice
                     </a>
                     <button class="btn btn-success" onclick="window.print()">
@@ -166,7 +166,7 @@
                 <h5 class="modal-title" id="assignDriverModalLabel">Assign Driver</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="<?php echo e(route('admin.orders.assignDelivery', $order->id)); ?>">
+            <form method="POST" action="<?php echo e(route('clerk.orders.assignDelivery', $order->id)); ?>">
                 <?php echo csrf_field(); ?>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -181,7 +181,7 @@
                                         data-deliveries="<?php echo e($driver->current_deliveries_today); ?>/<?php echo e($driver->max_deliveries_per_day); ?>"
                                         data-work-hours="<?php echo e($driver->work_start_time->format('H:i')); ?> - <?php echo e($driver->work_end_time->format('H:i')); ?>"
                                         <?php echo e(!$driver->isAvailable() ? 'disabled' : ''); ?>>
-                                    <?php echo e($driver->user->name); ?> 
+                                    <?php echo e($driver->user ? $driver->user->name : 'Unknown Driver'); ?> 
                                     (<?php echo e($driver->getAvailabilityText()); ?>)
                                     <?php if(!$driver->isAvailable()): ?>
                                         - Not Available
@@ -189,12 +189,6 @@
                                 </option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="delivery_date" class="form-label">Delivery Date</label>
-                        <input type="date" id="delivery_date" name="delivery_date" class="form-control" 
-                               value="<?php echo e(now()->addDay()->format('Y-m-d')); ?>" required>
                     </div>
                     
                     <!-- Driver Information Display -->
@@ -281,4 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <?php $__env->stopSection(); ?>
-<?php echo $__env->make('layouts.admin_app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\JJ_Flowershop_Capstone\resources\views/admin/orders/online/done.blade.php ENDPATH**/ ?>
+
+
+
+<?php echo $__env->make('layouts.clerk_app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\JJ_Flowershop_Capstone\resources\views/clerk/orders/online/done.blade.php ENDPATH**/ ?>

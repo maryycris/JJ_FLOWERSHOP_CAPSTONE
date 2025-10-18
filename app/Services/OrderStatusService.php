@@ -6,6 +6,9 @@ use App\Models\Order;
 use App\Models\Delivery;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Notifications\OrderApprovedNotification;
+use App\Notifications\OrderDeliveredNotification;
+use App\Notifications\OrderCompletedNotification;
 
 class OrderStatusService
 {
@@ -63,6 +66,13 @@ class OrderStatusService
             } catch (\Throwable $e) {
                 Log::error("Inventory movement creation failed for order {$order->id}: {$e->getMessage()}");
                 // Don't fail the approval if inventory tracking fails
+            }
+
+            // Notify customer about order approval
+            try {
+                $order->user->notify(new OrderApprovedNotification($order));
+            } catch (\Throwable $e) {
+                Log::error("Failed to send order approval notification for order {$order->id}: {$e->getMessage()}");
             }
 
             DB::commit();
@@ -256,6 +266,13 @@ class OrderStatusService
                     'status' => 'completed',
                     'message' => 'Order completed',
                 ]);
+            }
+
+            // Notify customer about order completion
+            try {
+                $order->user->notify(new OrderCompletedNotification($order));
+            } catch (\Throwable $e) {
+                Log::error("Failed to send order completion notification for order {$order->id}: {$e->getMessage()}");
             }
 
             DB::commit();

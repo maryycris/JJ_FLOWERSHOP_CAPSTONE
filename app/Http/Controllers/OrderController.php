@@ -555,6 +555,13 @@ class OrderController extends Controller
         $inventoryService = new \App\Services\InventoryService();
         $inventoryService->updateInventoryOnDelivery($order);
 
+        // Notify customer about delivery
+        try {
+            $order->user->notify(new \App\Notifications\OrderDeliveredNotification($order));
+        } catch (\Throwable $e) {
+            \Log::error("Failed to send delivery notification for order {$order->id}: {$e->getMessage()}");
+        }
+
         return redirect()->back()->with('success', 'Order marked as delivered successfully!');
     }
 

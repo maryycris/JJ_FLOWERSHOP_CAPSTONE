@@ -34,7 +34,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-top: 110px;
+            padding-top: 80px;
         }
 
         .navbar {
@@ -261,20 +261,26 @@
                 </div>
             </div>
         </nav>
-        <main class="py-4 flex-grow-1">
+        <main class="py-2 flex-grow-1">
             <div class="container-fluid">
                 @auth
                 @yield('content')
                 @endauth
             </div>
         </main>
+        
+        <!-- Alert Component -->
+        @include('components.alert')
+        
         @php
             $hideFooterOnRoutes = [
                 'customer.account.index',
                 'customer.address_book.index',
                 'customer.account.change_password',
                 'customer.orders.index',
+                'customer.orders.show',
                 'customer.trackOrders.page',
+                'customer.checkout.*',
             ];
         @endphp
         @unless (request()->routeIs($hideFooterOnRoutes))
@@ -427,5 +433,9 @@
             }
         });
     </script>
+    
+    <!-- Auto Capitalization Script -->
+    <script src="{{ asset('js/auto-capitalization.js') }}"></script>
+    @yield('scripts')
 </body>
 </html> 

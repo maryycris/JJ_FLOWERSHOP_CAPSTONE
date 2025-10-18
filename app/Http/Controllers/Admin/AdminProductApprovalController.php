@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CatalogProduct;
 use App\Models\ProductComposition;
+use App\Services\ProductAvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -47,7 +48,15 @@ class AdminProductApprovalController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json($products);
+        // Check availability for all products
+        $availabilityService = new ProductAvailabilityService();
+        $productIds = $products->pluck('id')->toArray();
+        $productAvailability = $availabilityService->getBulkCatalogAvailability($productIds);
+
+        return response()->json([
+            'products' => $products,
+            'productAvailability' => $productAvailability
+        ]);
     }
 
     /**

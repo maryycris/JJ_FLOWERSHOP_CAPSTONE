@@ -33,7 +33,7 @@ class OrderPlacedNotification extends Notification
             'total_price' => $this->order->total_price,
             'icon' => 'fas fa-check-circle',
             'color' => 'success',
-            'action_url' => route('customer.orders.show', $this->order->id)
+            'action_url' => route('customer.orders.index', ['status' => 'to_pay'])
         ];
     }
 }

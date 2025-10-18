@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             OrdersTableSeeder::class,
             DriverSeeder::class,
             GreenerySeeder::class,
+            CreateAdminUserSeeder::class,
         ]);
 
         // Seed a default store if not exists

@@ -1,7 +1,7 @@
 @extends('layouts.customer_app')
 
 @section('content')
-<div class="py-4" style="background: #f4faf4; min-height: 100vh;">
+<div class="pt-1 " style="background: #f4faf4; min-height: 80vh;">
     <div class="container" style="max-width: 1400px;">
     
     <form action="{{ route('customer.checkout.process') }}" method="POST" id="paymentForm">

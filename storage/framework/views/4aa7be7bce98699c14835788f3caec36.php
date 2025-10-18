@@ -66,18 +66,144 @@
                                             <?php
                                                 $demand = (int) ($product->pivot->quantity ?? 0);
                                                 $stockAvailable = (int) ($product->stock ?? 0);
-                                                $quantityToProvide = max(0, min($demand, $stockAvailable));
+                                                
+                                                // Check if we can fulfill based on composition analysis
+                                                $canFulfillFromComposition = false;
+                                                $compositionMessage = '';
+                                                
+                                                if (isset($productCompositions[$product->id]) && $productCompositions[$product->id]) {
+                                                    $composition = $productCompositions[$product->id];
+                                                    $canFulfillFromComposition = $composition['can_fulfill'];
+                                                    $compositionMessage = $canFulfillFromComposition ? 
+                                                        'Can be made from materials' : 
+                                                        'Insufficient materials';
+                                                }
+                                                
+                                                // Use composition analysis if available, otherwise fall back to stock
+                                                if (isset($productCompositions[$product->id]) && $productCompositions[$product->id]) {
+                                                    $quantityToProvide = $canFulfillFromComposition ? $demand : 0;
+                                                    $isInsufficientStock = !$canFulfillFromComposition;
+                                                    $stockMessage = $compositionMessage;
+                                                } else {
+                                                    $quantityToProvide = max(0, min($demand, $stockAvailable));
+                                                    $isInsufficientStock = $stockAvailable < $demand;
+                                                    $stockMessage = $isInsufficientStock ? 
+                                                        "(Insufficient stock: {$stockAvailable} available)" : 
+                                                        "({$stockAvailable} available)";
+                                                }
                                             ?>
-                                            <tr>
+                                            <tr class="<?php echo e($isInsufficientStock ? 'table-warning' : ''); ?>">
                                                 <td><?php echo e($product->name); ?></td>
                                                 <td><?php echo e($demand); ?></td>
-                                                <td><?php echo e($quantityToProvide); ?></td>
+                                                <td>
+                                                    <span class="<?php echo e($isInsufficientStock ? 'text-warning' : ''); ?>">
+                                                        <?php echo e($quantityToProvide); ?>
+
+                                                        <?php if($isInsufficientStock): ?>
+                                                            <small class="text-muted">(<?php echo e($stockMessage); ?>)</small>
+                                                        <?php else: ?>
+                                                            <small class="text-success">(<?php echo e($stockMessage); ?>)</small>
+                                                        <?php endif; ?>
+                                                    </span>
+                                                </td>
                                             </tr>
                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
+
+                        <!-- Product Composition Breakdown -->
+                        <?php if(isset($productCompositions) && !empty($productCompositions)): ?>
+                            <div class="mt-4">
+                                <div class="px-3 py-2 fw-semibold" style="display:inline-block;background:#f8f9fa;border:1px solid #dee2e6;border-bottom:0;border-top-left-radius:4px;border-top-right-radius:4px;">Product Composition Breakdown</div>
+                                <div class="table-responsive" style="border:1px solid #dee2e6;">
+                                    <?php $__currentLoopData = $order->products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php if(isset($productCompositions[$product->id]) && $productCompositions[$product->id]): ?>
+                                            <?php
+                                                $composition = $productCompositions[$product->id];
+                                                $quantity = $product->pivot->quantity;
+                                            ?>
+                                            <div class="p-3 border-bottom">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="mb-0"><?php echo e($product->name); ?> (Qty: <?php echo e($quantity); ?>)</h6>
+                                                    <span class="badge bg-<?php echo e($composition['can_fulfill'] ? 'success' : 'danger'); ?>">
+                                                        <?php echo e($composition['can_fulfill'] ? 'Can Fulfill' : 'Cannot Fulfill'); ?>
+
+                                                    </span>
+                                                </div>
+                                                
+                                                <?php if($composition['total_components'] > 0): ?>
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                            <div class="table-responsive">
+                                                                <table class="table table-sm mb-0">
+                                                                    <thead class="table-light">
+                                                                        <tr>
+                                                                            <th>Material</th>
+                                                                            <th>Required</th>
+                                                                            <th>Available</th>
+                                                                            <th>Status</th>
+                                                                            <th>Shortage</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <?php $__currentLoopData = $composition['components']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $component): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                                            <tr class="<?php echo e($component['sufficient'] ? '' : 'table-warning'); ?>">
+                                                                                <td>
+                                                                                    <strong><?php echo e($component['composition']->component_name); ?></strong>
+                                                                                    <?php if($component['component']): ?>
+                                                                                        <br><small class="text-muted">ID: <?php echo e($component['component']->id); ?></small>
+                                                                                    <?php endif; ?>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <?php echo e($component['required_quantity']); ?> <?php echo e($component['composition']->unit); ?>
+
+                                                                                    <br><small class="text-muted"><?php echo e($component['composition']->quantity); ?> per unit</small>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <?php echo e($component['available_stock']); ?> <?php echo e($component['composition']->unit); ?>
+
+                                                                                </td>
+                                                                                <td>
+                                                                                    <span class="badge bg-<?php echo e($component['status_class']); ?>">
+                                                                                        <?php echo e($component['status']); ?>
+
+                                                                                    </span>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <?php if($component['shortage'] > 0): ?>
+                                                                                        <span class="text-danger">
+                                                                                            <?php echo e($component['shortage']); ?> <?php echo e($component['composition']->unit); ?> short
+                                                                                        </span>
+                                                                                    <?php else: ?>
+                                                                                        <span class="text-success">✓</span>
+                                                                                    <?php endif; ?>
+                                                                                </td>
+                                                                            </tr>
+                                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="mt-2">
+                                                        <small class="text-muted">
+                                                            Summary: <?php echo e($composition['sufficient_components']); ?>/<?php echo e($composition['total_components']); ?> materials sufficient
+                                                        </small>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="text-muted">
+                                                        <i class="fas fa-info-circle"></i> No composition data available for this product.
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

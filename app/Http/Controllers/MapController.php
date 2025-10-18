@@ -33,6 +33,8 @@ class MapController extends Controller
             // Handle common variations with better formatting
             if ($lowerAddress === 'cebu city' || $lowerAddress === 'cebu') {
                 $address = 'Cebu City, Cebu, Philippines';
+            } elseif (str_contains($lowerAddress, 'cordova') || str_contains($lowerAddress, 'corfova')) {
+                $address = 'Cordova, Cebu, Philippines';
             } elseif (str_contains($lowerAddress, 'minglanilla')) {
                 $address = 'Minglanilla, Cebu, Philippines';
             } elseif (str_contains($lowerAddress, 'kalawisan')) {

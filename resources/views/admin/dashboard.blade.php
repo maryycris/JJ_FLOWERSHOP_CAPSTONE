@@ -39,6 +39,12 @@
                     </div>
                     </a>
                 </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card dashboard-card dashboard-green text-center p-3" style="min-width:180px;">
+                        <div class="fw-semibold mb-1" style="font-size:1.1rem;"><i class="bi bi-arrow-left-right me-1"></i> Movements Today</div>
+                        <div class="dashboard-count">{{ $totalMovementsToday ?? 0 }}</div>
+                    </div>
+                </div>
             </div>
             <!-- Added Analytics: Totals and Popular Products -->
             <div class="row g-4 mb-3 align-items-stretch">
@@ -93,10 +99,10 @@
                     </div>
                 </div>
             </div>
-            <!-- Restock Card -->
+            <!-- Restock Card and Movement History -->
             <div class="row mt-2 align-items-stretch">
                 <div class="col-md-6 col-lg-4">
-                    <a href="{{ route('admin.admin.inventory.index') }}" style="text-decoration: none; color: inherit;">
+                    <a href="{{ route('admin.inventory.index') }}" style="text-decoration: none; color: inherit;">
                     <div class="card dashboard-card dashboard-orange text-start p-3" style="min-width:260px;">
                         <div class="card-body p-0">
                             <div class="d-flex align-items-center mb-2">
@@ -116,6 +122,61 @@
                     </div>
                     </a>
                 </div>
+                <div class="col-md-6 col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Recent Movement History</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            @if(isset($recentMovements) && count($recentMovements) > 0)
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Movement #</th>
+                                                <th>Product</th>
+                                                <th>Type</th>
+                                                <th>Quantity</th>
+                                                <th>User</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($recentMovements as $movement)
+                                                <tr>
+                                                    <td>
+                                                        <span class="badge bg-{{ $movement->movement_type == 'OUT' ? 'danger' : ($movement->movement_type == 'IN' ? 'success' : 'info') }}">
+                                                            {{ $movement->movement_number }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ $movement->product->name ?? 'N/A' }}</td>
+                                                    <td>
+                                                        <span class="badge bg-{{ $movement->movement_type == 'OUT' ? 'danger' : ($movement->movement_type == 'IN' ? 'success' : 'info') }}">
+                                                            {{ $movement->movement_type }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="{{ $movement->movement_type == 'OUT' ? 'text-danger' : 'text-success' }}">
+                                                        {{ $movement->movement_type == 'OUT' ? '-' : '+' }}{{ $movement->quantity }}
+                                                    </td>
+                                                    <td>{{ $movement->user->name ?? 'N/A' }}</td>
+                                                    <td>{{ $movement->created_at->format('M d, H:i') }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="card-footer text-center">
+                                    <span class="text-muted small">Recent movements only</span>
+                                </div>
+                            @else
+                                <div class="text-center py-4">
+                                    <i class="bi bi-inbox fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted mb-0">No recent movements</p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
             </div>
             </div>
         </div>
@@ -132,6 +193,7 @@
 .dashboard-red { background: #F8D6D6; }
 .dashboard-yellow { background: #FFF8D6; }
 .dashboard-orange { background: #F8D6C1; }
+.dashboard-green { background: #D6F8D6; }
 .dashboard-count { font-size: 2.2rem; font-weight: bold; margin-top: 0.5rem; }
 .restock-list div { font-size: 1.1rem; margin-bottom: 0.2rem; }
 .stat-card { background:#ffffff; border:none; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }

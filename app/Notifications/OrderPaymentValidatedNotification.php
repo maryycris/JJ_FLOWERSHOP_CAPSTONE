@@ -30,8 +30,12 @@ class OrderPaymentValidatedNotification extends Notification
     {
         return [
             'type' => 'payment_validated',
-            'order_id' => $this->order->id,
+            'title' => 'Payment Validated',
             'message' => 'Your payment proof for Order #' . $this->order->id . ' has been approved. Your order is now being processed.',
+            'order_id' => $this->order->id,
+            'icon' => 'fas fa-credit-card',
+            'color' => 'success',
+            'action_url' => route('customer.orders.index', ['status' => 'to_ship'])
         ];
     }
 } 

@@ -1,42 +1,39 @@
 <?php $__env->startSection('content'); ?>
-<div class="pt-0 pb-4" style="background: #f4faf4; min-height: 100vh;">
+<div class="pt-0 " style="background: #f4faf4; min-height: 85vh;">
     <div class="container" style="max-width: 1400px;">
 
 
         <div class="row justify-content-center">
             <!-- Left Box - Order Details -->
-            <div class="col-12 col-lg-8 col-xl-6" style="max-width: 1200px;">
+            <div class="col-12 col-lg-8 col-xl-6" style="max-width: 900px;">
                 <!-- Header Section for Left Box -->
                 <div class="mb-2">
-                    <div class="rounded-2 p-2" style="background: linear-gradient(135deg, #8ACB88, #7bb47b); box-shadow: 0 2px 10px rgba(0,0,0,0.08); border: none; display: inline-block;">
-                        <h4 class="mb-0" style="color: white; font-weight: 600;">
-                            Order Details #<?php echo e($order->id); ?>
+                    <a href="<?php echo e(route('customer.orders.index')); ?>" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Go to My Orders
+                    </a>
+                </div>
 
-                        </h4>
-                    </div>
-    </div>
-
-                <div class="bg-white rounded-3 p-4 mb-4 scrollable-content" style="box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: none; max-height: 85vh; overflow-y: auto;">
+                <div class="bg-white rounded-3 p-4 mb-4 scrollable-content" style="box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: none; max-height: 80vh; overflow-y: auto;">
                     
-                    <div class="d-flex align-items-center mb-4">
+                    <div class="d-flex align-items-center mb-3">
                         <div class="me-3">
-                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #8ACB88, #7bb47b); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-shopping-bag text-white" style="font-size: 1.5rem;"></i>
+                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #8ACB88, #7bb47b); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-shopping-bag text-white" style="font-size: 1.1rem;"></i>
         </div>
         </div>
                         <div>
-                            <h4 class="mb-1" style="color: #2c3e50; font-weight: 700;">Order Information</h4>
-                            <p class="text-muted mb-0">Order #<?php echo e($order->id); ?> • <?php echo e($order->created_at->format('M d, Y')); ?></p>
+                            <h5 class="mb-1" style="color: #2c3e50; font-weight: 600; font-size: 1.1rem;">Order Information</h5>
+                            <p class="text-muted mb-0 small">Order #<?php echo e($order->id); ?> • <?php echo e($order->created_at->format('M d, Y')); ?></p>
                 </div>
                         </div>
                     
                     <!-- Order Status Cards -->
-                    <div class="row g-3 mb-4">
+                    <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                            <div class="d-flex align-items-center p-3" style="background: #f8f9fa; border-radius: 8px;">
-                                <i class="fas fa-info-circle me-3 text-primary"></i>
+                            <div class="d-flex align-items-center p-2" style="background: #f8f9fa; border-radius: 6px;">
+                                <i class="fas fa-info-circle me-2 text-primary" style="font-size: 0.9rem;"></i>
                                 <div>
-                                    <small class="text-muted d-block">Order Status</small>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Order Status</small>
                                     <?php
                                         $currentStatus = $order->order_status ?? $order->status;
                                         $statusDisplay = \App\Services\OrderStatusService::getCustomerDisplayStatus($currentStatus);
@@ -52,21 +49,21 @@
                                             default => 'secondary'
                                         };
                                     ?>
-                                    <span class="badge bg-<?php echo e($statusColor); ?> px-3 py-2"><?php echo e($statusDisplay); ?></span>
+                                    <span class="badge bg-<?php echo e($statusColor); ?> px-2 py-1" style="font-size: 0.7rem;"><?php echo e($statusDisplay); ?></span>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="d-flex align-items-center p-3" style="background: #f8f9fa; border-radius: 8px;">
-                                <i class="fas fa-credit-card me-3 text-primary"></i>
+                            <div class="d-flex align-items-center p-2" style="background: #f8f9fa; border-radius: 6px;">
+                                <i class="fas fa-credit-card me-2 text-primary" style="font-size: 0.9rem;"></i>
                                 <div>
-                                    <small class="text-muted d-block">Payment Status</small>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Payment Status</small>
                                     <?php if($order->payment_status === 'paid'): ?>
-                                        <span class="badge bg-success px-3 py-2">Paid</span>
+                                        <span class="badge bg-success px-2 py-1" style="font-size: 0.7rem;">Paid</span>
                                     <?php elseif($order->payment_status === 'pending'): ?>
-                                        <span class="badge bg-warning px-3 py-2">Pending</span>
+                                        <span class="badge bg-warning px-2 py-1" style="font-size: 0.7rem;">Pending</span>
                                     <?php else: ?>
-                                        <span class="badge bg-danger px-3 py-2">Unpaid</span>
+                                        <span class="badge bg-danger px-2 py-1" style="font-size: 0.7rem;">Unpaid</span>
                             <?php endif; ?>
                         </div>
                             </div>
@@ -74,43 +71,43 @@
                     </div>
                     
                     <!-- Total Amount & Payment Method -->
-                    <div class="row g-3 mb-4">
+                    <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                            <div class="d-flex align-items-center p-3" style="background: linear-gradient(135deg, #8ACB88, #7bb47b); border-radius: 8px; color: white;">
-                                <i class="fas fa-dollar-sign me-3"></i>
+                            <div class="d-flex align-items-center p-2" style="background: linear-gradient(135deg, #8ACB88, #7bb47b); border-radius: 6px; color: white;">
+                                <i class="fas fa-dollar-sign me-2" style="font-size: 0.9rem;"></i>
                                 <div>
-                                    <small class="opacity-75 d-block">Total Amount</small>
-                                    <strong style="font-size: 1.2rem;">₱<?php echo e(number_format($order->total_price, 2)); ?></strong>
+                                    <small class="opacity-75 d-block" style="font-size: 0.75rem;">Total Amount</small>
+                                    <strong style="font-size: 1rem;">₱<?php echo e(number_format($order->total_price, 2)); ?></strong>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="d-flex align-items-center p-3" style="background: #f8f9fa; border-radius: 8px;">
-                                <i class="fas fa-wallet me-3 text-primary"></i>
+                            <div class="d-flex align-items-center p-2" style="background: #f8f9fa; border-radius: 6px;">
+                                <i class="fas fa-wallet me-2 text-primary" style="font-size: 0.9rem;"></i>
                                 <div>
-                                    <small class="text-muted d-block">Payment Method</small>
-                                    <span class="badge bg-info px-3 py-2"><?php echo e(strtoupper($order->payment_method ?? 'N/A')); ?></span>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Payment Method</small>
+                                    <span class="badge bg-info px-2 py-1" style="font-size: 0.7rem;"><?php echo e(strtoupper($order->payment_method ?? 'N/A')); ?></span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Products in Order -->
-                    <div class="mb-4">
-                        <h5 class="mb-3" style="color: #2c3e50; font-weight: 600;">
-                            <i class="fas fa-box me-2 text-primary"></i>Products in Order
-                        </h5>
-                        <div class="row g-3">
+                    <div class="mb-3">
+                        <h6 class="mb-2" style="color: #2c3e50; font-weight: 600; font-size: 1rem;">
+                            <i class="fas fa-box me-2 text-primary" style="font-size: 0.9rem;"></i>Products in Order
+                        </h6>
+                        <div class="row g-2">
                             <?php $__currentLoopData = $order->products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <div class="col-12">
-                                    <div class="d-flex align-items-center p-3" style="background: #f8f9fa; border-radius: 8px; border-left: 4px solid #8ACB88;">
-                                        <img src="<?php echo e(asset('storage/' . $product->image)); ?>" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" alt="<?php echo e($product->name); ?>">
-                                        <div class="flex-grow-1 ms-3">
-                                            <h6 class="mb-1" style="color: #2c3e50;"><?php echo e($product->name); ?></h6>
-                                            <small class="text-muted">Quantity: <?php echo e($product->pivot->quantity); ?></small>
+                                    <div class="d-flex align-items-center p-2" style="background: #f8f9fa; border-radius: 6px; border-left: 3px solid #8ACB88;">
+                                        <img src="<?php echo e(asset('storage/' . $product->image)); ?>" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px;" alt="<?php echo e($product->name); ?>">
+                                        <div class="flex-grow-1 ms-2">
+                                            <h6 class="mb-1" style="color: #2c3e50; font-size: 0.9rem;"><?php echo e($product->name); ?></h6>
+                                            <small class="text-muted" style="font-size: 0.75rem;">Quantity: <?php echo e($product->pivot->quantity); ?></small>
                                         </div>
                                         <div class="text-end">
-                                            <strong style="color: #8ACB88; font-size: 1.1rem;">₱<?php echo e(number_format($product->price * $product->pivot->quantity, 2)); ?></strong>
+                                            <strong style="color: #8ACB88; font-size: 0.9rem;">₱<?php echo e(number_format($product->price * $product->pivot->quantity, 2)); ?></strong>
                                         </div>
                                     </div>
                                 </div>
@@ -120,26 +117,26 @@
 
                     <!-- Delivery Information -->
                     <?php if($order->delivery): ?>
-                        <div class="mb-4">
-                            <h5 class="mb-3" style="color: #2c3e50; font-weight: 600;">
-                                <i class="fas fa-truck me-2 text-primary"></i>Delivery Information
-                            </h5>
-                            <div class="row g-3">
+                        <div class="mb-3">
+                            <h6 class="mb-2" style="color: #2c3e50; font-weight: 600; font-size: 1rem;">
+                                <i class="fas fa-truck me-2 text-primary" style="font-size: 0.9rem;"></i>Delivery Information
+                            </h6>
+                            <div class="row g-2">
                                 <div class="col-md-6">
-                                    <div class="d-flex align-items-center p-3" style="background: #f8f9fa; border-radius: 8px;">
-                                        <i class="fas fa-map-marker-alt me-3 text-primary"></i>
+                                    <div class="d-flex align-items-center p-2" style="background: #f8f9fa; border-radius: 6px;">
+                                        <i class="fas fa-map-marker-alt me-2 text-primary" style="font-size: 0.9rem;"></i>
                                         <div>
-                                            <small class="text-muted d-block">Delivery Address</small>
-                                            <strong><?php echo e($order->delivery->delivery_address ?? 'N/A'); ?></strong>
+                                            <small class="text-muted d-block" style="font-size: 0.75rem;">Delivery Address</small>
+                                            <strong style="font-size: 0.85rem;"><?php echo e($order->delivery->delivery_address ?? 'N/A'); ?></strong>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="d-flex align-items-center p-3" style="background: #f8f9fa; border-radius: 8px;">
-                                        <i class="fas fa-user me-3 text-primary"></i>
+                                    <div class="d-flex align-items-center p-2" style="background: #f8f9fa; border-radius: 6px;">
+                                        <i class="fas fa-user me-2 text-primary" style="font-size: 0.9rem;"></i>
                                         <div>
-                                            <small class="text-muted d-block">Recipient</small>
-                                            <strong><?php echo e($order->delivery->recipient_name ?? 'N/A'); ?></strong>
+                                            <small class="text-muted d-block" style="font-size: 0.75rem;">Recipient</small>
+                                            <strong style="font-size: 0.85rem;"><?php echo e($order->delivery->recipient_name ?? 'N/A'); ?></strong>
                                         </div>
                                     </div>
                                 </div>
@@ -283,46 +280,46 @@
             <!-- Right Box - Actions & Customer Info -->
             <div class="col-12 col-lg-4 col-xl-4">
                 <!-- Header Section for Right Box -->
-                <div class="d-flex justify-content-end mb-2">
-                    <a href="<?php echo e(route('customer.orders.index')); ?>" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i> Back to My Orders
-                    </a>
+                <div class="mb-2">
+                    <!-- Back button moved to left side -->
                 </div>
                 
-                <div class="bg-white rounded-3 p-4 mb-4 scrollable-content" style="box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: none; max-height: 85vh; overflow-y: auto;">
+                <!-- Add top margin to align with Order Information section -->
+                <div class="mt-5">
+                    <div class="bg-white rounded-3 p-4 mb-4 scrollable-content" style="box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: none; max-height: 80vh; overflow-y: auto;">
                     
-                    <div class="d-flex align-items-center mb-4">
+                    <div class="d-flex align-items-center mb-3">
                         <div class="me-3">
-                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #6c757d, #495057); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-user text-white" style="font-size: 1.5rem;"></i>
+                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #6c757d, #495057); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-user text-white" style="font-size: 1.1rem;"></i>
                             </div>
                         </div>
                         <div>
-                            <h4 class="mb-1" style="color: #2c3e50; font-weight: 700;">Customer Information</h4>
-                            <p class="text-muted mb-0">Account Details</p>
+                            <h5 class="mb-1" style="color: #2c3e50; font-weight: 600; font-size: 1.1rem;">Customer Information</h5>
+                            <p class="text-muted mb-0 small">Account Details</p>
                         </div>
                     </div>
                     
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center p-3 mb-3" style="background: #f8f9fa; border-radius: 8px;">
-                            <i class="fas fa-user me-3 text-primary"></i>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center p-2 mb-2" style="background: #f8f9fa; border-radius: 6px;">
+                            <i class="fas fa-user me-2 text-primary" style="font-size: 0.9rem;"></i>
                             <div>
-                                <small class="text-muted d-block">Full Name</small>
-                                <strong><?php echo e($order->user->name); ?></strong>
+                                <small class="text-muted d-block" style="font-size: 0.75rem;">Full Name</small>
+                                <strong style="font-size: 0.85rem;"><?php echo e($order->user->name); ?></strong>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center p-3 mb-3" style="background: #f8f9fa; border-radius: 8px;">
-                            <i class="fas fa-envelope me-3 text-primary"></i>
+                        <div class="d-flex align-items-center p-2 mb-2" style="background: #f8f9fa; border-radius: 6px;">
+                            <i class="fas fa-envelope me-2 text-primary" style="font-size: 0.9rem;"></i>
                             <div>
-                                <small class="text-muted d-block">Email Address</small>
-                                <strong><?php echo e($order->user->email); ?></strong>
+                                <small class="text-muted d-block" style="font-size: 0.75rem;">Email Address</small>
+                                <strong style="font-size: 0.85rem;"><?php echo e($order->user->email); ?></strong>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center p-3" style="background: #f8f9fa; border-radius: 8px;">
-                            <i class="fas fa-phone me-3 text-primary"></i>
+                        <div class="d-flex align-items-center p-2" style="background: #f8f9fa; border-radius: 6px;">
+                            <i class="fas fa-phone me-2 text-primary" style="font-size: 0.9rem;"></i>
                             <div>
-                                <small class="text-muted d-block">Phone Number</small>
-                                <strong><?php echo e($order->user->contact_number ?? 'N/A'); ?></strong>
+                                <small class="text-muted d-block" style="font-size: 0.75rem;">Phone Number</small>
+                                <strong style="font-size: 0.85rem;"><?php echo e($order->user->contact_number ?? 'N/A'); ?></strong>
                     </div>
                 </div>
             </div>
@@ -448,6 +445,7 @@
                 </div>
             <?php endif; ?>
                 </div>
+                </div> <!-- Close mt-4 wrapper -->
             </div>
         </div>
     </div>

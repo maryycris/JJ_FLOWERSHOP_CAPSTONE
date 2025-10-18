@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\CatalogProduct;
+use App\Models\PendingProductChange;
+use App\Services\ProductAvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
@@ -30,12 +32,175 @@ class ProductController extends Controller
             }
         }
         
+        // Add search functionality
+        if ($request->has('search') && $request->search !== '') {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->has('min_price') && $request->min_price !== '') {
+            $query->where('price', '>=', $request->min_price);
+        }
+
+        if ($request->has('max_price') && $request->max_price !== '') {
+            $query->where('price', '<=', $request->max_price);
+        }
+        
         // Get approved products ordered by newest first
-        $products = $query->orderBy('created_at', 'desc')->get();
+        $products = $query->orderBy('created_at', 'desc')->paginate(20); // 20 products per page
         $categories = ['Bouquets', 'Packages', 'Gifts']; // Only these 3 categories for catalog
         $promotedProducts = CatalogProduct::where('is_approved', true)->orderBy('created_at', 'desc')->take(3)->get();
 
-        return view('admin.products.index', compact('products', 'categories', 'promotedProducts'));
+        // Check availability for all products
+        $availabilityService = new ProductAvailabilityService();
+        $productIds = $products->pluck('id')->toArray();
+        $promotedProductIds = $promotedProducts->pluck('id')->toArray();
+        
+        $productAvailability = $availabilityService->getBulkCatalogAvailability($productIds);
+        $promotedProductAvailability = $availabilityService->getBulkCatalogAvailability($promotedProductIds);
+
+        return view('admin.products.index', compact('products', 'categories', 'promotedProducts', 'productAvailability', 'promotedProductAvailability'));
+    }
+
+    /**
+     * Approve a pending product change
+     */
+    public function approveProductChange(Request $request, $id)
+    {
+        $change = PendingProductChange::findOrFail($id);
+        
+        try {
+            if ($change->action === 'edit') {
+                // Apply the changes to the product
+                $product = $change->product;
+                $changes = $change->changes;
+                
+                // Update basic fields
+                $product->update([
+                    'name' => $changes['name'],
+                    'price' => $changes['price'],
+                    'category' => $changes['category'],
+                    'description' => $changes['description'],
+                ]);
+                
+                // Handle image update
+                if (isset($changes['image'])) {
+                    // Delete old image if exists
+                    if ($product->image) {
+                        \Storage::disk('public')->delete($product->image);
+                    }
+                    $product->update(['image' => $changes['image']]);
+                }
+                
+                // Handle compositions update
+                if (isset($changes['compositions'])) {
+                    // Delete existing compositions
+                    $product->compositions()->delete();
+                    
+                    // Add new compositions
+                    foreach ($changes['compositions'] as $composition) {
+                        $product->compositions()->create($composition);
+                    }
+                }
+                
+            } elseif ($change->action === 'delete') {
+                // Delete the product
+                $product = $change->product;
+                if ($product->image) {
+                    \Storage::disk('public')->delete($product->image);
+                }
+                $product->delete();
+            }
+            
+            // Mark the change as approved
+            $change->update([
+                'status' => 'approved',
+                'reviewed_by' => auth()->id(),
+                'reviewed_at' => now(),
+                'admin_notes' => $request->input('admin_notes', ''),
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Product change approved successfully!'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error approving change: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Reject a pending product change
+     */
+    public function rejectProductChange(Request $request, $id)
+    {
+        $change = PendingProductChange::findOrFail($id);
+        
+        try {
+            $change->update([
+                'status' => 'rejected',
+                'reviewed_by' => auth()->id(),
+                'reviewed_at' => now(),
+                'admin_notes' => $request->input('admin_notes', ''),
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Product change rejected successfully!'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error rejecting change: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get details of a pending product change
+     */
+    public function getProductChangeDetails($id)
+    {
+        try {
+            $change = PendingProductChange::with(['product', 'requestedBy'])
+                ->findOrFail($id);
+            
+            return response()->json([
+                'success' => true,
+                'change' => $change
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching change details: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get all pending product changes
+     */
+    public function getPendingProductChanges()
+    {
+        try {
+            $changes = PendingProductChange::with(['product', 'requestedBy'])
+                ->pending()
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            return response()->json($changes);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching pending changes: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -496,13 +661,52 @@ class ProductController extends Controller
     public function reviews($id)
     {
         try {
-            $product = Product::findOrFail($id);
+            \Log::info('Reviews endpoint called for ID: ' . $id);
             
-            // Get reviews from order_product pivot table
+            // First, try to find as CatalogProduct (since this is the customer context)
+            $catalogProduct = \App\Models\CatalogProduct::find($id);
+            $productId = $id;
+            
+            if ($catalogProduct) {
+                \Log::info('Found CatalogProduct: ' . $catalogProduct->name);
+                // Find corresponding Product with same name/price/category
+                $product = Product::where('name', $catalogProduct->name)
+                    ->where('price', $catalogProduct->price)
+                    ->where('category', $catalogProduct->category)
+                    ->first();
+                if ($product) {
+                    $productId = $product->id;
+                    \Log::info('Found corresponding Product ID: ' . $productId . ' for ' . $product->name);
+                } else {
+                    \Log::info('No corresponding Product found for CatalogProduct');
+                    return response()->json([
+                        'reviews' => [],
+                        'average_rating' => 0,
+                        'total_reviews' => 0
+                    ]);
+                }
+            } else {
+                // Fallback: try to find as Product ID directly
+                \Log::info('Not found as CatalogProduct, checking Product...');
+                $product = Product::find($id);
+                if ($product) {
+                    \Log::info('Found as Product: ' . $product->name);
+                    $productId = $id;
+                } else {
+                    \Log::info('Not found as Product either');
+                    return response()->json([
+                        'reviews' => [],
+                        'average_rating' => 0,
+                        'total_reviews' => 0
+                    ]);
+                }
+            }
+            
+            // Get reviews from order_product pivot table using the resolved product ID
             $reviews = DB::table('order_product')
                 ->join('orders', 'order_product.order_id', '=', 'orders.id')
                 ->join('users', 'orders.user_id', '=', 'users.id')
-                ->where('order_product.product_id', $id)
+                ->where('order_product.product_id', $productId)
                 ->where('order_product.reviewed', true)
                 ->whereNotNull('order_product.rating')
                 ->select([
@@ -513,6 +717,9 @@ class ProductController extends Controller
                 ])
                 ->orderBy('order_product.reviewed_at', 'desc')
                 ->get();
+
+            \Log::info('Reviews found: ' . $reviews->count());
+            \Log::info('Reviews data: ' . json_encode($reviews->toArray()));
 
             // Calculate average rating
             $averageRating = $reviews->avg('rating') ?? 0;

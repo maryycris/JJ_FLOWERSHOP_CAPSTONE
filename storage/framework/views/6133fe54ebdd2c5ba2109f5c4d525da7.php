@@ -106,10 +106,16 @@
     if (countEl) countEl.textContent = (count && count>0) ? `${count} review${count>1?'s':''}` : '';
   }
   function loadProductReviews(productId) {
+    console.log('loadProductReviews called with productId:', productId);
     const list = document.getElementById('modalReviewsList');
     if (list) list.innerHTML = '<div class="text-muted small">Loading reviews…</div>';
-    fetch(`<?php echo e(url('/customer/products')); ?>/${productId}/reviews`)
-      .then(r => r.ok ? r.json() : Promise.reject())
+    const url = `<?php echo e(url('/customer/products')); ?>/${productId}/reviews`;
+    console.log('Fetching reviews from URL:', url);
+    fetch(url)
+      .then(r => {
+        console.log('Response status:', r.status);
+        return r.ok ? r.json() : Promise.reject();
+      })
       .then(data => {
         const reviews = Array.isArray(data.reviews) ? data.reviews : [];
         const avg = Number(data.average_rating || 0);
@@ -155,7 +161,12 @@
       document.getElementById('modalProductQty').value = 1;
       document.getElementById('modalProductTotal').textContent = '₱' + parseFloat(product.price).toFixed(2);
       setRatingSummary(0,0);
-      if (product.id) { loadProductReviews(product.id); }
+      console.log('About to load reviews for product ID:', product.id);
+      if (product.id) { 
+        loadProductReviews(product.id); 
+      } else {
+        console.error('No product ID provided!');
+      }
       setFavStateOnOpen();
       var modal = new bootstrap.Modal(document.getElementById('productModal'));
       modal.show();
@@ -177,7 +188,7 @@
     document.getElementById('modalAddToCartBtn').onclick = function() {
       if (!modalProduct) {
         console.error('No modalProduct found');
-        alert('No product selected');
+        showAlert('No product selected', 'error');
         return;
       }
       
@@ -190,7 +201,11 @@
       
       fetch("<?php echo e(route('customer.cart.add')); ?>", {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content') },
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content') 
+        },
         body: JSON.stringify(requestData)
       })
       .then(response => {
@@ -202,38 +217,23 @@
         else if (!response.ok) { 
           return response.json().then(errorData => { 
             console.error('Server error:', errorData);
-            
-            // Handle inventory validation errors with SweetAlert
-            if (errorData.type === 'insufficient_inventory' || errorData.type === 'missing_components') {
-              showInventoryAlert(errorData);
-            } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: errorData.message || 'Failed to add product to cart'
-              });
-            }
+            showAlert(errorData.message || 'Failed to add product to cart', 'error');
             throw new Error('Server error'); 
           }); 
         }
         else { 
           console.log('Successfully added to cart');
-          Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: 'Product added to cart!',
-            timer: 2000,
-            showConfirmButton: false
+          return response.json().then(data => {
+            showAlert(data.message || 'Product added to cart!', 'success');
+            // Close modal after successful add
+            const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
+            if (modal) modal.hide();
           });
         }
       })
       .catch(error => { 
         console.error('Fetch error:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'An error occurred while adding product to cart.'
-        });
+        showAlert('An error occurred while adding product to cart.', 'error');
       });
     };
     document.getElementById('modalBuyNowBtn').onclick = function() {

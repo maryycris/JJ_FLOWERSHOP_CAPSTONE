@@ -252,7 +252,6 @@
                     <input type="hidden" name="status" id="statusFilter" value="{{ request('status', 'all') }}">
                 </form>
                 <div id="reviewSectionHeader" class="d-flex align-items-center mb-0" style="display:none;">
-                    <div id="reviewSectionTitle" style="font-size:1.3rem;color:#7bb47b; margin-right: 12px;">To be Review Product</div>
                 </div>
                 @if ($orders->isEmpty())
                     <div class="alert alert-info" role="alert">

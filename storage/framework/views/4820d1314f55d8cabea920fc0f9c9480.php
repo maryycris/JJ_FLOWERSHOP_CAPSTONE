@@ -1,9 +1,9 @@
-<?php $__env->startSection('customer_content'); ?>
-<div class="container-fluid pt-4">
-    <h1 class="h3 mb-4 text-gray-800">Notifications</h1>
-
-    <div class="card shadow mb-4">
-        <div class="card-body">
+<?php $__env->startSection('content'); ?>
+<div class="container-fluid py-4" style="min-height: 60vh;">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+            <div class="card shadow mb-4" style="background: white; border-radius: 8px;">
+        <div class="card-body" style="padding: 2rem;">
             <?php if(session('success')): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
@@ -60,38 +60,44 @@
                              data-notification-id="<?php echo e($notification->id); ?>"
                              data-clickable="<?php echo e($isClickable ? 'true' : 'false'); ?>"
                              data-action-url="<?php echo e($isClickable ? $data['action_url'] : ''); ?>"
-                             style="cursor: pointer; transition: all 0.2s ease; <?php echo e($isClickable ? 'border-left: 4px solid #007bff;' : ''); ?>"
-                             onclick="handleNotificationClick('<?php echo e($notification->id); ?>', '<?php echo e($isClickable ? $data['action_url'] : ''); ?>')">
+                             style="cursor: pointer; transition: all 0.2s ease; <?php echo e($isClickable ? 'border-left: 4px solid #007bff;' : ''); ?>; border-radius: 8px; margin-bottom: 8px;"
+                             onclick="handleNotificationClick('<?php echo e($notification->id); ?>', '<?php echo e($isClickable ? $data['action_url'] : ''); ?>')"
+                             onmouseover="this.style.backgroundColor='#e3f2fd'; this.style.transform='translateX(5px)';"
+                             onmouseout="this.style.backgroundColor='<?php echo e($notification->read_at ? '' : '#f8f9fa'); ?>'; this.style.transform='translateX(0px)';">
                             <div class="d-flex align-items-start">
                                 <div class="me-3">
                                     <i class="<?php echo e($icon); ?> text-<?php echo e($color); ?>"></i>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="mb-1 <?php echo e($notification->read_at ? 'text-muted' : 'fw-bold'); ?>">
+                                    <h6 class="mb-1 <?php echo e($notification->read_at ? 'text-muted' : 'fw-bold'); ?>" style="font-size: 1.1rem; color: #2c3e50;">
                                         <?php echo e($title); ?>
 
                                     </h6>
-                                    <p class="mb-1 text-muted"><?php echo e($message); ?></p>
-                                    <small class="text-muted"><?php echo e($notification->created_at->diffForHumans()); ?></small>
+                                    <p class="mb-1" style="color: #555; font-size: 0.95rem; line-height: 1.4;"><?php echo e($message); ?></p>
+                                    <small class="text-muted" style="font-size: 0.8rem;"><?php echo e($notification->created_at->diffForHumans()); ?></small>
                                 </div>
                                 <div class="d-flex align-items-center">
                                     <?php if(!$notification->read_at): ?>
-                                        <div class="badge bg-<?php echo e($color); ?> rounded-pill me-2">New</div>
+                                        <div class="badge bg-<?php echo e($color); ?> rounded-pill me-2" style="font-size: 0.7rem;">New</div>
                                     <?php endif; ?>
                                     <?php if($isClickable): ?>
-                                        <i class="fas fa-external-link-alt text-muted"></i>
+                                        <div class="d-flex align-items-center text-primary" style="font-size: 0.8rem;">
+                                            <i class="fas fa-external-link-alt me-1"></i>
+                                            <span>Click to view</span>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 <?php else: ?>
-                    <div class="text-center py-5">
+                    <div class="text-center py-5" style="background: #f8f9fa; border-radius: 8px; margin: 2rem 0;">
                         <i class="fas fa-bell-slash text-muted" style="font-size: 3rem;"></i>
                         <h5 class="text-muted mt-3">No notifications yet</h5>
-                        <p class="text-muted">You'll receive notifications when your event status changes</p>
+                        <p class="text-muted">You'll receive notifications when your order status changes</p>
                     </div>
                 <?php endif; ?>
+            </div>
             </div>
         </div>
     </div>
@@ -136,14 +142,36 @@ function markAllAsRead() {
 }
 
 function handleNotificationClick(notificationId, actionUrl) {
+    // Add visual feedback
+    const notificationItem = document.querySelector(`[data-notification-id="${notificationId}"]`);
+    if (notificationItem) {
+        notificationItem.style.backgroundColor = '#d4edda';
+        notificationItem.style.borderLeft = '4px solid #28a745';
+    }
+    
     // Mark notification as read first
     markNotificationAsRead(notificationId);
     
     // Then navigate if there's an action URL
     if (actionUrl) {
+        // Show loading indicator
+        if (notificationItem) {
+            const clickIndicator = notificationItem.querySelector('.text-primary');
+            if (clickIndicator) {
+                clickIndicator.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Opening...';
+            }
+        }
+        
         setTimeout(() => {
             window.location.href = actionUrl;
-        }, 500);
+        }, 300);
+    } else {
+        // If no action URL, just mark as read
+        setTimeout(() => {
+            if (notificationItem) {
+                notificationItem.style.backgroundColor = '#f8f9fa';
+            }
+        }, 1000);
     }
 }
 

@@ -43,5 +43,7 @@
 <div class="container-fluid py-4">
     @yield('content')
 </div>
+<!-- Auto Capitalization Script -->
+<script src="{{ asset('js/auto-capitalization.js') }}"></script>
 </body>
 </html> 

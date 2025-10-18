@@ -34,7 +34,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-top: 110px;
+            padding-top: 80px;
         }
 
         .navbar {
@@ -264,20 +264,26 @@
                 </div>
             </div>
         </nav>
-        <main class="py-4 flex-grow-1">
+        <main class="py-2 flex-grow-1">
             <div class="container-fluid">
                 <?php if(auth()->guard()->check()): ?>
                 <?php echo $__env->yieldContent('content'); ?>
                 <?php endif; ?>
             </div>
         </main>
+        
+        <!-- Alert Component -->
+        <?php echo $__env->make('components.alert', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+        
         <?php
             $hideFooterOnRoutes = [
                 'customer.account.index',
                 'customer.address_book.index',
                 'customer.account.change_password',
                 'customer.orders.index',
+                'customer.orders.show',
                 'customer.trackOrders.page',
+                'customer.checkout.*',
             ];
         ?>
         <?php if (! (request()->routeIs($hideFooterOnRoutes))): ?>
@@ -430,5 +436,9 @@
             }
         });
     </script>
+    
+    <!-- Auto Capitalization Script -->
+    <script src="<?php echo e(asset('js/auto-capitalization.js')); ?>"></script>
+    <?php echo $__env->yieldContent('scripts'); ?>
 </body>
 </html> <?php /**PATH C:\xampp\htdocs\JJ_Flowershop_Capstone\resources\views/layouts/customer_app.blade.php ENDPATH**/ ?>

@@ -11,6 +11,8 @@ use App\Models\User;
 use App\Models\PendingInventoryChange;
 use App\Models\PendingInventoryAddition;
 use App\Models\InventoryLog;
+use App\Models\PendingProductChange;
+use App\Services\ProductAvailabilityService;
 use Illuminate\Support\Facades\Schema;
 use App\Services\OrderStatusService;
 use Illuminate\Http\Request;
@@ -44,7 +46,7 @@ class ClerkController extends Controller
             $query->where('category', $request->category);
         }
 
-        $products = $query->latest()->get();
+        $products = $query->latest()->paginate(20); // 20 products per page
         $promotedProducts = Product::orderBy('created_at', 'desc')->take(3)->get();
         
         return view('clerk.products.index', compact('products', 'promotedProducts'));
@@ -58,6 +60,57 @@ class ClerkController extends Controller
             ->where('status', true)
             ->get();
         return view('clerk.inventory.index', compact('products'));
+    }
+
+    public function checkApprovalStatus() {
+        try {
+            $userId = auth()->id();
+            
+            if (!$userId) {
+                return response()->json(['error' => 'User not authenticated'], 401);
+            }
+            
+            // Check if there are any pending inventory changes for this clerk
+            $pendingChanges = \App\Models\PendingInventoryChange::where('submitted_by', $userId)
+                ->where('status', 'pending')
+                ->exists();
+                
+            // Check if there are any pending inventory additions for this clerk
+            $pendingAdditions = \App\Models\PendingInventoryAddition::where('submitted_by', $userId)
+                ->where('status', 'pending')
+                ->exists();
+                
+            // Check if there are any pending product changes for this clerk
+            $pendingProductChanges = \App\Models\PendingProductChange::where('requested_by', $userId)
+                ->where('status', 'pending')
+                ->exists();
+            
+            // Check if there are any rejected changes
+            $rejectedChanges = \App\Models\PendingInventoryChange::where('submitted_by', $userId)
+                ->where('status', 'rejected')
+                ->exists() ||
+                \App\Models\PendingInventoryAddition::where('submitted_by', $userId)
+                ->where('status', 'rejected')
+                ->exists() ||
+                \App\Models\PendingProductChange::where('requested_by', $userId)
+                ->where('status', 'rejected')
+                ->exists();
+            
+            // If no pending changes exist, it means they've been approved
+            $approved = !$pendingChanges && !$pendingAdditions && !$pendingProductChanges;
+            
+            return response()->json([
+                'approved' => $approved,
+                'rejected' => $rejectedChanges,
+                'pending_changes' => $pendingChanges,
+                'pending_additions' => $pendingAdditions,
+                'pending_product_changes' => $pendingProductChanges,
+                'user_id' => $userId
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error checking approval status: ' . $e->getMessage());
+            return response()->json(['error' => 'Server error: ' . $e->getMessage()], 500);
+        }
     }
 
     public function storeProduct(Request $request) {
@@ -336,17 +389,38 @@ class ClerkController extends Controller
               ->where('is_approved', true)
               ->whereIn('category', $includeCategories);
         
+        // Add search functionality
+        if ($request->has('search') && $request->search !== '') {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->has('min_price') && $request->min_price !== '') {
+            $query->where('price', '>=', $request->min_price);
+        }
+
+        if ($request->has('max_price') && $request->max_price !== '') {
+            $query->where('price', '<=', $request->max_price);
+        }
+
         // Sort products by newest first
         $query->orderBy('created_at', 'desc');
         
-        $products = $query->get();
+        $products = $query->paginate(20); // Use pagination instead of get()
         $promotedProducts = \App\Models\CatalogProduct::where('status', true)
                                               ->where('is_approved', true)
                                               ->whereIn('category', $includeCategories)
                                               ->orderBy('created_at', 'desc')
                                               ->take(3)->get();
         
-        return view('clerk.product_catalog.index', compact('products', 'promotedProducts'));
+        // Check availability for all products
+        $availabilityService = new ProductAvailabilityService();
+        $productIds = $products->pluck('id')->toArray();
+        $promotedProductIds = $promotedProducts->pluck('id')->toArray();
+        
+        $productAvailability = $availabilityService->getBulkCatalogAvailability($productIds);
+        $promotedProductAvailability = $availabilityService->getBulkCatalogAvailability($promotedProductIds);
+        
+        return view('clerk.product_catalog.index', compact('products', 'promotedProducts', 'productAvailability', 'promotedProductAvailability'));
     }
 
     public function updateCatalogProduct(Request $request, $id)
@@ -359,40 +433,55 @@ class ClerkController extends Controller
             'category' => 'required|string|in:Bouquets,Packages,Gifts',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
+            'reason' => 'required|string|max:500',
         ]);
 
         // Handle image upload
+        $imagePath = null;
         if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($product->image) {
-                \Storage::disk('public')->delete($product->image);
-            }
-            $newImagePath = $request->file('image')->store('catalog_products', 'public');
-            $validated['image'] = $newImagePath;
+            $imagePath = $request->file('image')->store('catalog_products', 'public');
+        }
+
+        // Prepare changes data
+        $changes = [
+            'name' => $validated['name'],
+            'price' => $validated['price'],
+            'category' => $validated['category'],
+            'description' => $validated['description'],
+        ];
+
+        if ($imagePath) {
+            $changes['image'] = $imagePath;
         }
 
         // Handle compositions
         if ($request->has('compositions')) {
-            // Delete existing compositions
-            $product->compositions()->delete();
-            
-            // Add new compositions
+            $compositions = [];
             foreach ($request->compositions as $composition) {
                 if (!empty($composition['component_id']) && !empty($composition['quantity']) && !empty($composition['unit'])) {
-                    $product->compositions()->create([
+                    $compositions[] = [
                         'component_id' => $composition['component_id'],
                         'component_name' => $composition['component_name'],
                         'category' => $composition['category'],
                         'quantity' => $composition['quantity'],
                         'unit' => $composition['unit'],
-                    ]);
+                    ];
                 }
             }
+            $changes['compositions'] = $compositions;
         }
 
-        $product->update($validated);
+        // Create pending change request
+        PendingProductChange::create([
+            'product_id' => $product->id,
+            'requested_by' => auth()->id(),
+            'action' => 'edit',
+            'changes' => $changes,
+            'reason' => $validated['reason'],
+            'status' => 'pending',
+        ]);
 
-        return redirect()->route('clerk.product_catalog.index')->with('success', 'Product updated successfully!');
+        return redirect()->route('clerk.product_catalog.index')->with('success', 'Product change request submitted for admin approval!');
     }
 
     /**
@@ -439,10 +528,19 @@ class ClerkController extends Controller
 
     public function destroyProduct($id)
     {
-        $product = \App\Models\Product::findOrFail($id);
-        if ($product->image) { \Storage::disk('public')->delete($product->image); }
-        $product->delete();
-        return redirect()->route('clerk.product_catalog.index')->with('success', 'Product deleted successfully!');
+        $product = CatalogProduct::findOrFail($id);
+        
+        // Create pending change request for deletion
+        PendingProductChange::create([
+            'product_id' => $product->id,
+            'requested_by' => auth()->id(),
+            'action' => 'delete',
+            'changes' => null,
+            'reason' => request('reason', 'Product deletion requested'),
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('clerk.product_catalog.index')->with('success', 'Product deletion request submitted for admin approval!');
     }
 
     public function destroyProductByForm(\Illuminate\Http\Request $request)

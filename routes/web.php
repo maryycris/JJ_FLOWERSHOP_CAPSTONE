@@ -110,6 +110,12 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\AdminMiddleware::class])-
     Route::get('/api/products/{product}/details', [\App\Http\Controllers\Admin\AdminProductApprovalController::class, 'getProductDetails'])->name('api.products.details');
     Route::get('/api/products/{product}/compositions', [\App\Http\Controllers\Admin\AdminProductApprovalController::class, 'getProductCompositions'])->name('api.products.compositions');
     
+    // Pending Product Changes Routes
+    Route::get('/api/product-changes/pending', [ProductController::class, 'getPendingProductChanges'])->name('api.product-changes.pending');
+    Route::post('/api/product-changes/{id}/approve', [ProductController::class, 'approveProductChange'])->name('api.product-changes.approve');
+    Route::post('/api/product-changes/{id}/reject', [ProductController::class, 'rejectProductChange'])->name('api.product-changes.reject');
+    Route::get('/api/product-changes/{id}/details', [ProductController::class, 'getProductChangeDetails'])->name('api.product-changes.details');
+    
     // Admin Walk-in Order Creation (must be before resource routes)
     Route::get('orders/create', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'createWalkinOrder'])->name('orders.create');
     // Delivery-only walk-in order (mirrors customer checkout)
@@ -153,7 +159,6 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\AdminMiddleware::class])-
     
     // Admin Inventory Management
     Route::get('/inventory', [\App\Http\Controllers\Admin\AdminInventoryController::class, 'index'])->name('inventory.index');
-    Route::get('/inventory/reports', [\App\Http\Controllers\Admin\AdminInventoryController::class, 'reports'])->name('inventory.reports');
     Route::post('/inventory/approve/{id}', [\App\Http\Controllers\Admin\AdminInventoryController::class, 'approve'])->name('admin.inventory.approve');
     Route::post('/inventory/reject/{id}', [\App\Http\Controllers\Admin\AdminInventoryController::class, 'reject'])->name('admin.inventory.reject');
     
@@ -222,7 +227,19 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\AdminMiddleware::class])-
                 if (\Illuminate\Support\Facades\Schema::hasColumn('products','status')) { $product->status = true; }
                 $product->save();
             } elseif ($log->action === 'edit' && $log->product) {
-                foreach ((array)($log->new_values ?? []) as $k=>$v) { $log->product->{$k} = $v; }
+                // Sanitize the new values to handle empty strings
+                $sanitizedValues = [];
+                foreach ((array)($log->new_values ?? []) as $k => $v) {
+                    // Convert empty strings to 0 for numeric fields
+                    if (in_array($k, ['qty_consumed', 'qty_damaged', 'qty_sold', 'stock', 'reorder_min', 'reorder_max', 'price', 'cost_price'])) {
+                        $sanitizedValues[$k] = $v === '' || $v === null ? 0 : (int)$v;
+                    } else {
+                        $sanitizedValues[$k] = $v;
+                    }
+                }
+                foreach ($sanitizedValues as $k => $v) { 
+                    $log->product->{$k} = $v; 
+                }
                 $log->product->save();
             } elseif ($log->action === 'delete' && $log->product) {
                 $log->product->delete();
@@ -270,6 +287,7 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\AdminMiddleware::class])-
     Route::post('/inventory', [ProductController::class, 'storeInventory'])->name('inventory.store');
     Route::put('/inventory/product/{product}', [ProductController::class, 'updateInventory'])->name('inventory.update');
     Route::delete('/inventory/product/{product}', [ProductController::class, 'destroyInventory'])->name('inventory.destroy');
+    Route::post('/inventory/approve-changes', [\App\Http\Controllers\Admin\AdminInventoryController::class, 'approveChanges'])->name('inventory.approve-changes');
     Route::get('/profile', [AdminController::class, 'editProfile'])->name('profile');
     Route::post('/profile', [AdminController::class, 'updateProfile'])->name('profile.update');
     Route::post('/profile/password', [AdminController::class, 'updatePassword'])->name('profile.password');
@@ -318,6 +336,7 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\ClerkMiddleware::class])-
     Route::delete('products/{product}/images/delete', [ProductController::class, 'deleteImage'])->name('products.deleteImage');
     Route::delete('products/{product}/images/delete-all', [ProductController::class, 'deleteAllImages'])->name('products.deleteAllImages');
     Route::get('/inventory', [ClerkController::class, 'inventory'])->name('clerk.inventory.index');
+    Route::get('/inventory/check-approval-status', [ClerkController::class, 'checkApprovalStatus'])->name('clerk.inventory.check-approval');
     Route::post('/inventory', [ClerkController::class, 'storeInventory'])->name('inventory.store');
     Route::put('/inventory/{product}', [ClerkController::class, 'updateProduct'])->name('inventory.update');
     Route::delete('/inventory/{product}', [\App\Http\Controllers\ProductController::class, 'destroyInventory'])->name('inventory.destroy');
@@ -325,6 +344,9 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\ClerkMiddleware::class])-
     Route::get('/orders', [ClerkController::class, 'orders'])->name('orders.index');
     // Clerk Walk-in Delivery page
     Route::get('orders/walkin/delivery', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'createWalkinDelivery'])->name('orders.walkin.delivery');
+    // Explicit store endpoint for walk-in order flow (mirrors admin route)
+    Route::post('orders/store', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'storeWalkinOrder'])->name('orders.store');
+    
     Route::resource('orders', OrderController::class)->except(['index']);
     Route::post('orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve');
     Route::post('orders/{order}/validate', [OrderController::class, 'validateOrder'])->name('orders.validate');
@@ -546,6 +568,52 @@ Route::get('/customer/payment/callback/{order}', [App\Http\Controllers\Customer\
 
 // PayMongo webhook route (no authentication required)
 Route::post('/webhooks/paymongo', [App\Http\Controllers\PayMongoWebhookController::class, 'handle'])->name('webhooks.paymongo');
+
+// Debug route for reviews
+Route::get('/debug-reviews', function() {
+    echo "=== DEBUG REVIEWS ===\n";
+    
+    // Check Order 215
+    $order = App\Models\Order::find(215);
+    if ($order) {
+        echo "Order 215 found\n";
+        $products = $order->products;
+        echo "Products in order: " . $products->count() . "\n";
+        foreach($products as $p) {
+            echo "Product: " . $p->id . " - " . $p->name . " | Reviewed: " . ($p->pivot->reviewed ? 'Yes' : 'No') . " | Rating: " . $p->pivot->rating . "\n";
+        }
+    } else {
+        echo "Order 215 not found\n";
+    }
+    
+    // Check Blooming Charm CatalogProduct
+    $catalogProduct = App\Models\CatalogProduct::where('name', 'like', '%Blooming Charm%')->first();
+    if ($catalogProduct) {
+        echo "\nCatalogProduct found: " . $catalogProduct->id . " - " . $catalogProduct->name . "\n";
+        $product = App\Models\Product::where('name', $catalogProduct->name)
+            ->where('price', $catalogProduct->price)
+            ->where('category', $catalogProduct->category)
+            ->first();
+        if ($product) {
+            echo "Corresponding Product: " . $product->id . " - " . $product->name . "\n";
+            $reviews = DB::table('order_product')
+                ->where('product_id', $product->id)
+                ->where('reviewed', true)
+                ->get();
+            echo "Reviews for this Product: " . $reviews->count() . "\n";
+            foreach($reviews as $review) {
+                echo "Review: Rating " . $review->rating . " - " . $review->review_comment . "\n";
+            }
+        } else {
+            echo "No corresponding Product found\n";
+        }
+    } else {
+        echo "CatalogProduct not found\n";
+    }
+    
+    echo "==================\n";
+    return "Check the output above";
+});
 
 Route::post('phone/send-code', [PhoneAuthController::class, 'sendCode']);
 Route::post('phone/verify-code', [PhoneAuthController::class, 'verifyCode']);

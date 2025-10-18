@@ -1,13 +1,13 @@
 @extends('layouts.customer_app')
 
 @section('content')
-<div class="container-fluid py-1" style="min-height: 100vh;">
+<div class="container-fluid py-1" style="min-height: 90vh;">
     <div class="row justify-content-center">
-        <div class="col-10 col-xl-10"><div class="row justify-content-center">
-            <div class="py-4" style="background: #CDE7C9; min-height: 100vh; border-radius: 1rem;">
+        <div class="col-10 col-xl-9"><div class="row justify-content-center">
+            <div class="py-4" style="background: #CDE7C9; min-height: 78vh; border-radius: 1rem;">
                 <div class="row h-100">
         <!-- Left Panel - Customization -->
-        <div class="col-lg-6" style="background: #CDE7C9; padding: 0.5rem 2rem; overflow-y: auto; max-height: 100vh;">
+        <div class="col-lg-6" style="background: #CDE7C9; padding: 0.5rem 2rem; overflow-y: auto; max-height: 78vh;">
             <div class="h-100 d-flex flex-column">
                 <!-- Header -->
                 <div class="text-center mb-2">
@@ -265,7 +265,7 @@
                         <h6 class="fw-bold text-dark mb-2">Quantity</h6>
                         <div class="input-group" style="max-width: 150px;">
                             <button class="btn btn-outline-secondary btn-sm" type="button" id="decreaseQty">-</button>
-                            <input type="number" class="form-control form-control-sm text-center" id="quantity" name="quantity" value="1" min="1" max="10">
+                            <input type="number" class="form-control form-control-sm text-center" id="window.quantity" name="window.quantity" value="1" min="1" max="10">
                             <button class="btn btn-outline-secondary btn-sm" type="button" id="increaseQty">+</button>
                         </div>
                     </div>
@@ -328,93 +328,71 @@
                 
                 <!-- Price Summary -->
                 <div class="mt-3 w-100" style="max-width: 360px;">
-                    <div class="price-summary bg-white rounded-3 shadow-sm p-3" id="priceSummaryCard" style="cursor: pointer;">
+                    <div class="price-summary bg-white rounded-3 shadow-sm p-3" id="priceSummaryCard" style="cursor: pointer; transition: all 0.3s ease;" data-bs-toggle="modal" data-bs-target="#priceSummaryModal">
                         <div class="fw-semibold text-dark mb-2">Price Summary</div>
                         <hr class="my-2">
-                        
-                    <!-- Collapsed Total (shown when collapsed) -->
-                    <div class="d-flex justify-content-between fw-bold" id="collapsedTotal">
+                        <div class="d-flex justify-content-between fw-bold">
                         <span>Total:</span>
                         <span id="totalPrice">₱0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
                     </div>
                         
-                        <!-- Collapsible Details -->
-                        <div id="priceDetails" style="display: none; overflow: hidden; transition: all 0.3s ease;">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div class="d-flex align-items-center gap-2">
+<!-- Price Summary Modal -->
+<div class="modal fade" id="priceSummaryModal" tabindex="-1" aria-labelledby="priceSummaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="priceSummaryModalLabel">Price Summary Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
                                 <span>Wrappers:</span>
-                                <select class="form-select form-select-sm" style="width: auto; min-width: 80px;" id="wrapperColorSelect">
-                                    <option value="">Color</option>
-                                    <option value="white">White</option>
-                                    <option value="pink">Pink</option>
-                                    <option value="green">Green</option>
-                                    <option value="brown">Brown</option>
-                                    <option value="gold">Gold</option>
-                                </select>
+                                        <span id="modalWrapperPrice">₱0.00</span>
                             </div>
-                            <span id="wrapperPrice">₱0.00</span>
-                        </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div class="d-flex align-items-center gap-2">
                                     <span>Fresh Flowers:</span>
-                                    <select class="form-select form-select-sm" style="width: auto; min-width: 80px;" id="freshFlowerColorSelect">
-                                        <option value="">Color</option>
-                                        <option value="red">Red</option>
-                                        <option value="pink">Pink</option>
-                                        <option value="white">White</option>
-                                        <option value="yellow">Yellow</option>
-                                        <option value="purple">Purple</option>
-                                    </select>
-                                    <input type="number" class="form-control form-control-sm text-center" id="freshFlowerQty" value="1" min="1" max="10" style="width: 50px; padding: 4px; font-size: 12px;">
+                                <input type="number" class="form-control form-control-sm text-center" id="modalFreshFlowerQty" value="1" min="1" max="10" style="width: 50px; padding: 4px; font-size: 12px;">
                                 </div>
-                                <span id="focalFlower1Price">₱0.00</span>
+                            <span id="modalFocalFlower1Price">₱0.00</span>
                             </div>
-                            <div class="d-flex justify-content-between mb-2">
+                        <div class="d-flex justify-content-between mb-3">
                                 <span>Greenery:</span>
-                                <span id="greeneryPrice">₱0.00</span>
+                            <span id="modalGreeneryPrice">₱0.00</span>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div class="d-flex align-items-center gap-2">
                                     <span>Artificial Flowers:</span>
-                                    <select class="form-select form-select-sm" style="width: auto; min-width: 80px;" id="artificialFlowerColorSelect">
-                                        <option value="">Color</option>
-                                        <option value="white">White</option>
-                                        <option value="pink">Pink</option>
-                                        <option value="yellow">Yellow</option>
-                                        <option value="purple">Purple</option>
-                                        <option value="blue">Blue</option>
-                                    </select>
-                                    <input type="number" class="form-control form-control-sm text-center" id="artificialFlowerQty" value="1" min="1" max="10" style="width: 50px; padding: 4px; font-size: 12px;">
+                                <input type="number" class="form-control form-control-sm text-center" id="modalArtificialFlowerQty" value="1" min="1" max="10" style="width: 50px; padding: 4px; font-size: 12px;">
                                 </div>
-                                <span id="fillerPrice">₱0.00</span>
+                            <span id="modalFillerPrice">₱0.00</span>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
                                     <span>Ribbons:</span>
-                                    <select class="form-select form-select-sm" style="width: auto; min-width: 80px;" id="ribbonColorSelect">
-                                        <option value="">Color</option>
-                                        <option value="red">Red</option>
-                                        <option value="pink">Pink</option>
-                                        <option value="white">White</option>
-                                        <option value="gold">Gold</option>
-                                        <option value="silver">Silver</option>
-                                        <option value="green">Green</option>
-                                    </select>
+                            <span id="modalRibbonPrice">₱0.00</span>
                                 </div>
-                                <span id="ribbonPrice">₱0.00</span>
-                            </div>
-                    <div class="d-flex justify-content-between mb-2">
+                        <div class="d-flex justify-content-between mb-3">
                         <span>Assembly Fee:</span>
-                        <span id="assemblyFeePrice">₱0.00</span>
+                            <span id="modalAssemblyFeePrice">₱0.00</span>
                     </div>
-                            <hr class="my-2">
-                            <div class="d-flex justify-content-between fw-bold">
+                        <hr class="my-3">
+                        <div class="d-flex justify-content-between fw-bold fs-5">
                                 <span>Total:</span>
-                                <span id="expandedTotalPrice">₱0.00</span>
+                            <span id="modalTotalPrice">₱0.00</span>
                             </div>
                         </div>
                     </div>
                 </div>
+            <div class="modal-footer">
+                <!-- Buttons removed for cleaner UI -->
             </div>
         </div>
     </div>
@@ -429,7 +407,7 @@
 <input type="hidden" id="selectedFiller" name="filler" value="">
 <input type="hidden" id="selectedRibbon" name="ribbon" value="">
 <input type="hidden" id="selectedMoneyAmount" name="money_amount" value="">
-<input type="hidden" id="bouquetType" name="bouquet_type" value="regular">
+<input type="hidden" id="window.bouquetType" name="bouquet_type" value="regular">
 
 @endsection
 
@@ -489,7 +467,14 @@
 }
 
 .price-summary {
-    border: 1px solid #e9ecef;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.price-summary:hover {
+    border-color: #8ACB88;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
 }
 
 .btn-outline-success:hover {
@@ -623,26 +608,158 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let selectedWrapper = null;
-    let selectedFocalFlower1 = null;
-    let selectedFocalFlower2 = null;
-    let selectedFocalFlower3 = null;
-    let selectedGreenery = null;
-    let selectedFiller = null;
-    let selectedRibbon = null;
-    let selectedMoneyAmount = null;
-    let selectedOccasion = null;
-    let quantity = 1;
-    let bouquetType = 'regular'; // 'regular' or 'money'
+// Define updatePrice function globally BEFORE DOMContentLoaded
+window.updatePrice = function() {
+    let total = 0;
+
+    // Add occasion base price if selected
+    if (window.selectedOccasion) {
+        total += window.selectedOccasion.basePrice;
+    }
+
+    // Wrapper price
+    const wrapperPrice = window.selectedWrapper ? window.selectedWrapper.price : 0;
+    total += wrapperPrice * window.quantity;
+
+    // Focal flower 1 price (with individual window.quantity)
+    const focal1Price = window.selectedFocalFlower1 ? window.selectedFocalFlower1.price : 0;
+    const freshFlowerQty = window.freshFlowerQuantity || 1;
+    total += focal1Price * freshFlowerQty * window.quantity;
+
+    // Focal flower 2 price (removed from UI)
+    const focal2Price = window.selectedFocalFlower2 ? window.selectedFocalFlower2.price : 0;
+    total += focal2Price * window.quantity;
+
+    // Focal flower 3 price (removed from UI)
+    const focal3Price = 0;
+
+    // Greenery price
+    const greeneryPrice = window.selectedGreenery ? window.selectedGreenery.price : 0;
+    total += greeneryPrice * window.quantity;
+
+    // Filler price (with individual window.quantity)
+    const fillerPrice = window.selectedFiller ? window.selectedFiller.price : 0;
+    const artificialFlowerQty = window.artificialFlowerQuantity || 1;
+    total += fillerPrice * artificialFlowerQty * window.quantity;
+
+    // Ribbon price
+    const ribbonPrice = window.selectedRibbon ? window.selectedRibbon.price : 0;
+    total += ribbonPrice * window.quantity;
+
+    // Money amount price (if money bouquet)
+    if (window.window.bouquetType === 'money') {
+        const moneyPrice = window.selectedMoneyAmount ? window.selectedMoneyAmount.price : 0;
+        total += moneyPrice * window.quantity;
+    }
+
+    // Add assembly fee only if there are materials selected
+    const hasMaterials = window.selectedWrapper || window.selectedFocalFlower1 || window.selectedGreenery || window.selectedFiller || window.selectedRibbon || window.selectedMoneyAmount;
+    if (hasMaterials) {
+        const assemblyFeeTotal = window.assemblyFee * window.quantity;
+        total += assemblyFeeTotal;
+    }
+
+    // Update the main price summary total
+    const totalPriceElement = document.getElementById('totalPrice');
+    if (totalPriceElement) {
+        totalPriceElement.textContent = `₱${total.toFixed(2)}`;
+    }
+
+    // Update modal prices if modal exists
+    if (typeof window.updateModalPrices === 'function') {
+        window.updateModalPrices();
+    }
+
+    // Debug: Log total price and selected items
+    console.log('=== PRICE UPDATE DEBUG ===');
+    console.log('Total price updated:', total.toFixed(2));
+    console.log('Selected wrapper:', window.selectedWrapper);
+    console.log('Selected focal flower 1:', window.selectedFocalFlower1);
+    console.log('Selected greenery:', window.selectedGreenery);
+    console.log('Selected filler:', window.selectedFiller);
+    console.log('Selected ribbon:', window.selectedRibbon);
+    console.log('Quantity:', window.quantity);
+    console.log('Assembly fee:', window.assemblyFee);
+    console.log('Has materials:', hasMaterials);
+    console.log('========================');
+};
+
+// Define updateModalPrices function globally
+window.updateModalPrices = function() {
+    // Calculate individual prices for modal display
+    const wrapperPrice = window.selectedWrapper ? window.selectedWrapper.price * window.quantity : 0;
+    const modalWrapperPrice = document.getElementById('modalWrapperPrice');
+    if (modalWrapperPrice) {
+        modalWrapperPrice.textContent = `₱${wrapperPrice.toFixed(2)}`;
+    }
     
-    const assemblyFee = 150;
+    const focal1Price = window.selectedFocalFlower1 ? window.selectedFocalFlower1.price : 0;
+    const freshFlowerQty = window.freshFlowerQuantity || 1;
+    const focalFlower1Total = focal1Price * freshFlowerQty * window.quantity;
+    const modalFocalFlower1Price = document.getElementById('modalFocalFlower1Price');
+    if (modalFocalFlower1Price) {
+        modalFocalFlower1Price.textContent = `₱${focalFlower1Total.toFixed(2)}`;
+    }
+    
+    const greeneryPrice = window.selectedGreenery ? window.selectedGreenery.price * window.quantity : 0;
+    const modalGreeneryPrice = document.getElementById('modalGreeneryPrice');
+    if (modalGreeneryPrice) {
+        modalGreeneryPrice.textContent = `₱${greeneryPrice.toFixed(2)}`;
+    }
+    
+    const fillerPrice = window.selectedFiller ? window.selectedFiller.price : 0;
+    const artificialFlowerQty = window.artificialFlowerQuantity || 1;
+    const fillerTotal = fillerPrice * artificialFlowerQty * window.quantity;
+    const modalFillerPrice = document.getElementById('modalFillerPrice');
+    if (modalFillerPrice) {
+        modalFillerPrice.textContent = `₱${fillerTotal.toFixed(2)}`;
+    }
+    
+    const ribbonPrice = window.selectedRibbon ? window.selectedRibbon.price * window.quantity : 0;
+    const modalRibbonPrice = document.getElementById('modalRibbonPrice');
+    if (modalRibbonPrice) {
+        modalRibbonPrice.textContent = `₱${ribbonPrice.toFixed(2)}`;
+    }
+    
+    const hasMaterials = window.selectedWrapper || window.selectedFocalFlower1 || window.selectedGreenery || window.selectedFiller || window.selectedRibbon || window.selectedMoneyAmount;
+        const assemblyFeeTotal = hasMaterials ? window.assemblyFee * window.quantity : 0;
+    const modalAssemblyFeePrice = document.getElementById('modalAssemblyFeePrice');
+    if (modalAssemblyFeePrice) {
+        modalAssemblyFeePrice.textContent = `₱${assemblyFeeTotal.toFixed(2)}`;
+    }
+    
+    const totalPrice = document.getElementById('totalPrice');
+    const modalTotalPrice = document.getElementById('modalTotalPrice');
+    if (totalPrice && modalTotalPrice) {
+        modalTotalPrice.textContent = totalPrice.textContent;
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Make all variables global so they can be accessed by the global functions
+    window.selectedWrapper = null;
+    window.selectedFocalFlower1 = null;
+    window.selectedFocalFlower2 = null;
+    window.selectedFocalFlower3 = null;
+    window.selectedGreenery = null;
+    window.selectedFiller = null;
+    window.selectedRibbon = null;
+    window.selectedMoneyAmount = null;
+    window.selectedOccasion = null;
+    window.window.quantity = 1;
+    window.window.bouquetType = 'regular'; // 'regular' or 'money'
+    
+    window.assemblyFee = 150;
+    
+    // Initialize modal quantities
+    window.freshFlowerQuantity = 1;
+    window.artificialFlowerQuantity = 1;
     
     // Bouquet type toggle handlers
     // Bouquet type toggle handlers - commented out since buttons were removed
     /*
     document.getElementById('regularBouquetBtn').addEventListener('click', function() {
-        bouquetType = 'regular';
+        window.bouquetType = 'regular';
         this.classList.remove('btn-outline-success');
         this.classList.add('btn-success');
         document.getElementById('moneyBouquetBtn').classList.remove('btn-success');
@@ -661,9 +778,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('moneyBouquetPreview').style.display = 'none';
         
         // Reset money selection
-        selectedMoneyAmount = null;
+        window.selectedMoneyAmount = null;
         document.getElementById('selectedMoneyAmount').value = '';
-        document.getElementById('bouquetType').value = 'regular';
+        document.getElementById('window.bouquetType').value = 'regular';
         
         updatePrice();
     });
@@ -671,7 +788,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     /*
     document.getElementById('moneyBouquetBtn').addEventListener('click', function() {
-        bouquetType = 'money';
+        window.bouquetType = 'money';
         this.classList.remove('btn-outline-success');
         this.classList.add('btn-success');
         document.getElementById('regularBouquetBtn').classList.remove('btn-success');
@@ -690,15 +807,15 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('moneyBouquetPreview').style.display = 'flex';
         
         // Reset other selections
-        selectedWrapper = null;
-        selectedFocalFlower1 = null;
-        selectedFocalFlower2 = null;
-        selectedFocalFlower3 = null;
-        selectedGreenery = null;
-        selectedFiller = null;
-        selectedRibbon = null;
+        window.selectedWrapper = null;
+        window.selectedFocalFlower1 = null;
+        window.selectedFocalFlower2 = null;
+        window.selectedFocalFlower3 = null;
+        window.selectedGreenery = null;
+        window.selectedFiller = null;
+        window.selectedRibbon = null;
         
-        document.getElementById('bouquetType').value = 'money';
+        document.getElementById('window.bouquetType').value = 'money';
         
         updatePrice();
     });
@@ -718,14 +835,14 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('selected');
             this.querySelector('.money-check').style.display = 'block';
             
-            selectedMoneyAmount = {
+            window.selectedMoneyAmount = {
                 amount: this.dataset.amount,
                 price: parseFloat(this.dataset.price)
             };
             
-            document.getElementById('selectedMoneyAmount').value = selectedMoneyAmount.amount;
+            document.getElementById('selectedMoneyAmount').value = window.selectedMoneyAmount.amount;
             updateMoneyPreview();
-            updatePrice();
+            window.updatePrice();
         });
     });
     */
@@ -744,7 +861,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('selected');
             this.querySelector('.occasion-check').style.display = 'block';
             
-            selectedOccasion = {
+            window.selectedOccasion = {
                 slug: this.dataset.occasion,
                 theme: this.dataset.theme,
                 flowers: JSON.parse(this.dataset.flowers),
@@ -756,7 +873,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Auto-select recommended components based on occasion
             autoSelectOccasionComponents();
             updatePreview();
-            updatePrice();
+            window.updatePrice();
         });
     });
     */
@@ -770,16 +887,16 @@ document.addEventListener('DOMContentLoaded', function() {
         clearAllSelections();
         
         // Auto-select recommended wrapper
-        if (selectedOccasion.wrappers && selectedOccasion.wrappers.length > 0) {
-            const wrapperOption = document.querySelector(`[data-wrapper="${selectedOccasion.wrappers[0]}"]`);
+        if (window.selectedOccasion.wrappers && window.selectedOccasion.wrappers.length > 0) {
+            const wrapperOption = document.querySelector(`[data-wrapper="${window.selectedOccasion.wrappers[0]}"]`);
             if (wrapperOption) {
                 wrapperOption.click();
             }
         }
         
         // Auto-select recommended flowers
-        if (selectedOccasion.flowers && selectedOccasion.flowers.length > 0) {
-            selectedOccasion.flowers.slice(0, 3).forEach((flower, index) => {
+        if (window.selectedOccasion.flowers && window.selectedOccasion.flowers.length > 0) {
+            window.selectedOccasion.flowers.slice(0, 3).forEach((flower, index) => {
                 const flowerOption = document.querySelector(`[data-flower="${flower}"]`);
                 if (flowerOption) {
                     flowerOption.click();
@@ -788,8 +905,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Auto-select recommended ribbon
-        if (selectedOccasion.ribbons && selectedOccasion.ribbons.length > 0) {
-            const ribbonOption = document.querySelector(`[data-ribbon="${selectedOccasion.ribbons[0]}"]`);
+        if (window.selectedOccasion.ribbons && window.selectedOccasion.ribbons.length > 0) {
+            const ribbonOption = document.querySelector(`[data-ribbon="${window.selectedOccasion.ribbons[0]}"]`);
             if (ribbonOption) {
                 ribbonOption.click();
             }
@@ -807,13 +924,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        selectedWrapper = null;
-        selectedFocalFlower1 = null;
-        selectedFocalFlower2 = null;
-        selectedFocalFlower3 = null;
-        selectedGreenery = null;
-        selectedFiller = null;
-        selectedRibbon = null;
+        window.selectedWrapper = null;
+        window.selectedFocalFlower1 = null;
+        window.selectedFocalFlower2 = null;
+        window.selectedFocalFlower3 = null;
+        window.selectedGreenery = null;
+        window.selectedFiller = null;
+        window.selectedRibbon = null;
     }
     
     // Wrapper selection handlers
@@ -824,7 +941,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // If already selected, unselect it
                 this.classList.remove('selected');
                 this.querySelector('.wrapper-check').style.display = 'none';
-                selectedWrapper = null;
+                window.selectedWrapper = null;
                 document.getElementById('selectedWrapper').value = '';
             } else {
                 // Remove previous selection
@@ -837,29 +954,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.classList.add('selected');
                 this.querySelector('.wrapper-check').style.display = 'block';
                 
-                selectedWrapper = {
+                window.selectedWrapper = {
                     name: this.dataset.wrapper,
                     price: parseFloat(this.dataset.price)
                 };
                 
-                document.getElementById('selectedWrapper').value = selectedWrapper.name;
+                document.getElementById('selectedWrapper').value = window.selectedWrapper.name;
             }
             
             updatePreview();
-            updatePrice();
+            window.updatePrice();
         });
     });
     
     // Focal Flower 1 selection handlers
     document.querySelectorAll('.focal1-option').forEach(option => {
         option.addEventListener('click', function() {
+            console.log('Focal flower clicked:', this.dataset.flower, 'Price:', this.dataset.price);
+            
             // Check if this option is already selected
             if (this.classList.contains('selected')) {
                 // If already selected, unselect it
                 this.classList.remove('selected');
                 this.querySelector('.flower-check').style.display = 'none';
-                selectedFocalFlower1 = null;
+                window.selectedFocalFlower1 = null;
                 document.getElementById('selectedFocalFlower1').value = '';
+                console.log('Focal flower unselected');
             } else {
                 // Remove previous selection
                 document.querySelectorAll('.focal1-option').forEach(opt => {
@@ -871,16 +991,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.classList.add('selected');
                 this.querySelector('.flower-check').style.display = 'block';
                 
-                selectedFocalFlower1 = {
+                window.selectedFocalFlower1 = {
                     name: this.dataset.flower,
                     price: parseFloat(this.dataset.price)
                 };
                 
-                document.getElementById('selectedFocalFlower1').value = selectedFocalFlower1.name;
+                document.getElementById('selectedFocalFlower1').value = window.selectedFocalFlower1.name;
+                console.log('Focal flower selected:', selectedFocalFlower1);
             }
             
             updatePreview();
-            updatePrice();
+            window.updatePrice();
         });
     });
     
@@ -897,14 +1018,14 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('selected');
             this.querySelector('.flower-check').style.display = 'block';
             
-            selectedFocalFlower2 = {
+            window.selectedFocalFlower2 = {
                 name: this.dataset.flower,
                 price: parseFloat(this.dataset.price)
             };
             
-            document.getElementById('selectedFocalFlower2').value = selectedFocalFlower2.name;
+            document.getElementById('selectedFocalFlower2').value = window.selectedFocalFlower2.name;
             updatePreview();
-            updatePrice();
+            window.updatePrice();
         });
     }); */
     
@@ -921,14 +1042,14 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('selected');
             this.querySelector('.flower-check').style.display = 'block';
             
-            selectedFocalFlower3 = {
+            window.selectedFocalFlower3 = {
                 name: this.dataset.flower,
                 price: parseFloat(this.dataset.price)
             };
             
             document.getElementById('selectedFocalFlower3').value = selectedFocalFlower3.name;
             updatePreview();
-            updatePrice();
+            window.updatePrice();
         });
     }); */
     
@@ -940,7 +1061,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // If already selected, unselect it
                 this.classList.remove('selected');
                 this.querySelector('.greenery-check').style.display = 'none';
-                selectedGreenery = null;
+                window.selectedGreenery = null;
                 document.getElementById('selectedGreenery').value = '';
             } else {
                 // Remove previous selection
@@ -953,16 +1074,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.classList.add('selected');
                 this.querySelector('.greenery-check').style.display = 'block';
                 
-                selectedGreenery = {
+                window.selectedGreenery = {
                     name: this.dataset.greenery,
                     price: parseFloat(this.dataset.price)
                 };
                 
-                document.getElementById('selectedGreenery').value = selectedGreenery.name;
+                document.getElementById('selectedGreenery').value = window.selectedGreenery.name;
             }
             
             updatePreview();
-            updatePrice();
+            window.updatePrice();
         });
     });
     
@@ -974,7 +1095,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // If already selected, unselect it
                 this.classList.remove('selected');
                 this.querySelector('.filler-check').style.display = 'none';
-                selectedFiller = null;
+                window.selectedFiller = null;
                 document.getElementById('selectedFiller').value = '';
             } else {
                 // Remove previous selection
@@ -987,16 +1108,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.classList.add('selected');
                 this.querySelector('.filler-check').style.display = 'block';
                 
-                selectedFiller = {
+                window.selectedFiller = {
                     name: this.dataset.filler,
                     price: parseFloat(this.dataset.price)
                 };
                 
-                document.getElementById('selectedFiller').value = selectedFiller.name;
+                document.getElementById('selectedFiller').value = window.selectedFiller.name;
             }
             
             updatePreview();
-            updatePrice();
+            window.updatePrice();
         });
     });
     
@@ -1008,7 +1129,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // If already selected, unselect it
                 this.classList.remove('selected');
                 this.querySelector('.ribbon-check').style.display = 'none';
-                selectedRibbon = null;
+                window.selectedRibbon = null;
                 document.getElementById('selectedRibbon').value = '';
             } else {
                 // Remove previous selection
@@ -1021,43 +1142,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.classList.add('selected');
                 this.querySelector('.ribbon-check').style.display = 'block';
                 
-                selectedRibbon = {
+                window.selectedRibbon = {
                     name: this.dataset.ribbon,
                     price: parseFloat(this.dataset.price)
                 };
                 
-                document.getElementById('selectedRibbon').value = selectedRibbon.name;
+                document.getElementById('selectedRibbon').value = window.selectedRibbon.name;
             }
             
             updatePreview();
-            updatePrice();
+            window.updatePrice();
         });
     });
     
     // Quantity controls
     document.getElementById('decreaseQty').addEventListener('click', function() {
-        if (quantity > 1) {
-            quantity--;
-            document.getElementById('quantity').value = quantity;
-            updatePrice();
+        if (window.quantity > 1) {
+            window.quantity--;
+            document.getElementById('window.quantity').value = window.quantity;
+            window.updatePrice();
         }
     });
     
     document.getElementById('increaseQty').addEventListener('click', function() {
-        if (quantity < 10) {
-            quantity++;
-            document.getElementById('quantity').value = quantity;
-            updatePrice();
+        if (window.quantity < 10) {
+            window.quantity++;
+            document.getElementById('window.quantity').value = window.quantity;
+            window.updatePrice();
         }
     });
     
-    document.getElementById('quantity').addEventListener('change', function() {
-        quantity = Math.max(1, Math.min(10, parseInt(this.value) || 1));
-        this.value = quantity;
+    document.getElementById('window.quantity').addEventListener('change', function() {
+        window.quantity = Math.max(1, Math.min(10, parseInt(this.value) || 1));
+        this.value = window.quantity;
         updatePrice();
     });
     
-    // Fresh Flower quantity controls
+    // Fresh Flower window.quantity controls
     document.getElementById('freshFlowerQty').addEventListener('change', function(e) {
         e.stopPropagation();
         let qty = Math.max(1, Math.min(10, parseInt(this.value) || 1));
@@ -1069,7 +1190,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.stopPropagation();
     });
     
-    // Artificial Flower quantity controls
+    // Artificial Flower window.quantity controls
     document.getElementById('artificialFlowerQty').addEventListener('change', function(e) {
         e.stopPropagation();
         let qty = Math.max(1, Math.min(10, parseInt(this.value) || 1));
@@ -1132,21 +1253,21 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectedMoneyAmount) {
             const moneyAmountElement = document.querySelector('.money-amount');
             if (moneyAmountElement) {
-                moneyAmountElement.textContent = `₱${selectedMoneyAmount.amount}`;
+                moneyAmountElement.textContent = `₱${window.selectedMoneyAmount.amount}`;
             }
         }
     }
     
     // Update preview (cooking-style layered approach)
     function updatePreview() {
-        if (bouquetType === 'money') {
+        if (window.bouquetType === 'money') {
             updateMoneyPreview();
             return;
         }
         
         // Hide default message when materials are selected
         const defaultMessage = document.getElementById('defaultMessage');
-        const hasMaterials = selectedWrapper || selectedFocalFlower1 || selectedGreenery || selectedFiller || selectedRibbon;
+        const hasMaterials = window.selectedWrapper || window.selectedFocalFlower1 || window.selectedGreenery || window.selectedFiller || selectedRibbon;
         
         if (hasMaterials) {
             defaultMessage.style.display = 'none';
@@ -1156,9 +1277,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update wrapper layer
         const wrapperLayer = document.getElementById('wrapperLayer');
-        if (selectedWrapper) {
+        if (window.selectedWrapper) {
             wrapperLayer.style.opacity = '1';
-            wrapperLayer.style.background = getWrapperStyle(selectedWrapper.name);
+            wrapperLayer.style.background = getWrapperStyle(window.selectedWrapper.name);
             wrapperLayer.classList.add('ingredient-added');
             const imgW = document.getElementById('imgWrapper');
             if (imgW) {
@@ -1180,7 +1301,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const greeneryLayer = document.getElementById('greeneryLayer');
         if (selectedGreenery) {
             greeneryLayer.style.opacity = '0.8';
-            greeneryLayer.style.background = getGreeneryStyle(selectedGreenery.name);
+            greeneryLayer.style.background = getGreeneryStyle(window.selectedGreenery.name);
             greeneryLayer.classList.add('ingredient-added');
             const imgG = document.getElementById('imgGreenery');
             if (imgG) {
@@ -1199,7 +1320,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const fillerLayer = document.getElementById('fillerLayer');
         if (selectedFiller) {
             fillerLayer.style.opacity = '0.6';
-            fillerLayer.style.background = getFillerStyle(selectedFiller.name);
+            fillerLayer.style.background = getFillerStyle(window.selectedFiller.name);
             fillerLayer.classList.add('ingredient-added');
             const imgF = document.getElementById('imgFiller');
             if (imgF) {
@@ -1218,7 +1339,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const ribbonLayer = document.getElementById('ribbonLayer');
         if (selectedRibbon) {
             ribbonLayer.style.opacity = '0.9';
-            ribbonLayer.style.background = getRibbonStyle(selectedRibbon.name);
+            ribbonLayer.style.background = getRibbonStyle(window.selectedRibbon.name);
             ribbonLayer.classList.add('ingredient-added');
             const imgR = document.getElementById('imgRibbon');
             if (imgR) {
@@ -1314,74 +1435,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return styles[ribbonName] || 'linear-gradient(90deg, #dc143c, #b22222)';
     }
     
-        // Update price
-        function updatePrice() {
-            let total = 0;
-            
-            // Add occasion base price if selected
-            if (selectedOccasion) {
-                total += selectedOccasion.basePrice;
-            }
-        
-        // Wrapper price
-        const wrapperPrice = selectedWrapper ? selectedWrapper.price : 0;
-        document.getElementById('wrapperPrice').textContent = `₱${(wrapperPrice * quantity).toFixed(2)}`;
-        total += wrapperPrice * quantity;
-        
-        // Focal flower 1 price (with individual quantity)
-        const focal1Price = selectedFocalFlower1 ? selectedFocalFlower1.price : 0;
-        const freshFlowerQty = parseInt(document.getElementById('freshFlowerQty').value) || 1;
-        document.getElementById('focalFlower1Price').textContent = `₱${(focal1Price * freshFlowerQty * quantity).toFixed(2)}`;
-        total += focal1Price * freshFlowerQty * quantity;
-        
-        // Focal flower 2 price (removed from UI)
-        const focal2Price = selectedFocalFlower2 ? selectedFocalFlower2.price : 0;
-        total += focal2Price * quantity;
-        
-        // Focal flower 3 price (removed from UI)
-        const focal3Price = 0;
-        
-        // Greenery price
-        const greeneryPrice = selectedGreenery ? selectedGreenery.price : 0;
-        document.getElementById('greeneryPrice').textContent = `₱${(greeneryPrice * quantity).toFixed(2)}`;
-        total += greeneryPrice * quantity;
-        
-        // Filler price (with individual quantity)
-        const fillerPrice = selectedFiller ? selectedFiller.price : 0;
-        const artificialFlowerQty = parseInt(document.getElementById('artificialFlowerQty').value) || 1;
-        document.getElementById('fillerPrice').textContent = `₱${(fillerPrice * artificialFlowerQty * quantity).toFixed(2)}`;
-        total += fillerPrice * artificialFlowerQty * quantity;
-        
-        // Ribbon price
-        const ribbonPrice = selectedRibbon ? selectedRibbon.price : 0;
-        document.getElementById('ribbonPrice').textContent = `₱${(ribbonPrice * quantity).toFixed(2)}`;
-        total += ribbonPrice * quantity;
-        
-        // Money amount price (if money bouquet)
-        if (bouquetType === 'money') {
-            const moneyPrice = selectedMoneyAmount ? selectedMoneyAmount.price : 0;
-            total += moneyPrice * quantity;
-        }
-        
-        // Add assembly fee only if there are materials selected
-        const hasMaterials = selectedWrapper || selectedFocalFlower1 || selectedGreenery || selectedFiller || selectedRibbon || selectedMoneyAmount;
-        if (hasMaterials) {
-            const assemblyFeeTotal = assemblyFee * quantity;
-            document.getElementById('assemblyFeePrice').textContent = `₱${assemblyFeeTotal.toFixed(2)}`;
-            total += assemblyFeeTotal;
-        } else {
-            document.getElementById('assemblyFeePrice').textContent = `₱0.00`;
-        }
-        
-        document.getElementById('totalPrice').textContent = `₱${total.toFixed(2)}`;
-        document.getElementById('expandedTotalPrice').textContent = `₱${total.toFixed(2)}`;
-    }
     
     // Form submission
     document.getElementById('bouquetCustomizationForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        if (bouquetType === 'money') {
+        if (window.bouquetType === 'money') {
             if (!selectedMoneyAmount) {
                 alert('Please select a money amount for your money bouquet.');
                 return;
@@ -1396,18 +1455,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Prepare form data
         const formData = new FormData();
         formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-        formData.append('bouquet_type', bouquetType);
-        formData.append('quantity', quantity);
+        formData.append('bouquet_type', window.bouquetType);
+        formData.append('window.quantity', window.quantity);
         
-        if (bouquetType === 'money') {
-            formData.append('money_amount', selectedMoneyAmount.amount);
+        if (window.bouquetType === 'money') {
+            formData.append('money_amount', window.selectedMoneyAmount.amount);
         } else {
-            if (selectedWrapper) formData.append('wrapper', selectedWrapper.name);
-            if (selectedFocalFlower1) formData.append('focal_flower_1', selectedFocalFlower1.name);
+            if (window.selectedWrapper) formData.append('wrapper', window.selectedWrapper.name);
+            if (selectedFocalFlower1) formData.append('focal_flower_1', window.selectedFocalFlower1.name);
             
-            if (selectedGreenery) formData.append('greenery', selectedGreenery.name);
-            if (selectedFiller) formData.append('filler', selectedFiller.name);
-            if (selectedRibbon) formData.append('ribbon', selectedRibbon.name);
+            if (selectedGreenery) formData.append('greenery', window.selectedGreenery.name);
+            if (selectedFiller) formData.append('filler', window.selectedFiller.name);
+            if (selectedRibbon) formData.append('ribbon', window.selectedRibbon.name);
         }
         
         // Submit to backend
@@ -1433,7 +1492,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add to cart functionality
     document.getElementById('addToCartBtn').addEventListener('click', function() {
-        if (bouquetType === 'money') {
+        if (window.bouquetType === 'money') {
             if (!selectedMoneyAmount) {
                 alert('Please select a money amount for your money bouquet.');
                 return;
@@ -1448,18 +1507,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Prepare form data
         const formData = new FormData();
         formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-        formData.append('bouquet_type', bouquetType);
-        formData.append('quantity', quantity);
+        formData.append('bouquet_type', window.bouquetType);
+        formData.append('window.quantity', window.quantity);
         
-        if (bouquetType === 'money') {
-            formData.append('money_amount', selectedMoneyAmount.amount);
+        if (window.bouquetType === 'money') {
+            formData.append('money_amount', window.selectedMoneyAmount.amount);
         } else {
-            if (selectedWrapper) formData.append('wrapper', selectedWrapper.name);
-            if (selectedFocalFlower1) formData.append('focal_flower_1', selectedFocalFlower1.name);
+            if (window.selectedWrapper) formData.append('wrapper', window.selectedWrapper.name);
+            if (selectedFocalFlower1) formData.append('focal_flower_1', window.selectedFocalFlower1.name);
             
-            if (selectedGreenery) formData.append('greenery', selectedGreenery.name);
-            if (selectedFiller) formData.append('filler', selectedFiller.name);
-            if (selectedRibbon) formData.append('ribbon', selectedRibbon.name);
+            if (selectedGreenery) formData.append('greenery', window.selectedGreenery.name);
+            if (selectedFiller) formData.append('filler', window.selectedFiller.name);
+            if (selectedRibbon) formData.append('ribbon', window.selectedRibbon.name);
         }
         
         // Submit to backend
@@ -1488,27 +1547,155 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Price Summary Toggle
-    const priceSummaryCard = document.getElementById('priceSummaryCard');
-    const priceDetails = document.getElementById('priceDetails');
-    const collapsedTotal = document.getElementById('collapsedTotal');
-    const expandedTotalPrice = document.getElementById('expandedTotalPrice');
     
-    priceSummaryCard.addEventListener('click', function() {
-        if (priceDetails.style.display === 'none' || priceDetails.style.display === '') {
-            // Expand: show details, hide collapsed total
-            priceDetails.style.display = 'block';
-            collapsedTotal.style.display = 'none';
-        } else {
-            // Collapse: hide details, show collapsed total
-            priceDetails.style.display = 'none';
-            collapsedTotal.style.display = 'flex';
+    function syncModalValues() {
+        // Sync fresh flower quantity
+        const modalFreshFlowerQty = document.getElementById('modalFreshFlowerQty');
+        if (modalFreshFlowerQty) {
+            modalFreshFlowerQty.value = window.freshFlowerQuantity || 1;
         }
-    });
+        
+        // Sync artificial flower quantity
+        const modalArtificialFlowerQty = document.getElementById('modalArtificialFlowerQty');
+        if (modalArtificialFlowerQty) {
+            modalArtificialFlowerQty.value = window.artificialFlowerQuantity || 1;
+        }
+        
+        // Update modal prices
+        window.updateModalPrices();
+    }
 
         // Initialize
-        updatePrice();
+        window.updatePrice();
     });
+    
+    // Sync modal when modal is shown
+    document.getElementById('priceSummaryModal').addEventListener('show.bs.modal', function() {
+        if (typeof syncModalValues === 'function') {
+            syncModalValues();
+        }
+        
+        // Add event listeners to modal window.quantity inputs
+        setupModalQuantityListeners();
+    });
+    
+    function setupModalQuantityListeners() {
+        // Remove existing listeners first to prevent duplicates
+        const modalFreshFlowerQty = document.getElementById('modalFreshFlowerQty');
+        if (modalFreshFlowerQty) {
+            // Clone the element to remove all event listeners
+            const newElement = modalFreshFlowerQty.cloneNode(true);
+            modalFreshFlowerQty.parentNode.replaceChild(newElement, modalFreshFlowerQty);
+        }
+        
+        const modalArtificialFlowerQty = document.getElementById('modalArtificialFlowerQty');
+        if (modalArtificialFlowerQty) {
+            // Clone the element to remove all event listeners
+            const newElement = modalArtificialFlowerQty.cloneNode(true);
+            modalArtificialFlowerQty.parentNode.replaceChild(newElement, modalArtificialFlowerQty);
+        }
+        
+        // Fresh Flower window.quantity in modal
+        const freshFlowerQty = document.getElementById('modalFreshFlowerQty');
+        if (freshFlowerQty) {
+            freshFlowerQty.addEventListener('change', function() {
+                const qty = Math.max(1, Math.min(10, parseInt(this.value) || 1));
+                this.value = qty;
+                
+                // Store the window.quantity in a global variable for price calculation
+                window.freshFlowerQuantity = qty;
+                
+                // Recalculate price
+                if (typeof window.updatePrice === 'function') {
+                    window.updatePrice();
+                }
+                console.log('Modal fresh flower window.quantity changed to:', qty);
+            });
+            
+            // Add input event for real-time updates
+            freshFlowerQty.addEventListener('input', function() {
+                console.log('Modal fresh flower input event triggered, value:', this.value);
+                const qty = Math.max(1, Math.min(10, parseInt(this.value) || 1));
+                console.log('Processed window.quantity:', qty);
+                
+                // Store the window.quantity in a global variable for price calculation
+                window.freshFlowerQuantity = qty;
+                console.log('Set fresh flower window.quantity to:', qty);
+                
+                // Recalculate price
+                console.log('Calling updatePrice()...');
+                if (typeof window.updatePrice === 'function') {
+                    window.updatePrice();
+        } else {
+                    console.error('updatePrice function not found!');
+                }
+            });
+            
+            // Add click event to prevent event bubbling
+            freshFlowerQty.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+        
+        // Artificial Flower window.quantity in modal
+        const artificialFlowerQty = document.getElementById('modalArtificialFlowerQty');
+        if (artificialFlowerQty) {
+            artificialFlowerQty.addEventListener('change', function() {
+                const qty = Math.max(1, Math.min(10, parseInt(this.value) || 1));
+                this.value = qty;
+                
+                // Store the window.quantity in a global variable for price calculation
+                window.artificialFlowerQuantity = qty;
+                
+                // Recalculate price
+                if (typeof window.updatePrice === 'function') {
+                    window.updatePrice();
+                }
+                console.log('Modal artificial flower window.quantity changed to:', qty);
+            });
+            
+            // Add input event for real-time updates
+            artificialFlowerQty.addEventListener('input', function() {
+                console.log('Modal artificial flower input event triggered, value:', this.value);
+                const qty = Math.max(1, Math.min(10, parseInt(this.value) || 1));
+                console.log('Processed artificial flower window.quantity:', qty);
+                
+                // Store the window.quantity in a global variable for price calculation
+                window.artificialFlowerQuantity = qty;
+                console.log('Set artificial flower window.quantity to:', qty);
+                
+                // Recalculate price
+                console.log('Calling updatePrice() for artificial flowers...');
+                if (typeof window.updatePrice === 'function') {
+                    window.updatePrice();
+                } else {
+                    console.error('updatePrice function not found!');
+                }
+            });
+            
+            // Add click event to prevent event bubbling
+            artificialFlowerQty.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+        
+    }
+    
+    // Add hover effects to price summary card
+    const priceSummaryCard = document.getElementById('priceSummaryCard');
+    if (priceSummaryCard) {
+        priceSummaryCard.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+        });
+        
+        priceSummaryCard.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 0.5rem 1rem rgba(0,0,0,0.05)';
+        });
+    }
+    
+    
 
     // Add cooking animation effect
     function addCookingAnimation(element) {
@@ -1521,11 +1708,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update material counters (like flower arrangement)
     function updateIngredientCounters() {
         const counters = {
-            wrapper: selectedWrapper ? 1 : 0,
-            flowers: (selectedFocalFlower1 ? 1 : 0),
-            greenery: selectedGreenery ? 1 : 0,
-            filler: selectedFiller ? 1 : 0,
-            ribbon: selectedRibbon ? 1 : 0
+            wrapper: window.selectedWrapper ? 1 : 0,
+            flowers: (window.selectedFocalFlower1 ? 1 : 0),
+            greenery: window.selectedGreenery ? 1 : 0,
+            filler: window.selectedFiller ? 1 : 0,
+            ribbon: window.selectedRibbon ? 1 : 0
         };
         
         // Update visual counters if they exist
@@ -1547,12 +1734,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const materials = [];
         
-        if (selectedWrapper) materials.push(`📦 ${selectedWrapper.name}`);
-        if (selectedFocalFlower1) materials.push(`🌸 ${selectedFocalFlower1.name}`);
+        if (window.selectedWrapper) materials.push(`📦 ${window.selectedWrapper.name}`);
+        if (selectedFocalFlower1) materials.push(`🌸 ${window.selectedFocalFlower1.name}`);
         
-        if (selectedGreenery) materials.push(`🌿 ${selectedGreenery.name}`);
-        if (selectedFiller) materials.push(`✨ ${selectedFiller.name}`);
-        if (selectedRibbon) materials.push(`🎀 ${selectedRibbon.name}`);
+        if (selectedGreenery) materials.push(`🌿 ${window.selectedGreenery.name}`);
+        if (selectedFiller) materials.push(`✨ ${window.selectedFiller.name}`);
+        if (selectedRibbon) materials.push(`🎀 ${window.selectedRibbon.name}`);
         
         if (materials.length === 0) {
             recipeSummary.innerHTML = '<em>Select materials to see your arrangement components...</em>';

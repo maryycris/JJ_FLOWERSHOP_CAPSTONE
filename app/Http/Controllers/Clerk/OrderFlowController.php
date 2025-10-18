@@ -119,9 +119,10 @@ class OrderFlowController extends Controller
 
     public function walkinCreateInvoice(Order $order)
     {
-        // Skip invoice page and go directly to validate
-        $route = auth()->user()->role === 'admin' ? 'admin.orders.walkin.validate' : 'clerk.orders.walkin.validate';
-        return redirect()->route($route, $order);
+        // Show the Create Invoice page
+        $order->load('user', 'products', 'delivery');
+        $view = auth()->user()->role === 'admin' ? 'admin.orders.walkin.create_invoice' : 'clerk.orders.walkin.create_invoice';
+        return view($view, compact('order'));
     }
 
     public function walkinInvoice(Order $order)
@@ -190,8 +191,9 @@ class OrderFlowController extends Controller
             $orderStatusService->assignDriver($order, $driver->id, auth()->id());
         }
         
-        $route = auth()->user()->role === 'admin' ? 'admin.orders.walkin.done' : 'clerk.orders.walkin.done';
-        return redirect()->route($route, $order);
+        // After validation/assignment, redirect back to orders list
+        $route = auth()->user()->role === 'admin' ? 'admin.orders.index' : 'clerk.orders.index';
+        return redirect()->route($route)->with('success', 'Order validated and invoice sent successfully!');
     }
 
     public function walkinDone(Order $order)
@@ -312,13 +314,36 @@ class OrderFlowController extends Controller
         $requestUrl = request()->url();
         $refererUrl = request()->header('referer');
         
-        if (str_contains($requestUrl, '/admin/') || str_contains($refererUrl, '/admin/')) {
-            $route = 'admin.orders.walkin.invoice';
-        } else {
-            $route = 'clerk.orders.walkin.invoice';
-        }
+        \Log::info('Order created successfully', [
+            'order_id' => $order->id,
+            'requestUrl' => $requestUrl,
+            'refererUrl' => $refererUrl
+        ]);
         
-        return redirect()->route($route, $order);
+        if (str_contains($requestUrl, '/admin/') || str_contains($refererUrl, '/admin/')) {
+            // Admin has a GET route named 'orders.walkin.invoice'
+            $route = 'admin.orders.walkin.invoice';
+            \Log::info('Redirecting to admin route', ['route' => $route, 'order_id' => $order->id]);
+        } else {
+            // Clerk should be redirected to the GET screen to create invoice
+            // Route name: clerk.orders.walkin.create_invoice
+            $route = 'clerk.orders.walkin.create_invoice';
+            \Log::info('Redirecting to clerk route', ['route' => $route, 'order_id' => $order->id]);
+        }
+
+        try {
+            $redirectUrl = route($route, $order);
+            \Log::info('Redirect URL generated', ['url' => $redirectUrl]);
+            return redirect($redirectUrl);
+        } catch (\Exception $e) {
+            \Log::error('Redirect failed', [
+                'route' => $route,
+                'order_id' => $order->id,
+                'error' => $e->getMessage()
+            ]);
+            // Fallback redirect
+            return redirect()->back()->with('error', 'Order created but redirect failed. Order ID: ' . $order->id);
+        }
     }
 }
 

@@ -68,12 +68,54 @@
 .dropdown-option:last-child {
     border-bottom: none;
 }
+
+/* Search bar styling */
+#productSearchInput {
+    border: 2px solid #e9ecef;
+    border-radius: 8px 0 0 8px;
+    transition: border-color 0.3s ease;
+    background: #fff;
+}
+
+#productSearchInput:focus {
+    border-color: #27ae60;
+    box-shadow: 0 0 0 0.2rem rgba(39, 174, 96, 0.25);
+}
+
+#productFilterBtn {
+    border: 2px solid #27ae60;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    transition: all 0.3s ease;
+}
+
+#productFilterBtn:hover {
+    background-color: #27ae60;
+    color: white;
+}
+
+#productFilterPanel {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+#productFilterMin, #productFilterMax {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+}
+
+#productFilterMin:focus, #productFilterMax:focus {
+    border-color: #27ae60;
+    box-shadow: 0 0 0 0.2rem rgba(39, 174, 96, 0.25);
+}
 </style>
 @endpush
 @section('content')
-<div class="container-fluid py-4" style="background: #f6faf6; min-height: 100vh;">
+<div class="container-fluid py-2" style="background: #f6faf6; min-height: 100vh;">
     <!-- Promoted Products Carousel -->
-    <div class="mx-auto mb-4" style="max-width: 1000px;">
+    <div class="mx-auto mb-2" style="max-width: 1000px;">
         <div class="bg-white rounded-4 shadow-sm p-2 position-relative">
             <div id="promotedCarousel" class="carousel slide" data-bs-ride="carousel">
                 <button class="btn btn-link text-success p-0 position-absolute" data-bs-target="#promotedCarousel" data-bs-slide="prev" style="left: 8px; top: 50%; transform: translateY(-50%); z-index: 10;"><i class="bi bi-chevron-left" style="font-size: 2rem;"></i></button>
@@ -94,6 +136,36 @@
         </div>
     </div>
 
+    <!-- Search Bar -->
+    <div class="mx-auto mb-3" style="max-width: 1000px;">
+        <div class="p-0">
+            <div class="row g-2 align-items-end">
+                <div class="col-12">
+                    <div class="input-group">
+                        <input id="productSearchInput" type="text" class="form-control" placeholder="Search products..." aria-label="Search" value="{{ request('search', '') }}">
+                        <button id="productFilterBtn" class="btn btn-outline-success" type="button" title="Filter"><i class="bi bi-funnel"></i></button>
+                    </div>
+                </div>
+            </div>
+            <!-- Advanced Filter Panel -->
+            <div id="productFilterPanel" class="card p-3 mt-2" style="display:none;">
+                <div class="row g-2 align-items-end">
+                    <div class="col-6 col-md-3">
+                        <label class="form-label mb-1">Min Price</label>
+                        <input id="productFilterMin" type="number" min="0" class="form-control form-control-sm" placeholder="0" value="{{ request('min_price', '') }}">
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label mb-1">Max Price</label>
+                        <input id="productFilterMax" type="number" min="0" class="form-control form-control-sm" placeholder="9999" value="{{ request('max_price', '') }}">
+                    </div>
+                    <div class="col-12 col-md-6 d-flex gap-2">
+                        <button id="productFilterApply" class="btn btn-success btn-sm">Apply Filters</button>
+                        <button id="productFilterClear" class="btn btn-outline-secondary btn-sm">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Product Tabs -->
     <div class="mx-auto mb-3" style="max-width: 1000px; background: transparent;">
@@ -136,20 +208,28 @@
                     </div>
                 </div>
                 @forelse($products as $product)
+                @php
+                    $isOutOfStock = isset($productAvailability[$product->id]) && !$productAvailability[$product->id]['can_fulfill'];
+                @endphp
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="card product-card h-100" data-product-id="{{ $product->id }}">
-                        <img src="{{ $product->image ? asset('storage/' . $product->image) : '/images/logo.png' }}" class="card-img-top product-image" alt="{{ $product->name }}">
+                    <div class="card product-card h-100" data-product-id="{{ $product->id }}" style="{{ $isOutOfStock ? 'opacity: 0.6;' : '' }}">
+                        <div style="position: relative;">
+                            <img src="{{ $product->image ? asset('storage/' . $product->image) : '/images/logo.png' }}" class="card-img-top product-image" alt="{{ $product->name }}" style="{{ $isOutOfStock ? 'filter: grayscale(50%);' : '' }}">
+                            @if($isOutOfStock)
+                                <div class="position-absolute" style="top: 10px; right: 10px; z-index: 10;">
+                                    <span class="badge bg-danger" style="font-size: 0.7rem;">OUT OF STOCK</span>
+                                </div>
+                            @endif
+                        </div>
                         <div class="card-body text-center">
                             <h6 class="card-title mb-1">{{ $product->name }}</h6>
                             <p class="card-text product-price">₱{{ number_format($product->price, 2) }}</p>
+                            @if($isOutOfStock)
+                                <small class="text-muted" style="font-size: 0.7rem;">Insufficient materials</small>
+                            @endif
                             <div class="d-flex justify-content-center gap-2 mt-2">
                                 <button class="btn btn-sm action-btn edit-btn edit-product-btn" title="Edit" data-bs-toggle="modal" data-bs-target="#editProductModal" data-product='{{ json_encode($product) }}'><i class="bi bi-pencil-square"></i></button>
-                                <form action="/clerk/product_catalog/{{ $product->id }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this product and its images?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <input type="hidden" name="id" value="{{ $product->id }}">
-                                    <button type="submit" class="btn btn-sm action-btn delete-btn" title="Delete"><i class="bi bi-trash3"></i></button>
-                                </form>
+                                <button class="btn btn-sm action-btn delete-btn" title="Delete" data-bs-toggle="modal" data-bs-target="#deleteProductModal" data-product='{{ json_encode($product) }}'><i class="bi bi-trash3"></i></button>
                             </div>
                         </div>
                     </div>
@@ -160,6 +240,16 @@
                 </div>
                 @endforelse
             </div>
+            
+            <!-- Pagination -->
+            @if($products->hasPages())
+                <x-pagination 
+                    :currentPage="$products->currentPage()" 
+                    :totalPages="$products->lastPage()" 
+                    :baseUrl="request()->url()" 
+                    :queryParams="request()->query()" 
+                />
+            @endif
         </div>
     </div>
 
@@ -292,6 +382,11 @@
                             <label for="edit_product_description" class="form-label">Description</label>
                             <textarea class="form-control" id="edit_product_description" name="description" rows="3" placeholder="Product description..."></textarea>
                         </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_reason" class="form-label">Reason for Change <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="edit_reason" name="reason" rows="2" placeholder="Please explain why you want to make these changes..." required></textarea>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -324,7 +419,126 @@
         </div>
     </div>
 
+    <!-- Delete Product Modal -->
+    <div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteProductModalLabel">Delete Product</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
+                <form id="deleteProductForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> This action will submit a deletion request for admin approval. The product will not be deleted immediately.
+                        </div>
+                        <div class="mb-3">
+                            <label for="delete_product_name" class="form-label">Product Name</label>
+                            <input type="text" class="form-control" id="delete_product_name" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="delete_reason" class="form-label">Reason for Deletion <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="delete_reason" name="reason" rows="3" placeholder="Please explain why you want to delete this product..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Submit Deletion Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Search Functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('productSearchInput');
+    const filterBtn = document.getElementById('productFilterBtn');
+    const filterPanel = document.getElementById('productFilterPanel');
+    const filterApply = document.getElementById('productFilterApply');
+    const filterClear = document.getElementById('productFilterClear');
+    const filterMin = document.getElementById('productFilterMin');
+    const filterMax = document.getElementById('productFilterMax');
+
+    function performSearch() {
+        const searchTerm = searchInput ? searchInput.value : '';
+        // preserve current category from URL (default to 'all')
+        const currentUrl = new URL(window.location.href);
+        const category = (currentUrl.searchParams.get('category') || 'all');
+        const minPrice = filterMin && filterMin.value ? filterMin.value : '';
+        const maxPrice = filterMax && filterMax.value ? filterMax.value : '';
+
+        // Build URL with search parameters
+        const url = new URL(window.location.href);
+        url.searchParams.set('search', searchTerm);
+        url.searchParams.set('category', category);
+        if (minPrice) url.searchParams.set('min_price', minPrice);
+        if (maxPrice) url.searchParams.set('max_price', maxPrice);
+
+        // Redirect to the same page with search parameters
+        window.location.href = url.toString();
+    }
+
+    function clearFilters() {
+        if (searchInput) searchInput.value = '';
+        if (filterMin) filterMin.value = '';
+        if (filterMax) filterMax.value = '';
+        
+        // Redirect to clean URL
+        const url = new URL(window.location.href);
+        url.searchParams.delete('search');
+        url.searchParams.delete('min_price');
+        url.searchParams.delete('max_price');
+        window.location.href = url.toString();
+    }
+
+    // Event listeners
+    if (filterBtn && filterPanel) {
+        filterBtn.addEventListener('click', function() {
+            filterPanel.style.display = (filterPanel.style.display === 'none' || !filterPanel.style.display) ? 'block' : 'none';
+        });
+        
+        // Close filter panel when clicking outside
+        document.addEventListener('click', function(e){
+            if (filterPanel.style.display === 'block') {
+                const within = filterPanel.contains(e.target) || filterBtn.contains(e.target);
+                if (!within) filterPanel.style.display = 'none';
+            }
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+        // Optional: live typing debounce search
+        clearTimeout(searchInput.__t);
+        searchInput.addEventListener('input', function(){
+            clearTimeout(searchInput.__t);
+            searchInput.__t = setTimeout(performSearch, 400);
+        });
+    }
+
+    if (filterApply) {
+        filterApply.addEventListener('click', function(){
+            performSearch();
+            if (filterPanel) filterPanel.style.display = 'none';
+        });
+    }
+
+    if (filterClear) {
+        filterClear.addEventListener('click', clearFilters);
+    }
+});
+</script>
 @endsection 
 
 @push('styles')
@@ -501,6 +715,19 @@
 
             // Load current compositions
             loadCurrentCompositions(product.id);
+        });
+
+        // Delete Product Modal population
+        var deleteProductModal = document.getElementById('deleteProductModal');
+        deleteProductModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget; // Button that triggered the modal
+            var product = JSON.parse(button.getAttribute('data-product'));
+
+            var form = deleteProductModal.querySelector('#deleteProductForm');
+            form.action = '/clerk/product_catalog/' + product.id;
+
+            deleteProductModal.querySelector('#delete_product_name').value = product.name;
+            deleteProductModal.querySelector('#delete_reason').value = '';
         });
 
     });

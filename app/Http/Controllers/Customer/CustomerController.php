@@ -41,7 +41,7 @@ class CustomerController extends Controller
             $query->where('price', '<=', $request->max_price);
         }
 
-        $products = $query->latest()->get();
+        $products = $query->latest()->paginate(20); // 20 products per page (5 rows of 4 products each)
 
         // Get 5 latest products as promoted products (same filters)
         $promotedProducts = CatalogProduct::select(['id', 'name', 'price', 'image', 'description', 'category', 'status', 'is_approved'])

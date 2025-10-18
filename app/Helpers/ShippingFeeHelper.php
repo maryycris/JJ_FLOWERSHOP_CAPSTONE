@@ -94,12 +94,12 @@ class ShippingFeeHelper
     }
 
     /**
-     * Check if address contains Cordova
+     * Check if address contains Cordova (including common typo "corfova")
      */
     private static function containsCordova($address)
     {
         $address = strtolower($address);
-        return strpos($address, 'cordova') !== false;
+        return strpos($address, 'cordova') !== false || strpos($address, 'corfova') !== false;
     }
 
     /**

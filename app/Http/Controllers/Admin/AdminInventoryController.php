@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\InventoryLog;
+use App\Models\PendingInventoryChange;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -15,6 +16,8 @@ class AdminInventoryController extends Controller
     {
         // Get products for the inventory tab
         $products = Product::orderBy('created_at', 'desc')->get();
+
+        // Admin inventory - no pending changes needed (direct actions only)
 
         // Get pending inventory logs for the inventory logs tab
         $pendingLogs = InventoryLog::with(['product','user'])
@@ -62,43 +65,179 @@ class AdminInventoryController extends Controller
         return response()->json(['count' => $count]);
     }
 
+    
     /**
-     * Show inventory reports
+     * Approve all staged changes (edits and deletions)
      */
-    public function reports(Request $request)
+    public function approveChanges(Request $request)
     {
-        $inventoryService = new \App\Services\InventoryManagementService();
-        
-        // Get summary data
-        $summary = $inventoryService->getInventorySummary();
-        
-        // Get all products for filter
-        $products = Product::orderBy('name')->get();
-        
-        // Build movement history query
-        $movementsQuery = \App\Models\InventoryMovement::with(['product', 'user', 'order'])
-            ->orderBy('created_at', 'desc');
-        
-        // Apply filters
-        if ($request->filled('product_id')) {
-            $movementsQuery->where('product_id', $request->product_id);
+        try {
+            $editedProducts = json_decode($request->edited_products, true) ?? [];
+            $deletedProducts = json_decode($request->deleted_products, true) ?? [];
+            $stagedEdits = json_decode($request->staged_edits, true) ?? [];
+            
+            \Log::info('Admin approving changes:', [
+                'edited_products' => $editedProducts,
+                'deleted_products' => $deletedProducts,
+                'staged_edits' => $stagedEdits
+            ]);
+            
+            DB::beginTransaction();
+            
+            // Process deletions
+            foreach ($deletedProducts as $productId) {
+                $product = Product::find($productId);
+                if ($product) {
+                    $product->delete();
+                    \Log::info("Product deleted: {$product->name} (ID: {$productId})");
+                    
+                    // Mark pending change as approved
+                    PendingInventoryChange::where('product_id', $productId)
+                        ->where('action', 'delete')
+                        ->where('status', 'pending')
+                        ->update(['status' => 'approved', 'reviewed_by' => auth()->id(), 'reviewed_at' => now()]);
+                }
+            }
+            
+            // Process edits
+            foreach ($stagedEdits as $productId => $editData) {
+                $product = Product::find($productId);
+                if ($product) {
+                    // Sanitize the edit data to handle empty strings
+                    $sanitizedData = [];
+                    foreach ($editData as $key => $value) {
+                        // Convert empty strings to 0 for numeric fields
+                        if (in_array($key, ['qty_consumed', 'qty_damaged', 'qty_sold', 'stock', 'reorder_min', 'reorder_max'])) {
+                            $sanitizedData[$key] = $value === '' || $value === null ? 0 : (int)$value;
+                        } else {
+                            $sanitizedData[$key] = $value;
+                        }
+                    }
+                    
+                    $product->update($sanitizedData);
+                    \Log::info("Product updated: {$product->name} (ID: {$productId})", $sanitizedData);
+                    
+                    // Mark pending change as approved
+                    PendingInventoryChange::where('product_id', $productId)
+                        ->where('action', 'edit')
+                        ->where('status', 'pending')
+                        ->update(['status' => 'approved', 'reviewed_by' => auth()->id(), 'reviewed_at' => now()]);
+                }
+            }
+            
+            DB::commit();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'All changes have been approved and saved successfully!',
+                'deleted_count' => count($deletedProducts),
+                'edited_count' => count($stagedEdits)
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error approving changes: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error approving changes: ' . $e->getMessage()
+            ], 500);
         }
-        
-        if ($request->filled('movement_type')) {
-            $movementsQuery->where('movement_type', $request->movement_type);
+    }
+
+    /**
+     * Approve a single pending change
+     */
+    public function approve($id)
+    {
+        try {
+            $change = \App\Models\PendingInventoryChange::findOrFail($id);
+            
+            if ($change->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This change has already been processed'
+                ], 400);
+            }
+            
+            // Update the change status to approved
+            $change->update([
+                'status' => 'approved',
+                'reviewed_by' => auth()->id(),
+                'reviewed_at' => now()
+            ]);
+            
+            // Apply the changes to the actual product
+            if ($change->action === 'edit' && $change->changes) {
+                $product = \App\Models\Product::find($change->product_id);
+                if ($product) {
+                    // Sanitize the changes data to handle empty strings
+                    $sanitizedChanges = [];
+                    foreach ($change->changes as $key => $value) {
+                        // Convert empty strings to 0 for numeric fields
+                        if (in_array($key, ['qty_consumed', 'qty_damaged', 'qty_sold', 'stock', 'reorder_min', 'reorder_max'])) {
+                            $sanitizedChanges[$key] = $value === '' || $value === null ? 0 : (int)$value;
+                        } else {
+                            $sanitizedChanges[$key] = $value;
+                        }
+                    }
+                    
+                    $product->update($sanitizedChanges);
+                }
+            } elseif ($change->action === 'delete') {
+                $product = \App\Models\Product::find($change->product_id);
+                if ($product) {
+                    $product->delete();
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Change approved successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error approving change: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error approving change: ' . $e->getMessage()
+            ], 500);
         }
-        
-        if ($request->filled('date_from')) {
-            $movementsQuery->whereDate('created_at', '>=', $request->date_from);
+    }
+
+    /**
+     * Reject a single pending change
+     */
+    public function reject($id)
+    {
+        try {
+            $change = \App\Models\PendingInventoryChange::findOrFail($id);
+            
+            if ($change->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This change has already been processed'
+                ], 400);
+            }
+            
+            // Update the change status to rejected
+            $change->update([
+                'status' => 'rejected',
+                'reviewed_by' => auth()->id(),
+                'reviewed_at' => now()
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Change rejected successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error rejecting change: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error rejecting change: ' . $e->getMessage()
+            ], 500);
         }
-        
-        if ($request->filled('date_to')) {
-            $movementsQuery->whereDate('created_at', '<=', $request->date_to);
-        }
-        
-        // Paginate results
-        $movements = $movementsQuery->paginate(50);
-        
-        return view('admin.inventory.reports', compact('summary', 'products', 'movements'));
     }
 }

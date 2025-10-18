@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\InventoryMovement;
 use App\Services\OrderStatusService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -31,6 +32,19 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
+        // Inventory movements data for dashboard
+        $totalMovementsToday = InventoryMovement::whereDate('created_at', today())->count();
+        $recentMovements = InventoryMovement::with(['product', 'user', 'order'])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Restock products (low stock)
+        $restockProducts = Product::where('stock', '<=', \DB::raw('reorder_min'))
+            ->where('reorder_min', '>', 0)
+            ->whereNull('deleted_at')
+            ->get();
+
         return view('admin.dashboard', [
             'pendingOrdersCount' => $orderCounts['pending'],
             'approvedOrdersCount' => $orderCounts['approved'],
@@ -40,6 +54,9 @@ class AdminController extends Controller
             'totalProducts' => $totalProducts,
             'totalCustomers' => $totalCustomers,
             'popularProducts' => $popularProducts,
+            'totalMovementsToday' => $totalMovementsToday,
+            'recentMovements' => $recentMovements,
+            'restockProducts' => $restockProducts,
         ]);
     }
 

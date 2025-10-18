@@ -179,7 +179,7 @@
                                         data-deliveries="{{ $driver->current_deliveries_today }}/{{ $driver->max_deliveries_per_day }}"
                                         data-work-hours="{{ $driver->work_start_time->format('H:i') }} - {{ $driver->work_end_time->format('H:i') }}"
                                         {{ !$driver->isAvailable() ? 'disabled' : '' }}>
-                                    {{ $driver->user->name }} 
+                                    {{ $driver->user ? $driver->user->name : 'Unknown Driver' }} 
                                     ({{ $driver->getAvailabilityText() }})
                                     @if(!$driver->isAvailable())
                                         - Not Available

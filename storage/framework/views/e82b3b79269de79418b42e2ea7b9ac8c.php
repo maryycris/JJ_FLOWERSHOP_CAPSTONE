@@ -169,97 +169,9 @@ thead th {
 </style>
 <?php $__env->stopPush(); ?>
 
-<?php $__env->startPush('scripts'); ?>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, setting up delete buttons...');
-    
-    // Handle delete button clicks
-    document.querySelectorAll('.delete-btn').forEach(button => {
-        console.log('Setting up delete button for product:', button.getAttribute('data-product-id'));
-        
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            console.log('Delete button clicked!');
-            
-            const productId = this.getAttribute('data-product-id');
-            const isMarked = this.getAttribute('data-is-marked') === 'true';
-            const productRow = document.getElementById('product-row-' + productId);
-            const icon = this.querySelector('i');
-            
-            console.log('Product ID:', productId, 'Is Marked:', isMarked);
-            
-            const confirmMessage = isMarked ? 
-                'Are you sure you want to unmark this product for deletion?' : 
-                'Are you sure you want to mark this product for deletion?';
-            
-            // Show confirmation
-            if (confirm(confirmMessage)) {
-                console.log('User confirmed, making AJAX request...');
-                
-                // Make AJAX request
-                fetch(`/clerk/inventory/${productId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                })
-                .then(response => {
-                    console.log('Response received:', response);
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Data received:', data);
-                    
-                    if (data.success) {
-                        if (isMarked) {
-                            // Unmark the row - remove red background class
-                            productRow.classList.remove('product-row-deleted');
-                            productRow.style.border = '';
-                            
-                            // Update button
-                            icon.className = 'bi bi-trash3';
-                            this.setAttribute('title', 'Mark for deletion');
-                            this.setAttribute('data-is-marked', 'false');
-                        } else {
-                            // Mark the row with soft red background
-                            productRow.classList.add('product-row-deleted');
-                            productRow.style.border = '';
-                            
-                            // Update button
-                            icon.className = 'bi bi-arrow-counterclockwise';
-                            this.setAttribute('title', 'Unmark for deletion');
-                            this.setAttribute('data-is-marked', 'true');
-                        }
-                        
-                        // Show success message
-                        console.log('Success:', data.message);
-                        showChangesReminder();
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while updating the product deletion status.');
-                });
-            }
-        });
-    });
-    
-    console.log('Delete buttons setup complete. Found', document.querySelectorAll('.delete-btn').length, 'buttons');
-});
-</script>
-<?php $__env->stopPush(); ?>
 
 <?php $__env->startSection('content'); ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Inventory (Clerk) <span id="pendingIcon" class="badge bg-warning ms-2" style="display: none; background-color: #ff8c00 !important;"><i class="fas fa-clock"></i> Pending</span></h2>
-    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProductModal">+ Add New Product</button>
-</div>
+<div class="mx-auto" style="max-width: 1400px; padding-top: 24px;">
 
 <!-- Add Product Modal -->
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
@@ -342,7 +254,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <input type="text" class="form-control" id="inventorySearch" placeholder="Search code, name, or category..." autocomplete="off">
         <button class="btn btn-outline-secondary" type="button" id="clearInventorySearch">Clear</button>
     </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProductModal">+ Add New Material</button>
     <button class="btn btn-success" id="submitInventoryBtn">Save changes</button>
+    </div>
 </div>
 
 <!-- Inventory Submitted Modal -->
@@ -408,22 +323,22 @@ document.addEventListener('DOMContentLoaded', function() {
         <?php $__currentLoopData = ['Fresh Flowers', 'Dried Flowers', 'Artificial Flowers', 'Greenery', 'Floral Supplies', 'Packaging Materials', 'Wrappers', 'Ribbon', 'Other Offers']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <div class="tab-pane fade <?php if($loop->first): ?> show active <?php endif; ?>" id="<?php echo e(Str::slug($category)); ?>" role="tabpanel">
                 <div class="table-responsive inventory-scroll">
-                    <table class="table table-bordered align-middle">
+                    <table class="table table-bordered align-middle" style="font-size: 0.85rem;">
                         <thead>
                             <tr>
-                                <th>Product Code</th>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Selling Price</th>
-                                <th>Acquisition Cost</th>
-                                <th colspan="2">Reordering Rules<br><small>(Min / Max)</small></th>
-                                <th>Qty On Hand</th>
-                                <th>Qty Consumed</th>
-                                <th>Qty Damaged</th>
-                                <th>Qty Sold</th>
-                                <th>Qty to Purchase<br><small>(Max - On Hand)</small></th>
-                                <th>Date</th>
-                                <th>Actions</th>
+                                <th style="font-size: 0.8rem;">Product Code</th>
+                                <th style="font-size: 0.8rem;">Name</th>
+                                <th style="font-size: 0.8rem;">Category</th>
+                                <th style="font-size: 0.8rem;">Selling Price</th>
+                                <th style="font-size: 0.8rem;">Acquisition Cost</th>
+                                <th colspan="2" style="font-size: 0.8rem;">Reordering Rules<br><small>(Min / Max)</small></th>
+                                <th style="font-size: 0.8rem;">Qty On Hand</th>
+                                <th style="font-size: 0.8rem;">Qty Consumed</th>
+                                <th style="font-size: 0.8rem;">Qty Damaged</th>
+                                <th style="font-size: 0.8rem;">Qty Sold</th>
+                                <th style="font-size: 0.8rem;">Qty to Purchase<br><small>(Max - On Hand)</small></th>
+                                <th style="font-size: 0.8rem;">Date</th>
+                                <th style="font-size: 0.8rem;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -439,19 +354,19 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <?php if($product->is_marked_for_deletion): ?> 
                                             class="product-row-deleted" 
                                         <?php endif; ?>>
-                                    <td><?php echo e($product->code ?? $product->id); ?></td>
-                                    <td><?php echo e($product->name); ?></td>
-                                    <td><?php echo e($product->category); ?></td>
-                                    <td><?php echo e($product->price); ?></td>
-                                    <td><?php echo e($product->cost_price ?? '-'); ?></td>
-                                    <td><?php echo e($min); ?></td>
-                                    <td><?php echo e($max); ?></td>
-                                    <td><?php echo e($stock); ?></td>
-                                    <td><?php echo e($product->qty_consumed ?? '-'); ?></td>
-                                    <td><?php echo e($product->qty_damaged ?? '-'); ?></td>
-                                    <td><?php echo e($product->qty_sold ?? '-'); ?></td>
-                                    <td><?php echo e($qtyToPurchase); ?></td>
-                                    <td><?php echo e($product->created_at ? $product->created_at->format('Y-m-d') : '-'); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($product->code ?? $product->id); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($product->name); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($product->category); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($product->price); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($product->cost_price ?? '-'); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($min); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($max); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($stock); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($product->qty_consumed ?? '-'); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($product->qty_damaged ?? '-'); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($product->qty_sold ?? '-'); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($qtyToPurchase); ?></td>
+                                    <td style="font-size: 0.8rem;"><?php echo e($product->created_at ? $product->created_at->format('Y-m-d') : '-'); ?></td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
                                             <!-- Edit Button -->
@@ -550,6 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php else: ?>
     <p>No products found.</p>
 <?php endif; ?>
+</div>
 
 <style>
 /* Override Bootstrap table-striped styling */
@@ -630,12 +546,14 @@ document.addEventListener('DOMContentLoaded', function() {
     let deletedProducts = new Set();
     let stagedEdits = {};
     let newProducts = []; // staged new products (no IDs yet)
+    let submittedForApproval = false; // Track if changes have been submitted
     
     // Load highlighted products from session storage
     const savedEdited = sessionStorage.getItem('editedProducts');
     const savedDeleted = sessionStorage.getItem('deletedProducts');
     const savedStagedEdits = sessionStorage.getItem('stagedEdits');
     const savedNewProducts = sessionStorage.getItem('newProducts');
+    const savedSubmitted = sessionStorage.getItem('submittedForApproval');
     
     if (savedEdited) {
         editedProducts = new Set(JSON.parse(savedEdited));
@@ -662,14 +580,84 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch(e) { newProducts = []; }
     }
     
-    // Apply highlighting to loaded products
+    if (savedSubmitted) {
+        submittedForApproval = JSON.parse(savedSubmitted);
+        console.log('Loaded submitted status from session:', submittedForApproval);
+    }
+    
+    // Debug: Log all session storage values
+    console.log('=== SESSION STORAGE DEBUG ===');
+    console.log('submittedForApproval:', submittedForApproval);
+    console.log('editedProducts:', Array.from(editedProducts));
+    console.log('deletedProducts:', Array.from(deletedProducts));
+    console.log('stagedEdits:', stagedEdits);
+    console.log('newProducts:', newProducts);
+    console.log('=============================');
+    
+    // Function to disable actions for marked items
+    function disableActionsForMarkedItems() {
+        // Disable actions for edited products
+        editedProducts.forEach(productId => {
+            const row = document.getElementById('product-row-' + productId);
+            if (row) {
+                const editBtn = row.querySelector('.edit-product-btn');
+                const deleteBtn = row.querySelector('.delete-btn');
+                if (editBtn) {
+                    editBtn.disabled = true;
+                    editBtn.style.opacity = '0.5';
+                    editBtn.style.cursor = 'not-allowed';
+                }
+                if (deleteBtn) {
+                    deleteBtn.disabled = true;
+                    deleteBtn.style.opacity = '0.5';
+                    deleteBtn.style.cursor = 'not-allowed';
+                }
+            }
+        });
+        
+        // Disable actions for deleted products
+        deletedProducts.forEach(productId => {
+            const row = document.getElementById('product-row-' + productId);
+            if (row) {
+                const editBtn = row.querySelector('.edit-product-btn');
+                const deleteBtn = row.querySelector('.delete-btn');
+                if (editBtn) {
+                    editBtn.disabled = true;
+                    editBtn.style.opacity = '0.5';
+                    editBtn.style.cursor = 'not-allowed';
+                }
+                if (deleteBtn) {
+                    deleteBtn.disabled = true;
+                    deleteBtn.style.opacity = '0.5';
+                    deleteBtn.style.cursor = 'not-allowed';
+                }
+            }
+        });
+        
+        // Disable actions for new products
+        document.querySelectorAll('.product-row-added').forEach(row => {
+            const editBtn = row.querySelector('.edit-product-btn');
+            const deleteBtn = row.querySelector('.delete-btn');
+            if (editBtn) {
+                editBtn.disabled = true;
+                editBtn.style.opacity = '0.5';
+                editBtn.style.cursor = 'not-allowed';
+            }
+            if (deleteBtn) {
+                deleteBtn.disabled = true;
+                deleteBtn.style.opacity = '0.5';
+                deleteBtn.style.cursor = 'not-allowed';
+            }
+        });
+    }
+    
+    // Apply markings if there are any pending changes
     editedProducts.forEach(productId => {
         const row = document.getElementById('product-row-' + productId);
         if (row) {
             row.classList.add('product-row-edited');
             row.style.backgroundColor = '';
             row.style.border = '';
-            console.log('Applied blue highlight to product:', productId);
         }
     });
     
@@ -679,23 +667,136 @@ document.addEventListener('DOMContentLoaded', function() {
             row.classList.add('product-row-deleted');
             row.style.backgroundColor = '';
             row.style.border = '';
-            console.log('Applied red highlight to product:', productId);
         }
     });
+    
+    // Render any staged new products into the active tab
+    if (submittedForApproval && newProducts.length > 0) {
+        console.log('Rendering staged new products:', newProducts);
+        newProducts.forEach(renderNewProductRow);
+    }
+    
+    // If submitted for approval, disable actions for marked items and check for admin decision
+    if (submittedForApproval) {
+        setTimeout(() => {
+            disableActionsForMarkedItems();
+        }, 100);
+        
+        // Check if admin has made a decision
+        checkAdminDecision();
+        
+        // Check every 5 seconds for admin decision
+        setInterval(checkAdminDecision, 5000);
+        
+        // Fallback: Clear markings after 5 seconds regardless of API status
+        setTimeout(() => {
+            console.log('Fallback: Clearing markings after 5 seconds');
+            clearSubmittedStatus();
+        }, 5000);
+    }
+    
+    // Function to check if admin has made a decision
+    async function checkAdminDecision() {
+        if (!submittedForApproval) return; // Stop if already cleared
+        
+        console.log('Checking admin decision...');
+        
+        try {
+            const response = await fetch('/clerk/inventory/check-approval-status', {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            });
+            
+            console.log('API Response status:', response.status);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Admin decision check response:', data);
+                
+                // If no pending changes, admin has decided (approved or rejected)
+                if (!data.pending_changes && !data.pending_additions && !data.pending_product_changes) {
+                    console.log('No pending changes - admin has decided - clearing markings');
+                    clearSubmittedStatus();
+                } else {
+                    console.log('Still pending changes:', {
+                        pending_changes: data.pending_changes,
+                        pending_additions: data.pending_additions,
+                        pending_product_changes: data.pending_product_changes
+                    });
+                }
+            } else {
+                console.error('API Error:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('Error details:', errorText);
+            }
+        } catch (error) {
+            console.error('Error checking admin decision:', error);
+        }
+    }
 
-    // Clear any existing staged data to ensure fresh start
+    // Only clear staged data if not submitted for approval
+    if (!submittedForApproval) {
     sessionStorage.removeItem('stagedEdits');
     sessionStorage.removeItem('editedProducts');
     sessionStorage.removeItem('deletedProducts');
-    // keep newProducts in session until submitted
+        sessionStorage.removeItem('submittedForApproval');
+        sessionStorage.removeItem('newProducts');
+    }
     
-    // Function to hide pending icon (for future admin approval)
-    window.hidePendingIcon = function() {
-        const pendingIcon = document.getElementById('pendingIcon');
-        if (pendingIcon) {
-            pendingIcon.style.display = 'none';
-            console.log('Pending icon hidden');
+    
+    // Function to clear submitted status (called when admin approves changes)
+    window.clearSubmittedStatus = function() {
+        submittedForApproval = false;
+        sessionStorage.removeItem('submittedForApproval');
+        sessionStorage.removeItem('editedProducts');
+        sessionStorage.removeItem('deletedProducts');
+        sessionStorage.removeItem('stagedEdits');
+        sessionStorage.removeItem('newProducts');
+        
+        // Clear highlighting
+        editedProducts.clear();
+        deletedProducts.clear();
+        stagedEdits = {};
+        newProducts = [];
+        
+        // Remove highlighting from rows
+        document.querySelectorAll('.product-row-edited, .product-row-deleted, .product-row-added').forEach(row => {
+            row.classList.remove('product-row-edited', 'product-row-deleted', 'product-row-added');
+            row.style.backgroundColor = '';
+            row.style.border = '';
+        });
+        
+        // Re-enable all buttons
+        document.querySelectorAll('.edit-product-btn, .delete-btn, .discard-new-btn').forEach(btn => {
+            btn.disabled = false;
+            btn.style.opacity = '';
+            btn.style.cursor = '';
+        });
+        
+        // Re-enable save and add buttons
+        const saveBtn = document.getElementById('submitInventoryBtn');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.style.opacity = '';
+            saveBtn.style.cursor = '';
         }
+        
+        const addBtn = document.querySelector('[data-bs-target="#addProductModal"]');
+        if (addBtn) {
+            addBtn.disabled = false;
+            addBtn.style.opacity = '';
+            addBtn.style.cursor = '';
+        }
+        
+        // Remove staged new product rows
+        document.querySelectorAll('.product-row-added').forEach(row => {
+            row.remove();
+        });
+        
+        console.log('Submitted status cleared - all actions re-enabled');
     };
     
     // Apply staged edits to table on load so they persist across refreshes
@@ -775,58 +876,23 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('handleModalUpdate called but not used');
     }
     
-    // Function to handle Delete button clicks
-    function handleDeleteClick(event) {
-        event.preventDefault();
-        const productId = this.getAttribute('data-product-id');
-        const row = document.getElementById('product-row-' + productId);
-        
-        console.log('Delete clicked for product:', productId);
-        
-        if (row) {
-            // Remove from edited list if it was there
-            editedProducts.delete(productId);
-            row.classList.remove('product-row-edited');
-
-            // Add to deleted list and highlight
-            deletedProducts.add(productId);
-            row.classList.add('product-row-deleted');
-            
-            // Save to session storage
-            sessionStorage.setItem('deletedProducts', JSON.stringify(Array.from(deletedProducts)));
-            
-            console.log('Row highlighted for delete:', productId);
-            console.log('Deleted products set:', Array.from(deletedProducts));
-            console.log('Row classes:', row.classList);
-            console.log('Row element:', row);
-            console.log('Row has deleted class:', row.classList.contains('product-row-deleted'));
-            
-            // Show confirmation message
-            if (confirm('Are you sure you want to mark this product for deletion? The admin will review this change.')) {
-                console.log('Product marked for deletion:', productId);
-            } else {
-                // If user cancels, remove the highlighting
-                deletedProducts.delete(productId);
-                row.classList.remove('product-row-deleted');
-                console.log('Delete cancelled for product:', productId);
-            }
-        } else {
-            console.error('Row not found for product ID:', productId);
-            console.log('Looking for element with ID: product-row-' + productId);
-        }
-    }
     
     // Use event delegation for dynamically loaded content
     document.addEventListener('click', function(event) {
         console.log('Click detected on:', event.target);
         console.log('Button classes:', event.target.classList);
         
+        // Check if button is disabled
+        if (event.target.disabled || event.target.style.opacity === '0.5') {
+            console.log('Button is disabled, ignoring click');
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+        }
+        
         if (event.target.classList.contains('edit-product-btn')) {
             console.log('Edit button clicked');
             handleEditClick.call(event.target, event);
-        } else if (event.target.classList.contains('delete-product-btn')) {
-            console.log('Delete button clicked');
-            handleDeleteClick.call(event.target, event);
         } else if (event.target.textContent === 'OK' && event.target.closest('#inventorySubmittedModal')) {
             console.log('OK button clicked via event delegation');
             
@@ -883,8 +949,104 @@ document.addEventListener('DOMContentLoaded', function() {
     if (clearBtn) {
         clearBtn.addEventListener('click', function(){ searchInput.value = ''; filterRows(''); searchInput.focus(); });
     }
-    // Re-apply filter when switching tabs
-    document.getElementById('inventoryTabs')?.addEventListener('shown.bs.tab', function(){ filterRows(searchInput?.value || ''); });
+    // Re-apply filter and markings when switching tabs
+    document.getElementById('inventoryTabs')?.addEventListener('shown.bs.tab', function(){ 
+        filterRows(searchInput?.value || ''); 
+        
+        // Re-apply markings after tab switch
+        if (submittedForApproval) {
+            setTimeout(() => {
+                // Re-apply highlighting
+                editedProducts.forEach(productId => {
+                    const row = document.getElementById('product-row-' + productId);
+                    if (row) {
+                        row.classList.add('product-row-edited');
+                        row.style.backgroundColor = '';
+                        row.style.border = '';
+                    }
+                });
+                
+                deletedProducts.forEach(productId => {
+                    const row = document.getElementById('product-row-' + productId);
+                    if (row) {
+                        row.classList.add('product-row-deleted');
+                        row.style.backgroundColor = '';
+                        row.style.border = '';
+                    }
+                });
+                
+                // Re-disable actions
+                disableActionsForMarkedItems();
+            }, 50);
+        }
+    });
+    
+    // Add direct click handlers for Delete buttons
+    document.addEventListener('click', function(event) {
+        console.log('Click detected on:', event.target);
+        console.log('Button classes:', event.target.classList);
+        
+        // Check if the clicked element is a delete button or inside a delete button
+        const deleteBtn = event.target.closest('.delete-btn');
+        console.log('Delete button found:', deleteBtn);
+        
+        if (deleteBtn) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            console.log('Delete button clicked!');
+            
+            const productId = deleteBtn.getAttribute('data-product-id');
+            const isMarked = deleteBtn.getAttribute('data-is-marked') === 'true';
+            const productRow = document.getElementById('product-row-' + productId);
+            const icon = deleteBtn.querySelector('i');
+            
+            console.log('Product ID:', productId, 'Is Marked:', isMarked);
+            
+            const confirmMessage = isMarked ? 
+                'Are you sure you want to unmark this product for deletion?' : 
+                'Are you sure you want to mark this product for deletion?';
+            
+            // Show confirmation
+            if (confirm(confirmMessage)) {
+                console.log('User confirmed, updating deletion status locally...');
+                
+                if (isMarked) {
+                    // Unmark for deletion
+                    deletedProducts.delete(productId);
+                    productRow.classList.remove('product-row-deleted');
+                    productRow.style.backgroundColor = '';
+                    productRow.style.border = '';
+                    
+                    // Update button
+                    icon.className = 'bi bi-trash3';
+                    deleteBtn.setAttribute('title', 'Mark for deletion');
+                    deleteBtn.setAttribute('data-is-marked', 'false');
+                    
+                    console.log('Product unmarked for deletion:', productId);
+                } else {
+                    // Mark for deletion
+                    deletedProducts.add(productId);
+                    productRow.classList.add('product-row-deleted');
+                    productRow.style.backgroundColor = 'rgba(255, 99, 99, 0.7)';
+                    productRow.style.border = '2px solid #FF6363';
+                    
+                    // Update button
+                    icon.className = 'bi bi-arrow-counterclockwise';
+                    deleteBtn.setAttribute('title', 'Unmark for deletion');
+                    deleteBtn.setAttribute('data-is-marked', 'true');
+                    
+                    console.log('Product marked for deletion:', productId);
+                }
+                
+                // Save to session storage
+                sessionStorage.setItem('deletedProducts', JSON.stringify(Array.from(deletedProducts)));
+                
+                // Show success message
+                console.log('Product deletion status updated successfully');
+            }
+        }
+    });
     
     // Add direct click handlers for Edit buttons in modals
     document.addEventListener('click', function(event) {
@@ -965,8 +1127,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editProductModal' + productId));
                     if (modal) { modal.hide(); }
                     
-                    // Show reminder modal instead of alert
-                    showChangesReminder();
+                    // Product marked for deletion successfully
                 } else {
                     console.error('Row or productId not found:', { row, productId });
                 }
@@ -990,7 +1151,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // close modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
             if (modal) modal.hide();
-            showChangesReminder();
         });
     }
 
@@ -1010,6 +1170,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+
     // Handle Update button click
     const updateBtn = document.getElementById('submitInventoryBtn');
     if (updateBtn) {
@@ -1019,9 +1180,14 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Edited products:', Array.from(editedProducts));
             console.log('Deleted products:', Array.from(deletedProducts));
             console.log('Staged edits:', stagedEdits);
+            console.log('New products:', newProducts);
+            console.log('Edited products size:', editedProducts.size);
+            console.log('Deleted products size:', deletedProducts.size);
+            console.log('New products length:', newProducts.length);
             
             // Check if there are any changes to submit
-            if (editedProducts.size === 0 && deletedProducts.size === 0) {
+            if (editedProducts.size === 0 && deletedProducts.size === 0 && newProducts.length === 0) {
+                console.log('No changes detected - editedProducts.size:', editedProducts.size, 'deletedProducts.size:', deletedProducts.size, 'newProducts.length:', newProducts.length);
                 alert('No changes to submit. Please make some changes first.');
                 return;
             }
@@ -1051,29 +1217,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     console.log('Changes submitted successfully:', data);
                     
-                    // Clear session storage and reset variables
-                    sessionStorage.removeItem('editedProducts');
-                    sessionStorage.removeItem('deletedProducts');
-                    sessionStorage.removeItem('stagedEdits');
-                    editedProducts.clear();
-                    deletedProducts.clear();
-                    stagedEdits = {};
-                    newProducts = [];
-                    sessionStorage.removeItem('newProducts');
+                    // Mark as submitted for approval
+                    submittedForApproval = true;
+                    sessionStorage.setItem('submittedForApproval', JSON.stringify(true));
                     
-                    // Keep row highlights and disable actions while pending approval
-                    document.querySelectorAll('.discard-new-btn').forEach(btn => { btn.disabled = true; });
-                    document.querySelectorAll('.edit-product-btn, .delete-btn, #addProductForm button[type="submit"], [data-bs-target="#addProductModal"]').forEach(el => {
-                        if (el) { el.setAttribute('disabled','true'); el.classList.add('disabled'); }
+                    // Keep the marked products in session storage for persistence
+                    sessionStorage.setItem('editedProducts', JSON.stringify(Array.from(editedProducts)));
+                    sessionStorage.setItem('deletedProducts', JSON.stringify(Array.from(deletedProducts)));
+                    sessionStorage.setItem('stagedEdits', JSON.stringify(stagedEdits));
+                    sessionStorage.setItem('newProducts', JSON.stringify(newProducts));
+                    
+                    // Disable actions for marked items only
+                    disableActionsForMarkedItems();
+                    
+                    // Keep the save button and add product button enabled
+                    // (Buttons remain clickable after save changes)
+                    
+                    
+                    // Disable discard buttons for new products
+                    document.querySelectorAll('.discard-new-btn').forEach(btn => { 
+                        btn.disabled = true; 
+                        btn.style.opacity = '0.5';
+                        btn.style.cursor = 'not-allowed';
                     });
-                    const saveBtn = document.getElementById('submitInventoryBtn');
-                    if (saveBtn) saveBtn.setAttribute('disabled','true');
-                    
-                    // Hide pending icon
-                    const pendingIcon = document.getElementById('pendingIcon');
-                    if (pendingIcon) {
-                        pendingIcon.style.display = 'none';
-                    }
                     
                     // Show confirmation modal with summary
                     const modal = document.getElementById('inventorySubmittedModal');
@@ -1156,6 +1322,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
 });
 </script>
 <?php $__env->stopSection(); ?>

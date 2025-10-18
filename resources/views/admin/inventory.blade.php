@@ -86,6 +86,59 @@
     flex: 1 1 50px;
 }
 
+/* Main inventory tabs styling - green color */
+#mainInventoryTabs .nav-link {
+    color: #28a745 !important;
+    border-color: #dee2e6;
+}
+
+#mainInventoryTabs .nav-link.active {
+    color: #28a745 !important;
+    background-color: #f8f9fa;
+    border-color: #dee2e6 #dee2e6 #f8f9fa;
+}
+
+#mainInventoryTabs .nav-link:hover {
+    color: #28a745 !important;
+    border-color: #dee2e6;
+}
+
+/* Category tabs in inventory update request - green color with soft background */
+#updateRequestTabs .nav-link {
+    color: #28a745 !important;
+    border: none !important;
+    background-color: transparent !important;
+    border-radius: 8px !important;
+    margin-right: 4px !important;
+    border-bottom: none !important;
+}
+
+#updateRequestTabs .nav-link.active {
+    color: #28a745 !important;
+    background-color: rgba(40, 167, 69, 0.15) !important;
+    border: none !important;
+    border-bottom: none !important;
+    border-radius: 8px !important;
+}
+
+#updateRequestTabs .nav-link:hover {
+    color: #28a745 !important;
+    background-color: rgba(40, 167, 69, 0.08) !important;
+    border: none !important;
+    border-bottom: none !important;
+    border-radius: 8px !important;
+}
+
+/* Override Bootstrap's default tab styling */
+#updateRequestTabs .nav-tabs {
+    border-bottom: none !important;
+}
+
+#updateRequestTabs .nav-tabs .nav-link {
+    border: none !important;
+    border-bottom: none !important;
+}
+
 /* Marked for deletion styling */
 .marked-for-deletion {
     border: 2px solid #dc3545 !important;
@@ -101,17 +154,17 @@
 @endpush
 
 @section('admin_content')
-<div class="mx-auto" style="max-width: 1100px; padding-top: 24px;">
+<div class="mx-auto" style="max-width: 1400px; padding-top: 24px;">
 <!-- Main Tab Navigation -->
 <ul class="nav nav-tabs mb-4" id="mainInventoryTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab" aria-controls="inventory" aria-selected="true">
+    <li class="nav-item" role="presentation" style="flex: 1;">
+        <button class="nav-link active w-100" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab" aria-controls="inventory" aria-selected="true">
             <i class="bi bi-box-seam me-2"></i>Inventory
         </button>
     </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="inventory-logs-tab" data-bs-toggle="tab" data-bs-target="#inventory-logs" type="button" role="tab" aria-controls="inventory-logs" aria-selected="false">
-            <i class="bi bi-clock-history me-2"></i>Inventory Logs
+    <li class="nav-item" role="presentation" style="flex: 1;">
+        <button class="nav-link w-100" id="inventory-logs-tab" data-bs-toggle="tab" data-bs-target="#inventory-logs" type="button" role="tab" aria-controls="inventory-logs" aria-selected="false">
+            <i class="bi bi-clock-history me-2"></i>Inventory Changes Request
         </button>
     </li>
 </ul>
@@ -120,15 +173,9 @@
 <div class="tab-content" id="mainInventoryTabsContent">
     <!-- Inventory Tab -->
     <div class="tab-pane fade show active" id="inventory" role="tabpanel">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3">
             <h4>Inventory Management</h4>
-            <div class="d-flex gap-2">
-                <button class="btn btn-primary" id="saveChangesBtn" title="Save inventory changes and create history record">
-                    <i class="bi bi-save me-1"></i> Save Changes
-                </button>
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProductModal">+ Add New Product</button>
-            </div>
-        </div>
+                        </div>
 
 <!-- Add Product Modal -->
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
@@ -202,14 +249,15 @@
   </div>
 </div>
 
-<!-- Toolbar: Search + Update -->
+<!-- Toolbar: Search + Add New Product -->
 <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
     <div class="input-group" style="max-width: 360px;">
         <span class="input-group-text"><i class="bi bi-search"></i></span>
         <input type="text" class="form-control" id="inventorySearch" placeholder="Search code, name, or category..." autocomplete="off">
         <button class="btn btn-outline-secondary" type="button" id="clearInventorySearch">Clear</button>
     </div>
-    </div>
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProductModal">+ Add New Material</button>
+</div>
 
 <!-- Inventory Submitted Modal -->
 <div class="modal fade" id="inventorySubmittedModal" tabindex="-1" aria-labelledby="inventorySubmittedModalLabel" aria-hidden="true">
@@ -242,22 +290,22 @@
         @foreach(['Fresh Flowers', 'Dried Flowers', 'Artificial Flowers', 'Greenery', 'Floral Supplies', 'Packaging Materials', 'Wrappers', 'Ribbon', 'Other Offers'] as $category)
             <div class="tab-pane fade @if($loop->first) show active @endif" id="{{ Str::slug($category) }}" role="tabpanel">
             <div class="table-responsive inventory-scroll">
-                    <table class="table table-bordered align-middle">
+                    <table class="table table-bordered align-middle" style="font-size: 0.85rem;">
                         <thead>
                     <tr>
-                                <th>Product Code</th>
-                        <th>Name</th>
-                        <th>Category</th>
-                                <th>Selling Price</th>
-                                <th>Acquisition Cost</th>
-                                <th colspan="2">Reordering Rules<br><small>(Min / Max)</small></th>
-                                <th>Qty On Hand</th>
-                                <th>Qty Consumed</th>
-                                <th>Qty Damaged</th>
-                                <th>Qty Sold</th>
-                                <th>Qty to Purchase<br><small>(Max - On Hand)</small></th>
-                                <th>Date</th>
-                                <th>Actions</th>
+                                <th style="font-size: 0.8rem;">Product Code</th>
+                        <th style="font-size: 0.8rem;">Name</th>
+                        <th style="font-size: 0.8rem;">Category</th>
+                                <th style="font-size: 0.8rem;">Selling Price</th>
+                                <th style="font-size: 0.8rem;">Acquisition Cost</th>
+                                <th colspan="2" style="font-size: 0.8rem;">Reordering Rules<br><small>(Min / Max)</small></th>
+                                <th style="font-size: 0.8rem;">Qty On Hand</th>
+                                <th style="font-size: 0.8rem;">Qty Consumed</th>
+                                <th style="font-size: 0.8rem;">Qty Damaged</th>
+                                <th style="font-size: 0.8rem;">Qty Sold</th>
+                                <th style="font-size: 0.8rem;">Qty to Purchase<br><small>(Max - On Hand)</small></th>
+                                <th style="font-size: 0.8rem;">Date</th>
+                                <th style="font-size: 0.8rem;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -271,22 +319,21 @@
                                 @endphp
                                     <tr id="product-row-{{ $product->id }}" data-product-id="{{ $product->id }}"
                                         @if($product->is_marked_for_deletion) 
-                                            class="marked-for-deletion" 
-                                            style="border: 2px solid #dc3545 !important;"
+                                            class="marked-for-deletion row-deleted"
                                         @endif>
-                                    <td>{{ $product->code ?? $product->id }}</td>
-                                    <td>{{ $product->name }}</td>
-                                    <td>{{ $product->category }}</td>
-                                    <td>{{ $product->price }}</td>
-                                    <td>{{ $product->cost_price ?? '-' }}</td>
-                                    <td>{{ $min }}</td>
-                                    <td>{{ $max }}</td>
-                                    <td>{{ $stock }}</td>
-                                    <td>{{ $product->qty_consumed ?? '-' }}</td>
-                                    <td>{{ $product->qty_damaged ?? '-' }}</td>
-                                    <td>{{ $product->qty_sold ?? '-' }}</td>
-                                    <td>{{ $qtyToPurchase }}</td>
-                                    <td>{{ $product->created_at ? $product->created_at->format('Y-m-d') : '-' }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $product->code ?? $product->id }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $product->name }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $product->category }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $product->price }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $product->cost_price ?? '-' }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $min }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $max }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $stock }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $product->qty_consumed ?? '-' }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $product->qty_damaged ?? '-' }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $product->qty_sold ?? '-' }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $qtyToPurchase }}</td>
+                                    <td style="font-size: 0.8rem;">{{ $product->created_at ? $product->created_at->format('Y-m-d') : '-' }}</td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
                                             <!-- Edit Button -->
@@ -382,10 +429,6 @@
     
     <!-- Inventory Logs Tab -->
     <div class="tab-pane fade" id="inventory-logs" role="tabpanel">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4>Inventory Update Requests</h4>
-            <small class="text-muted">Pending Logs: {{ $pendingLogs->count() }}</small>
-        </div>
         
         
         
@@ -393,29 +436,11 @@
 
         <!-- Inventory Update Request Section (dynamic) -->
         <div class="update-request-section">
-            <h4>Inventory Update Request</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Inventory Changes Request</h4>
+                <small class="text-muted">Pending Logs: {{ $pendingLogs->count() }}</small>
+            </div>
             
-            @if($pendingLogs->count() > 0)
-                <div class="request-header">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <strong>Clerk's name:</strong> <span id="clerkName">{{ $pendingLogs->first()->user->name ?? 'Unknown' }}</span>
-                        </div>
-                        <div class="col-md-6">
-                            <strong>Date:</strong> <span id="requestDate">{{ $pendingLogs->first()->created_at->format('Y-m-d') }}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="request-actions">
-                    <button class="btn btn-accept" id="acceptChangesBtn">
-                        <i class="bi bi-check-circle me-1"></i> Accept Changes
-                    </button>
-                    <button class="btn btn-decline" id="declineChangesBtn">
-                        <i class="bi bi-x-circle me-1"></i> Decline
-                    </button>
-                </div>
-            @endif
             
             <!-- Category Tabs (always show) -->
             <ul class="nav nav-tabs" id="updateRequestTabs" role="tablist">
@@ -458,22 +483,22 @@
                                 <strong>{{ $cat }}:</strong> {{ $catLogs->count() }} pending logs
                             </div>
                             @if($catLogs->count() > 0)
-                                <table class="table table-striped">
+                                <table class="table table-striped" style="font-size: 0.85rem;">
                                     <thead>
                                         <tr>
-                                            <th>Product Code</th>
-                                            <th>Name</th>
-                                            <th>Category</th>
-                                            <th>Selling Price</th>
-                                            <th>Acquisition Cost</th>
-                                            <th>Reordering Rules (Min / Max)</th>
-                                            <th>Qty On Hand</th>
-                                            <th>Qty Consumed</th>
-                                            <th>Qty Damaged</th>
-                                            <th>Qty Sold</th>
-                                            <th>Qty to Purchase (Max - On Hand)</th>
-                                            <th>Date</th>
-                                            <th style="width: 120px;">Actions</th>
+                                            <th style="font-size: 0.8rem;">Product Code</th>
+                                            <th style="font-size: 0.8rem;">Name</th>
+                                            <th style="font-size: 0.8rem;">Category</th>
+                                            <th style="font-size: 0.8rem;">Selling Price</th>
+                                            <th style="font-size: 0.8rem;">Acquisition Cost</th>
+                                            <th style="font-size: 0.8rem;">Reordering Rules (Min / Max)</th>
+                                            <th style="font-size: 0.8rem;">Qty On Hand</th>
+                                            <th style="font-size: 0.8rem;">Qty Consumed</th>
+                                            <th style="font-size: 0.8rem;">Qty Damaged</th>
+                                            <th style="font-size: 0.8rem;">Qty Sold</th>
+                                            <th style="font-size: 0.8rem;">Qty to Purchase (Max - On Hand)</th>
+                                            <th style="font-size: 0.8rem;">Date</th>
+                                            <th style="width: 120px; font-size: 0.8rem;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -484,18 +509,18 @@
                                                 $rowClass = $log->action === 'create' ? 'row-added' : ($log->action === 'edit' ? 'row-edited' : 'row-deleted');
                                             @endphp
                                             <tr class="{{ $rowClass }}">
-                                                <td>{{ $log->action === 'create' ? 'NEW' : ($p->code ?? $p->id ?? 'N/A') }}</td>
-                                                <td>{{ $nv['name'] ?? ($p->name ?? 'Product Deleted') }}</td>
-                                                <td>{{ $nv['category'] ?? ($p->category ?? 'N/A') }}</td>
-                                                <td>{{ $nv['price'] ?? ($p->price ?? '0') }}</td>
-                                                <td>{{ $nv['cost_price'] ?? ($p->cost_price ?? 'N/A') }}</td>
-                                                <td>{{ ($nv['reorder_min'] ?? ($p->reorder_min ?? 0)) . ' / ' . ($nv['reorder_max'] ?? ($p->reorder_max ?? 0)) }}</td>
-                                                <td>{{ $nv['stock'] ?? ($p->stock ?? 0) }}</td>
-                                                <td>{{ $nv['qty_consumed'] ?? ($p->qty_consumed ?? 0) }}</td>
-                                                <td>{{ $nv['qty_damaged'] ?? ($p->qty_damaged ?? 0) }}</td>
-                                                <td>{{ $nv['qty_sold'] ?? ($p->qty_sold ?? 0) }}</td>
-                                                <td>{{ max(0, (int)($nv['reorder_max'] ?? ($p->reorder_max ?? 0)) - (int)($nv['stock'] ?? ($p->stock ?? 0))) }}</td>
-                                                <td>{{ optional(optional($log)->created_at)->format('Y-m-d') }}</td>
+                                                <td style="font-size: 0.8rem;">{{ $log->action === 'create' ? 'NEW' : ($p->code ?? $p->id ?? 'N/A') }}</td>
+                                                <td style="font-size: 0.8rem;">{{ $nv['name'] ?? ($p->name ?? 'Product Deleted') }}</td>
+                                                <td style="font-size: 0.8rem;">{{ $nv['category'] ?? ($p->category ?? 'N/A') }}</td>
+                                                <td style="font-size: 0.8rem;">{{ $nv['price'] ?? ($p->price ?? '0') }}</td>
+                                                <td style="font-size: 0.8rem;">{{ $nv['cost_price'] ?? ($p->cost_price ?? 'N/A') }}</td>
+                                                <td style="font-size: 0.8rem;">{{ ($nv['reorder_min'] ?? ($p->reorder_min ?? 0)) . ' / ' . ($nv['reorder_max'] ?? ($p->reorder_max ?? 0)) }}</td>
+                                                <td style="font-size: 0.8rem;">{{ $nv['stock'] ?? ($p->stock ?? 0) }}</td>
+                                                <td style="font-size: 0.8rem;">{{ $nv['qty_consumed'] ?? ($p->qty_consumed ?? 0) }}</td>
+                                                <td style="font-size: 0.8rem;">{{ $nv['qty_damaged'] ?? ($p->qty_damaged ?? 0) }}</td>
+                                                <td style="font-size: 0.8rem;">{{ $nv['qty_sold'] ?? ($p->qty_sold ?? 0) }}</td>
+                                                <td style="font-size: 0.8rem;">{{ max(0, (int)($nv['reorder_max'] ?? ($p->reorder_max ?? 0)) - (int)($nv['stock'] ?? ($p->stock ?? 0))) }}</td>
+                                                <td style="font-size: 0.8rem;">{{ optional(optional($log)->created_at)->format('Y-m-d') }}</td>
                                                 <td>
                                                     @if(($log->status ?? 'pending') === 'pending')
                                                         <form method="post" action="{{ route('admin.admin.inventory.approve-pending') }}" onsubmit="return approveSingle(event, {{ $log->id }});" class="d-inline">
@@ -513,10 +538,10 @@
                                     </tbody>
                                 </table>
                             @else
-                                <div class="text-center py-5">
-                                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
-                                    <h4 class="mt-3">No Pending Changes</h4>
-                                    <p class="text-muted">All inventory changes have been reviewed.</p>
+                                <div class="text-center py-3">
+                                    <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2">No Pending Changes</h6>
+                                    <p class="text-muted small">All inventory changes have been reviewed.</p>
                                 </div>
                             @endif
                         </div>
@@ -549,25 +574,7 @@
     background: #5aa65a;
 }
 
-.product-row-edited {
-    background-color: rgba(135, 206, 235, 0.5) !important; /* 50% transparent sky-blue */
-    transition: background-color 0.3s ease;
-}
-
-.product-row-edited td {
-    background-color: rgba(135, 206, 235, 0.5) !important; /* Blue background for all cells */
-    border-color: #87CEEB !important;
-}
-
-.product-row-deleted {
-    background-color: rgba(255, 99, 99, 0.5) !important; /* 50% transparent red */
-    transition: background-color 0.3s ease;
-}
-
-.product-row-deleted td {
-    background-color: rgba(255, 99, 99, 0.5) !important; /* Red background for all cells */
-    border-color: #FF6363 !important;
-}
+/* Removed conflicting styles - using row-edited, row-added, row-deleted instead */
 </style>
 <style>
 /* Override Bootstrap table-striped styling */
@@ -673,22 +680,35 @@
 }
 
 /* Row border colors */
-.row-added {
-    border: 2px solid #28a745 !important;
+/* Soft background colors similar to clerk side - no borders */
+.update-request-table .row-added {
+    background-color: rgba(40, 167, 69, 0.15) !important;
+    border: none !important;
 }
 
-.row-edited {
-    border: 2px solid #007bff !important;
+.update-request-table .row-edited {
+    background-color: rgba(0, 123, 255, 0.15) !important;
+    border: none !important;
 }
 
-.row-deleted {
-    border: 2px solid #dc3545 !important;
+.update-request-table .row-deleted {
+    background-color: rgba(220, 53, 69, 0.15) !important;
+    border: none !important;
 }
 
-/* Soft background colors similar to clerk side */
-.row-added td { background-color: #e8fbe8 !important; }
-.row-edited td { background-color: #e8f0ff !important; }
-.row-deleted td { background-color: #fdeaea !important; }
+/* Ensure table cells inherit the soft background */
+.update-request-table .row-added td { 
+    background-color: rgba(40, 167, 69, 0.15) !important; 
+    border: none !important;
+}
+.update-request-table .row-edited td { 
+    background-color: rgba(0, 123, 255, 0.15) !important; 
+    border: none !important;
+}
+.update-request-table .row-deleted td { 
+    background-color: rgba(220, 53, 69, 0.15) !important; 
+    border: none !important;
+}
 
 /* Custom tab content visibility */
 .category-tab-content {
@@ -705,7 +725,21 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Admin inventory highlighting script loaded');
     
-    // Admin inventory changes are applied immediately - no tracking needed
+    // Manual test function to highlight Rose (product ID 635)
+    window.testHighlightRose = function() {
+        const roseRow = document.getElementById('product-row-635');
+        if (roseRow) {
+            roseRow.classList.add('product-row-edited');
+            roseRow.style.backgroundColor = 'rgba(135, 206, 235, 0.5)';
+            roseRow.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+            console.log('Manually highlighted Rose (product 635)');
+        } else {
+            console.log('Rose row not found with ID: product-row-635');
+        }
+    };
+    
+    // Admin inventory - no staging needed, direct actions only
+    console.log('Admin inventory loaded - direct actions enabled');
     
     // Function to handle Edit button clicks
     function handleEditClick(event) {
@@ -739,7 +773,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Form action:', form.action);
         try { console.log('Form data ready'); } catch (_) {}
         
-        // Submit the form data
+        // Submit the form data directly (IMMEDIATE SAVE)
         const formData = new FormData(form);
         
         // Ensure CSRF token is included in form data
@@ -775,13 +809,32 @@ document.addEventListener('DOMContentLoaded', function() {
                     modal.hide();
                 }
                 
+                // Update the row data in place instead of reloading
+                if (row) {
+                    const cells = row.querySelectorAll('td');
+                    const formData = new FormData(form);
+                    
+                    // Update each cell with the new data
+                    if (cells[1]) cells[1].textContent = formData.get('name') || cells[1].textContent;
+                    if (cells[2]) cells[2].textContent = formData.get('category') || cells[2].textContent;
+                    if (cells[3]) cells[3].textContent = parseFloat(formData.get('price') || 0).toFixed(2);
+                    if (cells[4]) cells[4].textContent = parseFloat(formData.get('cost_price') || 0).toFixed(2);
+                    if (cells[5]) cells[5].textContent = formData.get('reorder_min') || cells[5].textContent;
+                    if (cells[6]) cells[6].textContent = formData.get('reorder_max') || cells[6].textContent;
+                    if (cells[7]) cells[7].textContent = formData.get('stock') || cells[7].textContent;
+                    if (cells[8]) cells[8].textContent = formData.get('qty_consumed') || cells[8].textContent;
+                    if (cells[9]) cells[9].textContent = formData.get('qty_damaged') || cells[9].textContent;
+                    if (cells[10]) cells[10].textContent = formData.get('qty_sold') || cells[10].textContent;
+                    
+                    // Recalculate qty_to_purchase
+                    const reorderMax = parseInt(formData.get('reorder_max') || 0);
+                    const stock = parseInt(formData.get('stock') || 0);
+                    const qtyToPurchase = Math.max(0, reorderMax - stock);
+                    if (cells[11]) cells[11].textContent = qtyToPurchase;
+                }
+                
                 // Show success message
                 alert('Product updated successfully!');
-                
-                // Reload the page to show updated data
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
             } else {
                 alert('Error: ' + (data.message || 'Unknown error occurred'));
             }
@@ -801,42 +854,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Delete clicked for product:', productId);
         
         if (row) {
-            // Show confirmation message
-            if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
-                // Get CSRF token
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                
-                // Send delete request
-                fetch(`/admin/inventory/${productId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => {
-                    console.log('Delete response status:', response.status);
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error('Delete failed');
-                })
-                .then(data => {
-                    console.log('Delete response data:', data);
-                    if (data.success) {
-                        // Remove row from table
-                        row.remove();
-                        alert('Product deleted successfully!');
-                    } else {
-                        alert('Failed to delete product: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Delete error:', error);
-                    alert('Error deleting product. Please try again.');
-                });
-            }
+            // Show smart delete confirmation modal
+            showDeleteConfirmationModal(productId, row);
         }
     }
     
@@ -888,32 +907,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Admin inventory changes are applied immediately - no Update button needed
 
-    // Handle Save Changes button
-    document.getElementById('saveChangesBtn').addEventListener('click', function() {
-        if (confirm('Are you sure you want to save all inventory changes? This will create a history record in Inventory Reports.')) {
-            // Show loading state
-            const originalText = this.innerHTML;
-            this.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Saving...';
-            this.disabled = true;
-            
-            // Simulate save process (replace with actual API call later)
-            setTimeout(() => {
-                // Reset button state
-                this.innerHTML = originalText;
-                this.disabled = false;
-                
-                // Show success message
-                alert('Inventory changes saved successfully! History record created in Inventory Reports.');
-                
-                // Here you would typically:
-                // 1. Collect all modified inventory data
-                // 2. Send to backend to save changes
-                // 3. Create history record for Inventory Reports
-                // 4. Reset any tracking variables
-                
-            }, 1500); // Simulate 1.5 second save process
-        }
-    });
+    // Admin inventory - no Save Changes button needed (direct actions only)
 
     // Inventory Logs Tab Functionality
     // Remove old bulk-accept button wiring if element not present
@@ -992,7 +986,19 @@ function approveSingle(e, logId) {
     e.preventDefault();
     fetch(`/admin/inventory/approve-log/${logId}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') } })
         .then(r => r.json())
-        .then(data => { if (data.success) { location.reload(); } else { alert(data.message || 'Failed'); } })
+        .then(data => { 
+            if (data.success) { 
+                // Remove the approved row from the table
+                const row = e.target.closest('tr');
+                if (row) {
+                    row.remove();
+                }
+                // Show success message
+                alert('Change approved successfully!');
+            } else { 
+                alert(data.message || 'Failed'); 
+            } 
+        })
         .catch(() => alert('Request failed'));
     return false;
 }
@@ -1002,9 +1008,122 @@ function rejectSingle(e, logId) {
     if (!confirm('Decline this change?')) return false;
     fetch(`/admin/inventory/reject-log/${logId}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') } })
         .then(r => r.json())
-        .then(data => { if (data.success) { location.reload(); } else { alert(data.message || 'Failed'); } })
+        .then(data => { 
+            if (data.success) { 
+                // Remove the rejected row from the table
+                const row = e.target.closest('tr');
+                if (row) {
+                    row.remove();
+                }
+                // Show success message
+                alert('Change declined successfully!');
+            } else { 
+                alert(data.message || 'Failed'); 
+            } 
+        })
         .catch(() => alert('Request failed'));
     return false;
+}
+
+// Smart Delete Confirmation Modal
+function showDeleteConfirmationModal(productId, row) {
+    // Get product name from the row
+    const productName = row.querySelector('td:nth-child(2)').textContent.trim();
+    
+    // Check if product is used in compositions (this would be an AJAX call in real implementation)
+    // For now, we'll show a smart modal that reminds about compositions
+    const modalHtml = `
+        <div class="modal fade" id="smartDeleteModal" tabindex="-1" aria-labelledby="smartDeleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="smartDeleteModalLabel">
+                            <i class="fas fa-trash me-2"></i>
+                            Delete Product
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <i class="fas fa-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+                        <h6 class="mt-3">Delete "${productName}"?</h6>
+                        <p class="text-muted mb-0">This action cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" onclick="confirmDelete(${productId}, '${productName}')">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('smartDeleteModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('smartDeleteModal'));
+    modal.show();
+    
+    // Store the row reference for later use
+    window.currentDeleteRow = row;
+}
+
+
+// Function to confirm delete
+function confirmDelete(productId, productName) {
+    // Close the modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('smartDeleteModal'));
+    modal.hide();
+    
+    // Proceed with the original delete logic
+    if (window.currentDeleteRow) {
+        const row = window.currentDeleteRow;
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // Send delete request immediately (IMMEDIATE DELETE)
+        fetch(`/admin/inventory/product/${productId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            console.log('Delete response status:', response.status);
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Delete failed');
+        })
+        .then(data => {
+            console.log('Delete response data:', data);
+            if (data.success) {
+                console.log('Product deleted successfully:', productId);
+                
+                // Remove row from table immediately
+                if (row) {
+                    row.remove();
+                }
+                
+                alert(`"${productName}" has been deleted successfully!`);
+            } else {
+                alert('Failed to delete product: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Delete error:', error);
+            alert('Error deleting product. Please try again.');
+        });
+    }
 }
 
 </script>
