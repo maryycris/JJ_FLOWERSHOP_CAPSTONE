@@ -252,7 +252,7 @@
                 <div id="reviewSectionHeader" class="d-flex align-items-center mb-0" style="display:none;">
                 </div>
                 <?php if($orders->isEmpty()): ?>
-                    <div class="alert alert-info" role="alert">
+                    <div class="alert" role="alert" style="background-color: #e8f5e8; border-color: #7bb47b; color: #2d5a2d;">
                         <?php if(request('status') && request('status') !== 'all'): ?>
                             <?php switch(request('status')):
                                 case ('to_pay'): ?>
@@ -336,9 +336,6 @@
                                                 <?php else: ?>
                                                     <span class="btn btn-sm btn-secondary order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
                                                 <?php endif; ?>
-                                                <small class="text-muted mt-1" style="font-size: 0.7rem;">
-                                                    <i class="fas fa-eye me-1"></i>Click to view details
-                                                </small>
                                             </div>
                                         </div>
                                     </div>
@@ -683,19 +680,21 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Review submitted successfully!');
+                showCuteAlert('Review submitted successfully!');
                 // Close modal
                 const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
                 modal.hide();
                 // Reload page to update the sections
-                window.location.reload();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             } else {
-                alert('Error: ' + (data.message || 'Failed to submit review'));
+                showCuteAlert('Error: ' + (data.message || 'Failed to submit review'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while submitting the review.');
+            showCuteAlert('An error occurred while submitting the review.');
         })
         .finally(() => {
             // Reset button state
@@ -855,6 +854,77 @@
     console.log('Current status filter:', document.getElementById('statusFilter').value);
     console.log('Current search term:', document.getElementById('orderSearchInput').value);
 
+    // Cute Alert Function
+    function showCuteAlert(message, type = 'success') {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.cute-alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create new alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'cute-alert';
+        alertDiv.style.cssText = `
+            background: #e8f5e8;
+            border: 1px solid #7bb47b;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 0;
+            max-width: 500px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1060;
+            box-shadow: 0 4px 12px rgba(123, 180, 123, 0.25);
+            animation: slideInDown 0.3s ease-out;
+        `;
+        
+        alertDiv.innerHTML = `
+            <div style="background: #7bb47b; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;">
+                <i class="fas fa-check"></i>
+            </div>
+            <div style="color: #2d5a2d; font-weight: 500; flex: 1; font-size: 14px;">${message}</div>
+            <button type="button" onclick="dismissCuteAlert()" style="background: none; border: none; color: #666; cursor: pointer; padding: 4px; border-radius: 4px; transition: background-color 0.2s; flex-shrink: 0;">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        // Auto dismiss after 4 seconds
+        setTimeout(() => {
+            dismissCuteAlert();
+        }, 4000);
+    }
+    
+    function dismissCuteAlert() {
+        const alert = document.querySelector('.cute-alert');
+        if (alert) {
+            alert.style.animation = 'slideOutUp 0.3s ease-in';
+            setTimeout(() => {
+                alert.remove();
+            }, 300);
+        }
+    }
+    
+    // Add CSS for animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideInDown {
+            from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        @keyframes slideOutUp {
+            from { transform: translateX(-50%) translateY(0); opacity: 1; }
+            to { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+
     // Review form submission
     document.addEventListener('submit', function(e) {
         if (e.target.classList.contains('review-form')) {
@@ -885,11 +955,13 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Review submitted successfully!');
+                    showCuteAlert('Review submitted successfully!');
                     // Reload the page to show updated reviews
-                    window.location.reload();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
                 } else {
-                    alert('Failed to submit review: ' + (data.message || 'Unknown error'));
+                    showCuteAlert('Failed to submit review: ' + (data.message || 'Unknown error'));
                     // Reset button state
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
@@ -897,10 +969,79 @@
             })
             .catch(error => {
                 console.error('Error submitting review:', error);
-                alert('Error submitting review. Please try again.');
+                showCuteAlert('Error submitting review. Please try again.');
                 // Reset button state
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
+            });
+        }
+    });
+    
+    // Shop Review Submission
+    document.addEventListener('DOMContentLoaded', function() {
+        const submitShopReviewBtn = document.getElementById('submitShopReview');
+        if (submitShopReviewBtn) {
+            submitShopReviewBtn.addEventListener('click', function() {
+                // Get form data
+                const shopRating = document.querySelector('input[name="shop_rating"]:checked');
+                const shopComment = document.getElementById('shopReviewComment').value;
+                const likedMost = document.querySelector('input[name="liked_most"]:checked');
+                
+                // Validate required fields
+                if (!shopRating) {
+                    showCuteAlert('Please select a rating for the shop.');
+                    return;
+                }
+                
+                if (!shopComment.trim()) {
+                    showCuteAlert('Please write a review comment.');
+                    return;
+                }
+                
+                // Show loading state
+                const originalText = submitShopReviewBtn.innerHTML;
+                submitShopReviewBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+                submitShopReviewBtn.disabled = true;
+                
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('shop_rating', shopRating.value);
+                formData.append('shop_comment', shopComment);
+                if (likedMost) {
+                    formData.append('liked_most', likedMost.value);
+                }
+                formData.append('_token', '<?php echo e(csrf_token()); ?>');
+                
+                // Submit shop review
+                fetch('<?php echo e(route("customer.orders.submitShopReview")); ?>', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showCuteAlert('Shop review submitted successfully!');
+                        // Reset form
+                        document.querySelectorAll('input[name="shop_rating"]').forEach(radio => radio.checked = false);
+                        document.getElementById('shopReviewComment').value = '';
+                        document.querySelectorAll('input[name="liked_most"]').forEach(radio => radio.checked = false);
+                    } else {
+                        showCuteAlert('Error: ' + (data.message || 'Failed to submit shop review'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting shop review:', error);
+                    showCuteAlert('An error occurred while submitting the shop review.');
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitShopReviewBtn.innerHTML = originalText;
+                    submitShopReviewBtn.disabled = false;
+                });
             });
         }
     });

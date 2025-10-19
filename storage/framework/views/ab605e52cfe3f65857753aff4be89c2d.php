@@ -1,6 +1,6 @@
-@extends('layouts.admin_app')
 
-@section('admin_content')
+
+<?php $__env->startSection('admin_content'); ?>
 <div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-lg-10">
@@ -9,7 +9,7 @@
                 <i class="fas fa-check-circle me-3"></i>
                 <div>
                     <h5 class="mb-1">Order Validated Successfully!</h5>
-                    <p class="mb-0">Order #{{ $order->id }} has been validated, invoice generated, and driver assigned for delivery.</p>
+                    <p class="mb-0">Order #<?php echo e($order->id); ?> has been validated, invoice generated, and driver assigned for delivery.</p>
                 </div>
             </div>
 
@@ -25,24 +25,25 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Invoice Details</h6>
-                            <p><strong>Invoice Number:</strong> {{ $invoiceData['invoice_number'] ?? 'INV-' . str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</p>
-                            <p><strong>Generated Date:</strong> {{ $invoiceData['generated_date'] ?? now()->format('M d, Y') }}</p>
+                            <p><strong>Invoice Number:</strong> <?php echo e($invoiceData['invoice_number'] ?? 'INV-' . str_pad($order->id, 6, '0', STR_PAD_LEFT)); ?></p>
+                            <p><strong>Generated Date:</strong> <?php echo e($invoiceData['generated_date'] ?? now()->format('M d, Y')); ?></p>
                             <p><strong>Status:</strong> 
-                                <span class="badge bg-{{ $order->invoice_status === 'paid' ? 'success' : 'warning' }}">
-                                    {{ ucfirst($order->invoice_status) }}
+                                <span class="badge bg-<?php echo e($order->invoice_status === 'paid' ? 'success' : 'warning'); ?>">
+                                    <?php echo e(ucfirst($order->invoice_status)); ?>
+
                                 </span>
                             </p>
                         </div>
                         <div class="col-md-6">
                             <h6>Client Information</h6>
-                            <p><strong>Name:</strong> {{ $order->user->name }}</p>
-                            <p><strong>Email:</strong> {{ $order->user->email }}</p>
-                            <p><strong>Total Amount:</strong> ₱{{ number_format($order->total_price, 2) }}</p>
+                            <p><strong>Name:</strong> <?php echo e($order->user->name); ?></p>
+                            <p><strong>Email:</strong> <?php echo e($order->user->email); ?></p>
+                            <p><strong>Total Amount:</strong> ₱<?php echo e(number_format($order->total_price, 2)); ?></p>
                         </div>
                     </div>
                     
                     <div class="mt-3">
-                        <h6>Products to be Delivered ({{ $order->products->count() }} items)</h6>
+                        <h6>Products to be Delivered (<?php echo e($order->products->count()); ?> items)</h6>
                         <div class="table-responsive">
                             <table class="table table-sm">
                                 <thead>
@@ -54,14 +55,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($order->products as $product)
+                                    <?php $__currentLoopData = $order->products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <tr>
-                                        <td>{{ $product->name }}</td>
-                                        <td>{{ $product->pivot->quantity }}</td>
-                                        <td>₱{{ number_format($product->price, 2) }}</td>
-                                        <td>₱{{ number_format($product->pivot->quantity * $product->price, 2) }}</td>
+                                        <td><?php echo e($product->name); ?></td>
+                                        <td><?php echo e($product->pivot->quantity); ?></td>
+                                        <td>₱<?php echo e(number_format($product->price, 2)); ?></td>
+                                        <td>₱<?php echo e(number_format($product->pivot->quantity * $product->price, 2)); ?></td>
                                     </tr>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </tbody>
                             </table>
                         </div>
@@ -70,12 +71,12 @@
             </div>
 
             <!-- Driver Assignment Card -->
-            @php
+            <?php
                 $drivers = \App\Models\Driver::with('user')->where('is_active', true)->get()->filter(function($driver) {
                     return $driver->user !== null;
                 });
-            @endphp
-            @if($order->assigned_driver_id)
+            ?>
+            <?php if($order->assigned_driver_id): ?>
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0">
@@ -87,16 +88,16 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h6>Assigned Driver</h6>
-                            @if($order->assignedDriver)
-                                <p><strong>Name:</strong> {{ $order->assignedDriver->name ?? 'N/A' }}</p>
-                                <p><strong>Contact:</strong> {{ $order->assignedDriver->contact_number ?? 'N/A' }}</p>
-                                @if($order->assignedDriver->driver)
-                                    <p><strong>Vehicle:</strong> {{ $order->assignedDriver->driver->vehicle_type ?? 'N/A' }} ({{ $order->assignedDriver->driver->vehicle_plate ?? 'N/A' }})</p>
-                                    <p><strong>License:</strong> {{ $order->assignedDriver->driver->license_number ?? 'N/A' }}</p>
-                                @endif
-                            @else
+                            <?php if($order->assignedDriver): ?>
+                                <p><strong>Name:</strong> <?php echo e($order->assignedDriver->name ?? 'N/A'); ?></p>
+                                <p><strong>Contact:</strong> <?php echo e($order->assignedDriver->contact_number ?? 'N/A'); ?></p>
+                                <?php if($order->assignedDriver->driver): ?>
+                                    <p><strong>Vehicle:</strong> <?php echo e($order->assignedDriver->driver->vehicle_type ?? 'N/A'); ?> (<?php echo e($order->assignedDriver->driver->vehicle_plate ?? 'N/A'); ?>)</p>
+                                    <p><strong>License:</strong> <?php echo e($order->assignedDriver->driver->license_number ?? 'N/A'); ?></p>
+                                <?php endif; ?>
+                            <?php else: ?>
                                 <p class="text-muted">Driver information not available</p>
-                            @endif
+                            <?php endif; ?>
                             <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#assignDriverModal">
                                 <i class="fas fa-exchange-alt me-1"></i> Change Driver
                             </button>
@@ -104,27 +105,28 @@
                         <div class="col-md-6">
                             <h6>Delivery Status</h6>
                             <p><strong>Status:</strong> 
-                                @if($order->order_status === 'on_delivery')
+                                <?php if($order->order_status === 'on_delivery'): ?>
                                     <span class="badge bg-info">On Delivery</span>
-                                @elseif($order->order_status === 'approved')
+                                <?php elseif($order->order_status === 'approved'): ?>
                                     <span class="badge bg-warning">Ready for Delivery</span>
-                                @else
-                                    <span class="badge bg-secondary">{{ ucfirst($order->order_status) }}</span>
-                                @endif
+                                <?php else: ?>
+                                    <span class="badge bg-secondary"><?php echo e(ucfirst($order->order_status)); ?></span>
+                                <?php endif; ?>
                             </p>
-                            <p><strong>Assigned:</strong> {{ $order->on_delivery_at ? \Carbon\Carbon::parse($order->on_delivery_at)->format('M d, Y g:i A') : 'Not assigned yet' }}</p>
-                            @if($order->assignedDriver && $order->assignedDriver->driver)
+                            <p><strong>Assigned:</strong> <?php echo e($order->on_delivery_at ? \Carbon\Carbon::parse($order->on_delivery_at)->format('M d, Y g:i A') : 'Not assigned yet'); ?></p>
+                            <?php if($order->assignedDriver && $order->assignedDriver->driver): ?>
                                 <p><strong>Driver Status:</strong> 
-                                    <span class="badge {{ $order->assignedDriver->driver->getAvailabilityBadgeClass() }}">
-                                        {{ $order->assignedDriver->driver->getAvailabilityText() }}
+                                    <span class="badge <?php echo e($order->assignedDriver->driver->getAvailabilityBadgeClass()); ?>">
+                                        <?php echo e($order->assignedDriver->driver->getAvailabilityText()); ?>
+
                                     </span>
                                 </p>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
             </div>
-            @else
+            <?php else: ?>
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-warning text-dark">
                     <h5 class="mb-0">
@@ -139,15 +141,15 @@
                     </button>
                 </div>
             </div>
-            @endif
+            <?php endif; ?>
 
             <!-- Action Buttons -->
             <div class="d-flex justify-content-between">
-                <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">
+                <a href="<?php echo e(route('admin.orders.index')); ?>" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Back to Orders
                 </a>
                 <div>
-                    <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-primary me-2">
+                    <a href="<?php echo e(route('admin.orders.show', $order->id)); ?>" class="btn btn-primary me-2">
                         <i class="fas fa-eye me-2"></i>View Full Invoice
                     </a>
                     <button class="btn btn-success" onclick="window.print()">
@@ -166,35 +168,35 @@
                 <h5 class="modal-title" id="assignDriverModalLabel">Assign Driver</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{{ route('admin.orders.assignDelivery', $order->id) }}">
-                @csrf
+            <form method="POST" action="<?php echo e(route('admin.orders.assignDelivery', $order->id)); ?>">
+                <?php echo csrf_field(); ?>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="driver_id" class="form-label">Select Driver</label>
                         <select id="driver_id" name="driver_id" class="form-select" required>
                             <option value="" selected disabled>Choose a driver...</option>
-                            @foreach($drivers as $driver)
-                                <option value="{{ $driver->user_id }}" 
-                                        data-availability="{{ $driver->availability_status }}"
-                                        data-vehicle="{{ $driver->vehicle_type }}"
-                                        data-license="{{ $driver->license_number }}"
-                                        data-deliveries="{{ $driver->current_deliveries_today }}/{{ $driver->max_deliveries_per_day }}"
-                                        data-work-hours="{{ $driver->work_start_time->format('H:i') }} - {{ $driver->work_end_time->format('H:i') }}"
-                                        {{ !$driver->isAvailable() ? 'disabled' : '' }}>
-                                    {{ $driver->user ? $driver->user->name : 'Unknown Driver' }} 
-                                    ({{ $driver->getAvailabilityText() }})
-                                    @if(!$driver->isAvailable())
+                            <?php $__currentLoopData = $drivers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $driver): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($driver->user_id); ?>" 
+                                        data-availability="<?php echo e($driver->availability_status); ?>"
+                                        data-vehicle="<?php echo e($driver->vehicle_type); ?>"
+                                        data-license="<?php echo e($driver->license_number); ?>"
+                                        data-deliveries="<?php echo e($driver->current_deliveries_today); ?>/<?php echo e($driver->max_deliveries_per_day); ?>"
+                                        data-work-hours="<?php echo e($driver->work_start_time->format('H:i')); ?> - <?php echo e($driver->work_end_time->format('H:i')); ?>"
+                                        <?php echo e(!$driver->isAvailable() ? 'disabled' : ''); ?>>
+                                    <?php echo e($driver->user ? $driver->user->name : 'Unknown Driver'); ?> 
+                                    (<?php echo e($driver->getAvailabilityText()); ?>)
+                                    <?php if(!$driver->isAvailable()): ?>
                                         - Not Available
-                                    @endif
+                                    <?php endif; ?>
                                 </option>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     
                     <div class="mb-3">
                         <label for="delivery_date" class="form-label">Delivery Date</label>
                         <input type="date" id="delivery_date" name="delivery_date" class="form-control" 
-                               value="{{ now()->addDay()->format('Y-m-d') }}" required>
+                               value="<?php echo e(now()->addDay()->format('Y-m-d')); ?>" required>
                     </div>
                     
                     <!-- Driver Information Display -->
@@ -206,7 +208,7 @@
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <p><strong>Contact:</strong> <span id="driverContact">{{ $drivers->first() && $drivers->first()->user ? $drivers->first()->user->contact_number : 'N/A' }}</span></p>
+                                        <p><strong>Contact:</strong> <span id="driverContact"><?php echo e($drivers->first() && $drivers->first()->user ? $drivers->first()->user->contact_number : 'N/A'); ?></span></p>
                                         <p><strong>Vehicle:</strong> <span id="driverVehicle">N/A</span></p>
                                         <p><strong>License:</strong> <span id="driverLicense">N/A</span></p>
                                     </div>
@@ -280,4 +282,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.admin_app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\JJ_Flowershop_Capstone\resources\views/admin/orders/online/done.blade.php ENDPATH**/ ?>

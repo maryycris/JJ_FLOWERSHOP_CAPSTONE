@@ -1,4 +1,37 @@
 <?php $__env->startSection('content'); ?>
+<style>
+    /* Custom scrollbar styling for transparent tracks */
+    .scrollable-content::-webkit-scrollbar {
+        width: 8px;
+        background: transparent;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-track {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb {
+        background: #7bb47b !important;
+        border-radius: 4px;
+        border: none !important;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb:hover {
+        background: #5a9c5a !important;
+    }
+    
+    /* Force transparent track */
+    .scrollable-content::-webkit-scrollbar-corner {
+        background: transparent !important;
+    }
+    
+    /* Additional overrides for complete transparency */
+    .scrollable-content::-webkit-scrollbar-track-piece {
+        background: transparent !important;
+    }
+</style>
 <div class="pt-1 " style="background: #f4faf4; min-height: 80vh;">
     <div class="container" style="max-width: 1400px;">
     
@@ -316,30 +349,6 @@
         background: #7bb47b !important;
     }
     
-    /* Custom scrollbar styling for the payment methods content area */
-    .scrollable-content::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    .scrollable-content::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 4px;
-    }
-
-    .scrollable-content::-webkit-scrollbar-thumb {
-        background: #8ACB88;
-        border-radius: 4px;
-    }
-
-    .scrollable-content::-webkit-scrollbar-thumb:hover {
-        background: #7bb47b;
-    }
-
-    /* For Firefox */
-    .scrollable-content {
-        scrollbar-width: thin;
-        scrollbar-color: #8ACB88 #f1f1f1;
-    }
 </style>
 <?php $__env->stopPush(); ?>
 
@@ -586,7 +595,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 
                 <!-- Payment Restrictions Warning -->
-                <div class="alert alert-info mb-4" style="border-left: 4px solid #17a2b8; background-color: #d1ecf1; border-color: #bee5eb;">
+                <div class="alert mb-4" style="border-left: 4px solid #7bb47b; background-color: #e8f5e8; border-color: #7bb47b; color: #2d5a2d;">
                     <div class="d-flex align-items-start">
                         <i class="fas fa-info-circle text-info me-2 mt-1"></i>
                         <div>

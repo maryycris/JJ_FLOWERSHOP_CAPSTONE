@@ -26,9 +26,9 @@
                                 <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addModal" data-category="{{ $cat }}"><i class="bi bi-plus-lg"></i> Add</button>
                             </div>
                         </div>
-                        <div class="row g-3">
+                        <div class="row g-1">
                             @foreach(($items[$cat] ?? []) as $item)
-                            <div class="col-6 col-md-4 col-lg-3">
+                            <div class="col-6 col-md-2 col-lg-2 col-xl-2">
                                 <div class="card h-100">
                                     <div class="position-relative">
                                         @if($item->image)
@@ -44,10 +44,7 @@
                                     </div>
                                     <div class="card-footer d-flex justify-content-center gap-2 p-2">
                                         <button class="btn btn-sm action-btn edit-btn" data-bs-toggle="modal" data-bs-target="#editModal{{ $item->id }}" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                                        <form method="POST" action="{{ route('admin.customize.destroy',$item->id) }}" onsubmit="return confirm('Delete this item?')" class="d-inline">
-                                            @csrf @method('DELETE')
-                                            <button class="btn btn-sm action-btn delete-btn" title="Delete"><i class="bi bi-trash3"></i></button>
-                                        </form>
+                                        <button class="btn btn-sm action-btn delete-btn" title="Delete" onclick="deleteItem({{ $item->id }})"><i class="bi bi-trash3"></i></button>
                                     </div>
                                 </div>
                             </div>
@@ -55,7 +52,7 @@
                             <!-- Edit Modal -->
                             <div class="modal fade" id="editModal{{ $item->id }}" tabindex="-1">
                               <div class="modal-dialog">
-                                <form class="modal-content" method="POST" action="{{ route('admin.customize.update',$item->id) }}" enctype="multipart/form-data">
+                                <form class="modal-content" method="POST" action="{{ route('admin.customize.update',$item->id) }}" enctype="multipart/form-data" onsubmit="handleEditForm(event, {{ $item->id }})">
                                   @csrf @method('PUT')
                                   <div class="modal-header"><h5 class="modal-title">Edit {{ $cat }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                                   <div class="modal-body">
@@ -105,7 +102,7 @@
 <!-- Add Modal (shared) -->
 <div class="modal fade" id="addModal" tabindex="-1">
   <div class="modal-dialog">
-    <form class="modal-content" method="POST" action="{{ route('admin.customize.store') }}" enctype="multipart/form-data">
+    <form class="modal-content" method="POST" action="{{ route('admin.customize.store') }}" enctype="multipart/form-data" onsubmit="handleAddForm(event)">
       @csrf
       <div class="modal-header"><h5 class="modal-title">Add Item</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
@@ -341,11 +338,120 @@
     background: transparent !important;
     background-color: transparent !important;
 }
+
+/* Customize Item Cards - Smaller Size and Fonts */
+.customize-scroll-container .card {
+    font-size: 0.8rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.customize-scroll-container .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.customize-scroll-container .card-img-top {
+    height: 100px !important;
+    object-fit: cover;
+}
+
+.customize-scroll-container .card-body {
+    padding: 8px 10px;
+}
+
+.customize-scroll-container .card-body .fw-semibold {
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 4px;
+}
+
+.customize-scroll-container .card-body .text-muted {
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.customize-scroll-container .card-footer {
+    padding: 6px 8px;
+}
+
+/* Smaller action buttons for smaller cards */
+.customize-scroll-container .action-btn {
+    width: 35px !important;
+    height: 30px !important;
+    font-size: 12px !important;
+}
+
+/* Smaller checkbox for smaller cards */
+.customize-scroll-container .item-checkbox {
+    width: 14px !important;
+    height: 14px !important;
+    border: 1px solid #007bff !important;
+}
+
+/* Category Tabs Green Styling */
+.nav-tabs .nav-link {
+    color: #28a745 !important;
+    border-color: #dee2e6;
+    background-color: transparent;
+}
+
+.nav-tabs .nav-link:hover {
+    background-color: #d4edda;
+    border-color: #c3e6cb #c3e6cb #d4edda;
+    color: #155724 !important;
+}
+
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-link.active:hover,
+.nav-tabs .nav-link.active:focus {
+    color: #155724 !important;
+    background-color: #d4edda;
+    border-color: #c3e6cb #c3e6cb #d4edda;
+}
+
 </style>
 @endpush
 
 @push('scripts')
 <script>
+// Store current active tab
+let currentActiveTab = null;
+
+// Initialize tab state preservation
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a saved tab state
+    const savedTab = sessionStorage.getItem('activeCustomizeTab');
+    
+    if (savedTab) {
+        // Activate the saved tab
+        const tabButton = document.querySelector(`[data-bs-target="#${savedTab}"]`);
+        if (tabButton) {
+            const tab = new bootstrap.Tab(tabButton);
+            tab.show();
+            currentActiveTab = savedTab;
+        }
+        // Clear the saved tab state
+        sessionStorage.removeItem('activeCustomizeTab');
+    } else {
+        // Store the initially active tab
+        const activeTab = document.querySelector('.tab-pane.active');
+        if (activeTab) {
+            currentActiveTab = activeTab.id;
+        }
+    }
+    
+    // Listen for tab changes
+    const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+    tabButtons.forEach(button => {
+        button.addEventListener('shown.bs.tab', function (e) {
+            currentActiveTab = e.target.getAttribute('data-bs-target').replace('#', '');
+        });
+    });
+});
+
 document.getElementById('addModal')?.addEventListener('show.bs.modal', function (e) {
     const btn = e.relatedTarget;
     if (btn && btn.dataset.category) {
@@ -353,6 +459,158 @@ document.getElementById('addModal')?.addEventListener('show.bs.modal', function 
         loadInventoryItems(); // Load items when modal opens with pre-selected category
     }
 });
+
+// AJAX function to handle add form submission
+async function handleAddForm(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addModal'));
+            modal.hide();
+            
+            // Show success message
+            showAlert('success', result.message);
+            
+            // Reload the page to show the new item and preserve tab state
+            setTimeout(() => {
+                // Store current tab before reload
+                if (currentActiveTab) {
+                    sessionStorage.setItem('activeCustomizeTab', currentActiveTab);
+                }
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert('error', result.message || 'An error occurred');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while adding the item');
+    }
+}
+
+// AJAX function to handle edit form submission
+async function handleEditForm(event, itemId) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById(`editModal${itemId}`));
+            modal.hide();
+            
+            // Show success message
+            showAlert('success', result.message);
+            
+            // Reload the page to show the updated item and preserve tab state
+            setTimeout(() => {
+                // Store current tab before reload
+                if (currentActiveTab) {
+                    sessionStorage.setItem('activeCustomizeTab', currentActiveTab);
+                }
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert('error', result.message || 'An error occurred');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while updating the item');
+    }
+}
+
+// AJAX function to handle delete
+async function deleteItem(itemId) {
+    if (!confirm('Delete this item?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/customize/${itemId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success message
+            showAlert('success', result.message);
+            
+            // Reload the page to remove the deleted item and preserve tab state
+            setTimeout(() => {
+                // Store current tab before reload
+                if (currentActiveTab) {
+                    sessionStorage.setItem('activeCustomizeTab', currentActiveTab);
+                }
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert('error', result.message || 'An error occurred');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while deleting the item');
+    }
+}
+
+// Function to show alerts
+function showAlert(type, message) {
+    // Remove existing alerts
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    // Create new alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
 
 // Load inventory items based on selected category
 async function loadInventoryItems() {
@@ -590,7 +848,7 @@ function toggleSelectAll() {
             cb.checked = true;
         });
         selectAllBtn.innerHTML = '<i class="bi bi-x-square"></i> Deselect All';
-        selectAllBtn.className = 'selectAllBtn btn btn-outline-secondary btn-sm';
+        selectAllBtn.className = 'selectAllBtn btn btn-outline-primary btn-sm';
     }
     
     // Update the remove button state
@@ -650,7 +908,7 @@ function updateSelectAllButtonState() {
         selectAllBtn.className = 'selectAllBtn btn btn-outline-primary btn-sm';
     } else if (checkedCount === checkboxes.length) {
         selectAllBtn.innerHTML = '<i class="bi bi-x-square"></i> Deselect All';
-        selectAllBtn.className = 'selectAllBtn btn btn-outline-secondary btn-sm';
+        selectAllBtn.className = 'selectAllBtn btn btn-outline-primary btn-sm';
     } else {
         selectAllBtn.innerHTML = '<i class="bi bi-check-square"></i> Select All';
         selectAllBtn.className = 'selectAllBtn btn btn-outline-primary btn-sm';
@@ -713,11 +971,39 @@ function removeSelectedItems() {
         console.log('Form added to DOM, submitting...');
         
         try {
-            form.submit();
+            // Use AJAX for bulk delete
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showAlert('success', result.message);
+                    // Reload the page to remove the deleted items and preserve tab state
+                    setTimeout(() => {
+                        if (currentActiveTab) {
+                            sessionStorage.setItem('activeCustomizeTab', currentActiveTab);
+                        }
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showAlert('error', result.message || 'An error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting form:', error);
+                showAlert('error', 'Error submitting form: ' + error.message);
+            });
+            
             console.log('Form submitted successfully');
         } catch (error) {
             console.error('Error submitting form:', error);
-            alert('Error submitting form: ' + error.message);
+            showAlert('error', 'Error submitting form: ' + error.message);
         }
     } else {
         console.log('User cancelled deletion');

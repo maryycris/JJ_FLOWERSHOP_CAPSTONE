@@ -1,15 +1,15 @@
 <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content" style="border-radius: 18px; overflow: hidden;">
-      <div class="modal-body p-4 d-flex flex-column" style="gap: 20px;">
-        <div class="d-flex flex-column flex-lg-row" style="gap: 24px; align-items: flex-start;">
+      <div class="modal-body p-4 d-flex flex-column" style="gap: 12px;">
+        <div class="d-flex flex-column flex-lg-row" style="gap: 20px; align-items: flex-start;">
           <!-- Left: Image + description -->
-          <div class="flex-grow-1" style="min-width: 280px; max-width: 320px;">
+          <div class="flex-grow-1" style="min-width: 260px; max-width: 320px;">
             <div class="d-flex flex-column align-items-center">
-              <img id="modalProductImage" src="" alt="Product" style="width: 100%; max-width: 300px; aspect-ratio: 1/1; border-radius: 12px; object-fit: cover; box-shadow: 0 8px 20px rgba(0,0,0,0.08);">
+              <img id="modalProductImage" src="" alt="Product" style="width: 100%; max-width: 260px; aspect-ratio: 1/1; border-radius: 12px; object-fit: cover; box-shadow: 0 8px 20px rgba(0,0,0,0.08);">
               <div class="mt-3 w-100">
                 <label class="form-label fw-semibold mb-2" style="color: #1f2d27; font-size: 0.95rem;">Description</label>
-                <div id="modalProductDescription" class="form-control" style="min-height: 80px; border: 1px solid #d7ead6; background: #f7fff6; border-radius: 8px; font-size: 0.95rem; color: #475057; resize: none; padding: 12px; font-family: inherit;">
+                <div id="modalProductDescription" class="form-control" style="min-height: 50px; border: 1px solid #d7ead6; background: #f7fff6; border-radius: 8px; font-size: 0.9rem; color: #475057; resize: none; padding: 8px; font-family: inherit;">
                   Description of the product...
                 </div>
               </div>
@@ -17,7 +17,7 @@
           </div>
           
           <!-- Right: Details + Actions -->
-          <div class="flex-grow-1" style="min-width: 280px;">
+          <div class="flex-grow-1" style="min-width: 260px;">
             <div class="d-flex align-items-start justify-content-between mb-2">
               <div>
                 <h3 id="modalProductName" class="mb-1" style="font-weight: 700; color: #1f2d27; font-size: 1.4rem;">Product Name</h3>
@@ -51,8 +51,8 @@
           </div>
         
         <!-- Reviews Section -->
-        <div id="modalReviewsSection" class="mt-3" style="background:#ffffff; border:1px solid #eef3ef; border-radius:12px; padding:16px;">
-          <div class="d-flex align-items-center justify-content-between mb-3">
+        <div id="modalReviewsSection" class="mt-1" style="background:#ffffff; border:1px solid #eef3ef; border-radius:12px; padding:10px;">
+          <div class="d-flex align-items-center justify-content-between mb-2">
             <div class="d-flex align-items-center" style="gap: 8px;">
               <h6 class="mb-0 fw-bold" style="color:#1f2d27; font-size: 1.1rem;">Customer Reviews</h6>
               <div id="modalRatingSummary" class="d-flex align-items-center" style="gap:4px;">
@@ -62,7 +62,7 @@
             </div>
             <small id="modalReviewsCount" class="text-muted fw-semibold" style="font-size: 0.9rem; background:#f8f9fa; padding:4px 8px; border-radius:12px;"></small>
           </div>
-          <div id="modalReviewsList" style="max-height: 200px; overflow-y:auto; padding-right: 8px;">
+          <div id="modalReviewsList" style="max-height: 120px; overflow-y:auto; padding-right: 8px;">
             <div class="text-center text-muted py-3">
               <i class="bi bi-chat-square-text" style="font-size: 2rem; opacity: 0.3;"></i>
               <div class="mt-2">No reviews yet</div>

@@ -11,7 +11,7 @@
             <div class="h-100 d-flex flex-column">
                 <!-- Header -->
                 <div class="text-center mb-2">
-                    <h3 class="fw-bold text-dark mb-2">Customize your Desired Bouquet</h3>
+                    <h4 class="fw-bold text-dark mb-2">Customize your Desired Bouquet</h4>
                     <br>
                     <div class="d-flex justify-content-center mb-3">
                         <button class="btn btn-success btn-sm">
@@ -29,13 +29,7 @@
                     <!-- Bouquet Wrapper Selection -->
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold text-dark mb-0">Choose Wrappers</h5>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="noWrapper" name="no_wrapper">
-                                <label class="form-check-label fw-medium" for="noWrapper">
-                                    Do not include
-                                </label>
-                            </div>
+                            <h6 class="fw-bold text-dark mb-0">Choose Wrappers</h6>
                         </div>
                         <div class="row g-3" id="wrapperGrid">
                             @foreach(($items['Wrappers'] ?? []) as $wrap)
@@ -74,13 +68,7 @@
                     <!-- Focal Flower 1 -->
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold text-dark mb-0">Choose Fresh Flowers</h5>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="noFocalFlower1" name="no_focal_flower_1">
-                                <label class="form-check-label fw-medium" for="noFocalFlower1">
-                                    Do not include
-                                </label>
-                            </div>
+                            <h6 class="fw-bold text-dark mb-0">Choose Fresh Flowers</h6>
                         </div>
                         <div class="row g-3" id="focalFlowerGrid1">
                             @foreach(($items['Fresh Flowers'] ?? []) as $focal)
@@ -121,13 +109,7 @@
                     <!-- Greenery Selection -->
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold text-dark mb-0">Choose Greenery</h5>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="noGreenery" name="no_greenery">
-                                <label class="form-check-label fw-medium" for="noGreenery">
-                                    Do not include
-                                </label>
-                            </div>
+                            <h6 class="fw-bold text-dark mb-0">Choose Greenery</h6>
                         </div>
                         <div class="row g-3">
                             @foreach(($items['Greenery'] ?? []) as $greenery)
@@ -166,13 +148,7 @@
                     <!-- Fillers Selection -->
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold text-dark mb-0">Choose Artificial Flowers</h5>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="noFillers" name="no_fillers">
-                                <label class="form-check-label fw-medium" for="noFillers">
-                                    Do not include
-                                </label>
-                            </div>
+                            <h6 class="fw-bold text-dark mb-0">Choose Artificial Flowers</h6>
                         </div>
                         <div class="row g-3">
                             @if(isset($items['Artificial Flowers']) && count($items['Artificial Flowers']) > 0)
@@ -217,13 +193,7 @@
                     <!-- Ribbon Selection -->
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold text-dark mb-0">Choose Ribbons</h5>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="noRibbon" name="no_ribbon">
-                                <label class="form-check-label fw-medium" for="noRibbon">
-                                    Do not include
-                                </label>
-                            </div>
+                            <h6 class="fw-bold text-dark mb-0">Choose Ribbons</h6>
                         </div>
                         <div class="row g-3">
                             @foreach(($items['Ribbons'] ?? []) as $ribbon)

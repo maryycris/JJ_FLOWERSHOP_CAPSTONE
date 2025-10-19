@@ -92,12 +92,12 @@
     }
     .sidebar-container {
         position: fixed;
-        top: 110px;
+        top: 78px;
         left: 0;
         width: 25%;
         max-width: 300px;
-        min-height: calc(100vh - 110px);
-        background: #f8f9fa;
+        min-height: calc(100vh - 78px);
+        background: #fff;
         z-index: 100;
         overflow-y: auto;
     }

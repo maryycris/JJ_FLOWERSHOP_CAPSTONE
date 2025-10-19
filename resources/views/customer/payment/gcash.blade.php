@@ -27,7 +27,7 @@
                         <p class="text-muted">Total Amount: ₱{{ number_format($order->total_price, 2) }}</p>
                     </div>
 
-                    <div class="alert alert-info">
+                    <div class="alert" style="background-color: #e8f5e8; border-color: #7bb47b; color: #2d5a2d;">
                         <i class="fas fa-info-circle me-2"></i>
                         <strong>Important:</strong> This is a simulation of the GCash payment gateway. 
                         In a real implementation, you would be redirected to the actual GCash payment page.

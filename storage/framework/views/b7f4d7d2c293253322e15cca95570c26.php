@@ -185,6 +185,85 @@
             right: 0;
             z-index: 1050;
         }
+        
+        /* Custom Success Alert Global Styling */
+        .custom-success-alert-global {
+            background: #e8f5e8;
+            border: 1px solid #7bb47b;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 0;
+            max-width: 500px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1060;
+            box-shadow: 0 4px 12px rgba(123, 180, 123, 0.25);
+            animation: slideInDown 0.3s ease-out;
+        }
+        
+        .custom-success-alert-global .alert-icon {
+            background: #7bb47b;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        .custom-success-alert-global .alert-message {
+            color: #2d5a2d;
+            font-weight: 500;
+            flex: 1;
+            font-size: 14px;
+        }
+        
+        .custom-success-alert-global .alert-close {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .custom-success-alert-global .alert-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: #333;
+        }
+        
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutUp {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+        }
     </style>
 
     <?php echo $__env->yieldPushContent('styles'); ?>
@@ -192,10 +271,14 @@
 <body>
     <div id="app">
         <?php if(session('success')): ?>
-            <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-                <?php echo e(session('success')); ?>
-
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="custom-success-alert-global" role="alert" id="successAlert">
+                <div class="alert-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="alert-message"><?php echo e(session('success')); ?></div>
+                <button type="button" class="alert-close" onclick="dismissAlert()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         <?php endif; ?>
         <?php if(session('error')): ?>
@@ -433,6 +516,27 @@
 
             if (filterClear) {
                 filterClear.addEventListener('click', clearFilters);
+            }
+        });
+        
+        // Auto-dismiss success alert
+        function dismissAlert() {
+            const alert = document.getElementById('successAlert');
+            if (alert) {
+                alert.style.animation = 'slideOutUp 0.3s ease-in';
+                setTimeout(() => {
+                    alert.remove();
+                }, 300);
+            }
+        }
+        
+        // Auto-dismiss after 4 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alert = document.getElementById('successAlert');
+            if (alert) {
+                setTimeout(() => {
+                    dismissAlert();
+                }, 4000);
             }
         });
     </script>

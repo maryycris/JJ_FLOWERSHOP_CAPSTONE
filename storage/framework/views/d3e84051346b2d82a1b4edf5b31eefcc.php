@@ -426,7 +426,7 @@
                 <h5 class="modal-title" id="addProductModalLabel">Add New Product</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="<?php echo e(route('admin.products.store')); ?>" method="POST" enctype="multipart/form-data">
+            <form action="<?php echo e(route('admin.products.store')); ?>" method="POST" enctype="multipart/form-data" onsubmit="handleAddProductForm(event)">
                 <?php echo csrf_field(); ?>
                 <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
                     <div class="mb-3 text-center">
@@ -504,7 +504,7 @@
                 <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="editProductForm" method="POST" enctype="multipart/form-data">
+            <form id="editProductForm" method="POST" enctype="multipart/form-data" onsubmit="handleEditProductForm(event, currentEditProductId)">
                 <?php echo csrf_field(); ?>
                 <?php echo method_field('PUT'); ?>
                 <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
@@ -613,6 +613,40 @@
 
 <!-- Search Functionality -->
 <script>
+// Store current active category tab
+let currentActiveCategory = null;
+let currentEditProductId = null;
+
+// Initialize category tab state preservation
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a saved category state
+    const savedCategory = sessionStorage.getItem('activeProductCategory');
+    
+    if (savedCategory) {
+        // Activate the saved category tab
+        const categoryLink = document.querySelector(`a[href="?category=${savedCategory}"]`);
+        if (categoryLink) {
+            categoryLink.click();
+            currentActiveCategory = savedCategory;
+        }
+        // Clear the saved category state
+        sessionStorage.removeItem('activeProductCategory');
+    } else {
+        // Store the initially active category
+        const currentUrl = new URL(window.location.href);
+        currentActiveCategory = currentUrl.searchParams.get('category') || 'all';
+    }
+    
+    // Listen for category tab changes
+    const categoryLinks = document.querySelectorAll('.category-tab-link');
+    categoryLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            const url = new URL(this.href);
+            currentActiveCategory = url.searchParams.get('category') || 'all';
+        });
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('productSearchInput');
     const filterBtn = document.getElementById('productFilterBtn');
@@ -720,6 +754,155 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// AJAX function to handle add product form submission
+async function handleAddProductForm(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
+            modal.hide();
+            
+            // Show success message
+            showAlert(result.message, 'success');
+            
+            // Reload the page to show the new product and preserve category state
+            setTimeout(() => {
+                if (currentActiveCategory) {
+                    sessionStorage.setItem('activeProductCategory', currentActiveCategory);
+                }
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert(result.message || 'An error occurred', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('An error occurred while adding the product', 'error');
+    }
+}
+
+// AJAX function to handle edit product form submission
+async function handleEditProductForm(event, productId) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch(`/admin/products/${productId}`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editProductModal'));
+            modal.hide();
+            
+            // Show success message
+            showAlert(result.message, 'success');
+            
+            // Reload the page to show the updated product and preserve category state
+            setTimeout(() => {
+                if (currentActiveCategory) {
+                    sessionStorage.setItem('activeProductCategory', currentActiveCategory);
+                }
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert(result.message || 'An error occurred', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('An error occurred while updating the product', 'error');
+    }
+}
+
+// AJAX function to handle delete product
+async function deleteProduct(productId) {
+    if (!confirm('Are you sure you want to delete this product and its images?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/products/${productId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success message
+            showAlert(result.message, 'success');
+            
+            // Reload the page to remove the deleted product and preserve category state
+            setTimeout(() => {
+                if (currentActiveCategory) {
+                    sessionStorage.setItem('activeProductCategory', currentActiveCategory);
+                }
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert(result.message || 'An error occurred', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('An error occurred while deleting the product', 'error');
+    }
+}
+
+// Function to show alerts
+function showAlert(message, type) {
+    // Remove existing alerts
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    // Create new alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
 
 // Pending Product Changes Functions
 async function approveProductChange(changeId) {
@@ -1216,6 +1399,9 @@ async function viewProductChangeDetails(changeId) {
         editProductModal.addEventListener('show.bs.modal', async function (event) {
             var button = event.relatedTarget; // Button that triggered the modal
             var product = JSON.parse(button.getAttribute('data-product'));
+
+            // Set the current edit product ID for AJAX handling
+            currentEditProductId = product.id;
 
             var form = editProductModal.querySelector('#editProductForm');
             form.action = '/admin/products/' + product.id; // Set the form action dynamically
@@ -1940,11 +2126,7 @@ async function viewProductChangeDetails(changeId) {
                             ${isOutOfStock ? '<small class="text-muted" style="font-size: 0.7rem;">Insufficient materials</small>' : ''}
                             <div class="d-flex justify-content-center gap-2 mt-2">
                                 <button class="btn btn-sm action-btn edit-btn edit-product-btn" title="Edit" data-bs-toggle="modal" data-bs-target="#editProductModal" data-product='${JSON.stringify(product)}'><i class="bi bi-pencil-square"></i></button>
-                                <form action="/admin/products/${product.id}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this product and its images?');">
-                                    <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').getAttribute('content')}">
-                                    <input type="hidden" name="_method" value="DELETE">
-                                    <button type="submit" class="btn btn-sm action-btn delete-btn" title="Delete"><i class="bi bi-trash3"></i></button>
-                                </form>
+                                <button class="btn btn-sm action-btn delete-btn" title="Delete" onclick="deleteProduct(${product.id})"><i class="bi bi-trash3"></i></button>
                             </div>
                         </div>
                     </div>

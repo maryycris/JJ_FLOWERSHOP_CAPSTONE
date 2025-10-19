@@ -440,7 +440,7 @@
                 <div class="modal-header bg-danger text-white">
                     <h5 class="modal-title" id="deleteProductModalLabel">Delete Product</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
+</div>
                 <form id="deleteProductForm" method="POST">
                     <?php echo csrf_field(); ?>
                     <?php echo method_field('DELETE'); ?>

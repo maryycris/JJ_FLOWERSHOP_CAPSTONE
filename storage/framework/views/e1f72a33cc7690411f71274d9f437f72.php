@@ -55,7 +55,7 @@
                     <i class="bi bi-brush"></i>
                     <span>Customize</span>
                 </a>
-                <a href="<?php echo e(route('clerk.clerk.inventory.index')); ?>" class="clerk-navbar-link <?php if(request()->routeIs('clerk.clerk.inventory.*')): ?> active <?php endif; ?>">
+                <a href="<?php echo e(route('clerk.inventory.manage')); ?>" class="clerk-navbar-link <?php if(request()->routeIs('clerk.inventory.*')): ?> active <?php endif; ?>">
                     <i class="bi bi-box"></i>
                     <span>Inventory</span>
                 </a>

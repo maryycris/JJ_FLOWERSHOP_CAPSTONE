@@ -245,7 +245,7 @@
                         </div>
                     @empty
                         <div class="col-12">
-                            <div class="alert alert-info">
+                            <div class="alert" style="background-color: #e8f5e8; border-color: #7bb47b; color: #2d5a2d;">
                                 You haven't added any addresses yet. Click the "Add New Address" button to add your first address.
                             </div>
                         </div>

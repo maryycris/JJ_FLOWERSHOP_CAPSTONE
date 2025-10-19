@@ -347,6 +347,14 @@ class ProductController extends Controller
             \Log::info('Compositions saved for product:', ['product_id' => $catalogProduct->id, 'compositions_count' => count($request->compositions)]);
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Product added successfully to catalog.',
+                'product' => $catalogProduct
+            ]);
+        }
+
         return Redirect::route('admin.products.index')->with('success', 'Product added successfully to catalog.');
     }
 
@@ -396,10 +404,18 @@ class ProductController extends Controller
 
         $product->update($validated);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Product updated successfully.',
+                'product' => $product
+            ]);
+        }
+
         return Redirect::route('admin.products.index')->with('success', 'Product updated successfully.');
     }
 
-    public function destroy(CatalogProduct $product)
+    public function destroy(Request $request, CatalogProduct $product)
     {
         // Delete all associated images from storage
         if ($product->image) {
@@ -413,6 +429,13 @@ class ProductController extends Controller
         }
 
         $product->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Product deleted successfully.'
+            ]);
+        }
 
         return Redirect::route('admin.products.index')->with('success', 'Product deleted successfully.');
     }
@@ -508,6 +531,14 @@ class ProductController extends Controller
             'status' => true,
         ]);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Product added successfully!',
+                'product' => Product::latest()->first()
+            ]);
+        }
+
         return redirect()->route('admin.inventory.index')->with('success', 'Product added successfully!');
     }
 
@@ -542,11 +573,15 @@ class ProductController extends Controller
         ]);
 
         // Return JSON response for AJAX requests
-        if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => 'Product updated successfully!']);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Material updated successfully!',
+                'product' => $product
+            ]);
         }
 
-        return redirect()->route('admin.inventory.index')->with('success', 'Product updated successfully!');
+        return redirect()->route('admin.inventory.index')->with('success', 'Material updated successfully!');
     }
 
     public function destroyInventory(Product $product)

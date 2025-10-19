@@ -88,12 +88,121 @@
 #mainInventoryTabs .nav-link {
     color: #28a745 !important;
     border-color: #dee2e6;
+    font-size: 0.9rem;
 }
 
 #mainInventoryTabs .nav-link.active {
     color: #28a745 !important;
     background-color: #f8f9fa;
     border-color: #dee2e6 #dee2e6 #f8f9fa;
+}
+
+
+/* Search Bar Styling */
+#inventorySearch {
+    font-size: 0.85rem;
+}
+
+#inventorySearch::placeholder {
+    font-size: 0.8rem;
+}
+
+#clearInventorySearch {
+    font-size: 0.8rem;
+}
+
+/* Add New Material Button */
+.btn-success {
+    font-size: 0.85rem;
+}
+
+/* Category Tabs */
+#inventoryTabs .nav-link {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Inventory Table Styling */
+.table {
+    font-size: 0.75rem;
+}
+
+.table thead th {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.5rem 0.3rem;
+    vertical-align: middle;
+}
+
+.table tbody td {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.3rem;
+    vertical-align: middle;
+}
+
+/* Action Buttons */
+.action-btn {
+    width: 35px !important;
+    height: 30px !important;
+    font-size: 12px !important;
+}
+
+/* Modal Styling */
+.modal-title {
+    font-size: 1.1rem;
+}
+
+.modal-body .form-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.modal-body .form-control,
+.modal-body .form-select {
+    font-size: 0.8rem;
+}
+
+/* Button Styling */
+.btn-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Inventory Logs Tab Styling */
+#inventory-logs-tab .nav-link {
+    font-size: 0.85rem;
+}
+
+/* Table Responsive Improvements */
+.table-responsive {
+    font-size: 0.75rem;
+}
+
+/* Badge Styling */
+.badge {
+    font-size: 0.65rem;
+}
+
+/* Form Controls in Table */
+.table .form-control,
+.table .form-select {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+}
+
+/* Inventory Logs Content */
+#inventory-logs .card-title {
+    font-size: 1rem;
+}
+
+#inventory-logs .card-text {
+    font-size: 0.8rem;
+}
+
+/* Update Request Tabs */
+#updateRequestTabs .nav-link {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
 }
 
 #mainInventoryTabs .nav-link:hover {
@@ -152,9 +261,9 @@
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startSection('admin_content'); ?>
-<div class="mx-auto" style="max-width: 1400px; padding-top: 24px;">
+<div class="mx-auto" style="max-width: 1400px; padding-top: 18px; max-height: 77vh; ">
 <!-- Main Tab Navigation -->
-<ul class="nav nav-tabs mb-4" id="mainInventoryTabs" role="tablist">
+<ul class="nav nav-tabs mb-3" id="mainInventoryTabs" role="tablist">
     <li class="nav-item" role="presentation" style="flex: 1;">
         <button class="nav-link active w-100" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab" aria-controls="inventory" aria-selected="true">
             <i class="bi bi-box-seam me-2"></i>Inventory
@@ -171,9 +280,6 @@
 <div class="tab-content" id="mainInventoryTabsContent">
     <!-- Inventory Tab -->
     <div class="tab-pane fade show active" id="inventory" role="tabpanel">
-<div class="d-flex justify-content-between align-items-center mb-3">
-            <h4>Inventory Management</h4>
-                        </div>
 
 <!-- Add Product Modal -->
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
@@ -183,7 +289,7 @@
         <h5 class="modal-title" id="addProductModalLabel">Add New Product</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-      <form action="<?php echo e(route('admin.inventory.store')); ?>" method="POST">
+      <form action="<?php echo e(route('admin.inventory.store')); ?>" method="POST" onsubmit="handleAddProductForm(event)">
         <?php echo csrf_field(); ?>
         <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
           <div class="mb-3">
@@ -721,6 +827,69 @@
 </style>
 
 <script>
+// Store current active tabs
+let currentActiveMainTab = null;
+let currentActiveCategoryTab = null;
+
+// Initialize tab state preservation
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a saved main tab state
+    const savedMainTab = sessionStorage.getItem('activeInventoryMainTab');
+    const savedCategoryTab = sessionStorage.getItem('activeInventoryCategoryTab');
+    
+    if (savedMainTab) {
+        // Activate the saved main tab
+        const mainTabButton = document.querySelector(`#${savedMainTab}`);
+        if (mainTabButton) {
+            const tab = new bootstrap.Tab(mainTabButton);
+            tab.show();
+            currentActiveMainTab = savedMainTab;
+        }
+        // Clear the saved main tab state
+        sessionStorage.removeItem('activeInventoryMainTab');
+    } else {
+        // Store the initially active main tab
+        const activeMainTab = document.querySelector('#mainInventoryTabs .nav-link.active');
+        if (activeMainTab) {
+            currentActiveMainTab = activeMainTab.id;
+        }
+    }
+    
+    if (savedCategoryTab) {
+        // Activate the saved category tab
+        const categoryTabButton = document.querySelector(`#${savedCategoryTab}`);
+        if (categoryTabButton) {
+            const tab = new bootstrap.Tab(categoryTabButton);
+            tab.show();
+            currentActiveCategoryTab = savedCategoryTab;
+        }
+        // Clear the saved category tab state
+        sessionStorage.removeItem('activeInventoryCategoryTab');
+    } else {
+        // Store the initially active category tab
+        const activeCategoryTab = document.querySelector('#inventoryTabs .nav-link.active');
+        if (activeCategoryTab) {
+            currentActiveCategoryTab = activeCategoryTab.id;
+        }
+    }
+    
+    // Listen for main tab changes
+    const mainTabButtons = document.querySelectorAll('#mainInventoryTabs .nav-link');
+    mainTabButtons.forEach(button => {
+        button.addEventListener('shown.bs.tab', function (e) {
+            currentActiveMainTab = e.target.id;
+        });
+    });
+    
+    // Listen for category tab changes
+    const categoryTabButtons = document.querySelectorAll('#inventoryTabs .nav-link');
+    categoryTabButtons.forEach(button => {
+        button.addEventListener('shown.bs.tab', function (e) {
+            currentActiveCategoryTab = e.target.id;
+        });
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Admin inventory highlighting script loaded');
     
@@ -762,7 +931,7 @@ document.addEventListener('DOMContentLoaded', function() {
             : (event.target.closest ? event.target.closest('form[data-product-id]') : null);
         if (!form) {
             console.error('handleModalUpdate: Could not resolve form element');
-            alert('Unable to update: form not found.');
+            showAlert('Unable to update: form not found.', 'error');
             return;
         }
         const productId = form.getAttribute('data-product-id');
@@ -807,6 +976,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (modal) {
                     modal.hide();
                 }
+                
+                // Show success message
+                showAlert(data.message || 'Product updated successfully!', 'success');
                 
                 // Update the row data in place instead of reloading
                 if (row) {
@@ -856,6 +1028,118 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show smart delete confirmation modal
             showDeleteConfirmationModal(productId, row);
         }
+    }
+
+    // AJAX function to handle add product form submission
+    async function handleAddProductForm(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
+                modal.hide();
+                
+                // Show success message
+                showAlert(result.message, 'success');
+                
+                // Reload the page to show the new product and preserve tab state
+                setTimeout(() => {
+                    if (currentActiveMainTab) {
+                        sessionStorage.setItem('activeInventoryMainTab', currentActiveMainTab);
+                    }
+                    if (currentActiveCategoryTab) {
+                        sessionStorage.setItem('activeInventoryCategoryTab', currentActiveCategoryTab);
+                    }
+                    location.reload();
+                }, 1000);
+            } else {
+                showAlert(result.message || 'An error occurred', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('An error occurred while adding the product', 'error');
+        }
+    }
+
+    // AJAX function to handle delete product
+    async function deleteProduct(productId) {
+        if (!confirm('Are you sure you want to delete this product?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/admin/inventory/product/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Show success message
+                showAlert(result.message, 'success');
+                
+                // Reload the page to remove the deleted product and preserve tab state
+                setTimeout(() => {
+                    if (currentActiveMainTab) {
+                        sessionStorage.setItem('activeInventoryMainTab', currentActiveMainTab);
+                    }
+                    if (currentActiveCategoryTab) {
+                        sessionStorage.setItem('activeInventoryCategoryTab', currentActiveCategoryTab);
+                    }
+                    location.reload();
+                }, 1000);
+            } else {
+                showAlert(result.message || 'An error occurred', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('An error occurred while deleting the product', 'error');
+        }
+    }
+
+    // Function to show alerts
+    function showAlert(message, type) {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create new alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
     }
     
     // Use event delegation for dynamically loaded content

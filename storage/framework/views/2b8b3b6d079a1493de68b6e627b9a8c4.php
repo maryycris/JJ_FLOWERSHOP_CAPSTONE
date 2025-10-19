@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         body { font-family: 'Poppins', sans-serif; min-height: 100vh; background: #f8f9fa; padding-top: 80px; }
-        .navbar-admin { background-color: #5E8458; height: 50px; border-bottom: none; width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); position: fixed; top: 0; z-index: 1000; }
+        .navbar-admin { background-color: #5E8458; height: 50px; border-bottom: none; width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); position: fixed; top: 0; z-index: 1002; }
         .navbar-admin-content { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0 6.0vw; height: 50px; padding-top: 5px; }
         .navbar-admin .shop-title { font-size: 1.2rem; line-height: 1; font-weight: bold; color: #fff; }
         .navbar-admin .shop-title span { font-size: 0.8rem; font-weight: 400; }
@@ -18,13 +18,19 @@
         .navbar-admin .admin-user i { font-size: 1.5rem; }
         .navbar-admin-logo { height: 50px; width: 50px; background: transparent; }
         .navbar-admin-hr { border: none; border-top: 2px solid #fff; opacity: 0.7; margin: 0; width: 88%; margin-left: 6%; margin-top: 5px;}
-        .navbar-admin-links-row { width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); background: #5E8458; position: fixed; top: 50px; z-index: 999; }
+        .navbar-admin-links-row { width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); background: #5E8458; position: fixed; top: 50px; z-index: 1001; }
         .navbar-admin-links { display: flex; justify-content: center; align-items: center; gap: 3rem; padding: 0.3rem 0 0.5rem 0; padding-top: 10px;}
         .navbar-admin-links .nav-link { color: #fff !important; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; padding: 0; border-radius: 0; border-bottom: 2px solid transparent; transition: border 0.2s; }
         .navbar-admin-links .nav-link.active, .navbar-admin-links .nav-link:hover { color: #fff !important; border-bottom: 2px solid #fff; }
         .navbar-admin .bi { font-size: 1.2rem; }
         /* --- Updated Sidebar Styles --- */
         #wrapper { min-height: calc(100vh - 56px); display: flex; }
+        #page-content-wrapper { 
+            margin-left: 260px; 
+            width: calc(100% - 260px);
+            transition: margin-left 0.3s ease;
+            margin-top: 0;
+        }
         .sidebar-container {
             min-width: 240px;
             max-width: 260px;
@@ -32,8 +38,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 40px;
-            height: 100vh;
+            padding-top: 20px;
+            height: calc(100vh - 100px);
+            position: fixed;
+            top: 100px;
+            left: 0;
+            z-index: 999;
+            overflow-y: auto;
         }
         .sidebar-profile {
             display: flex;
@@ -96,6 +107,21 @@
         }
         .sidebar-link:not(.active)::after {
             display: none;
+        }
+        
+        /* Responsive behavior for mobile */
+        @media (max-width: 768px) {
+            .sidebar-container {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar-container.show {
+                transform: translateX(0);
+            }
+            #page-content-wrapper {
+                margin-left: 0;
+                width: 100%;
+            }
         }
         .sidebar-container .nav-item {
             width: 100%;
@@ -168,7 +194,7 @@
                 <span class="fw-semibold"><?php echo e(auth()->user()->name); ?></span>
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminProfileDropdown">
-                <li><a class="dropdown-item" href="<?php echo e(route('admin.profile')); ?>">My Profile</a></li>
+                <li><a class="dropdown-item" href="<?php echo e(route('admin.dashboard')); ?>">Dashboard</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
                     <form method="POST" action="<?php echo e(route('logout')); ?>">

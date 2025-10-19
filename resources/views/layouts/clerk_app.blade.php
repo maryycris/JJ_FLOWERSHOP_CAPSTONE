@@ -54,7 +54,7 @@
                     <i class="bi bi-brush"></i>
                     <span>Customize</span>
                 </a>
-                <a href="{{ route('clerk.clerk.inventory.index') }}" class="clerk-navbar-link @if(request()->routeIs('clerk.clerk.inventory.*')) active @endif">
+                <a href="{{ route('clerk.inventory.manage') }}" class="clerk-navbar-link @if(request()->routeIs('clerk.inventory.*')) active @endif">
                     <i class="bi bi-box"></i>
                     <span>Inventory</span>
                 </a>

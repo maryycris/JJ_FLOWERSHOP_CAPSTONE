@@ -1,6 +1,39 @@
 @extends('layouts.customer_app')
 
 @section('content')
+<style>
+    /* Custom scrollbar styling for transparent tracks */
+    .scrollable-content::-webkit-scrollbar {
+        width: 8px;
+        background: transparent;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-track {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb {
+        background: #7bb47b !important;
+        border-radius: 4px;
+        border: none !important;
+    }
+    
+    .scrollable-content::-webkit-scrollbar-thumb:hover {
+        background: #5a9c5a !important;
+    }
+    
+    /* Force transparent track */
+    .scrollable-content::-webkit-scrollbar-corner {
+        background: transparent !important;
+    }
+    
+    /* Additional overrides for complete transparency */
+    .scrollable-content::-webkit-scrollbar-track-piece {
+        background: transparent !important;
+    }
+</style>
 <div class="pt-0 " style="background: #f4faf4; min-height: 85vh;">
     <div class="container" style="max-width: 1400px;">
 
@@ -10,8 +43,8 @@
             <div class="col-12 col-lg-8 col-xl-6" style="max-width: 900px;">
                 <!-- Header Section for Left Box -->
                 <div class="mb-2">
-                    <a href="{{ route('customer.orders.index') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i> Go to My Orders
+                    <a href="{{ route('customer.orders.index') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-2"></i> Go to My Purchase
                     </a>
                 </div>
 
@@ -280,12 +313,12 @@
             <!-- Right Box - Actions & Customer Info -->
             <div class="col-12 col-lg-4 col-xl-4">
                 <!-- Header Section for Right Box -->
-                <div class="mb-2">
-                    <!-- Back button moved to left side -->
+                <div style="height: 38px; margin-bottom: 0.1rem;">
+                    <!-- Spacer to align with left column button -->
                 </div>
                 
-                <!-- Add top margin to align with Order Information section -->
-                <div class="mt-5">
+                <!-- Align with Order Information section -->
+                <div>
                     <div class="bg-white rounded-3 p-4 mb-4 scrollable-content" style="box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: none; max-height: 80vh; overflow-y: auto;">
                     
                     <div class="d-flex align-items-center mb-3">
@@ -453,32 +486,6 @@
 @endsection
 
 @push('styles')
-<style>
-    /* Custom scrollbar styling for the content areas */
-    .scrollable-content::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    .scrollable-content::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 4px;
-    }
-
-    .scrollable-content::-webkit-scrollbar-thumb {
-        background: #8ACB88;
-        border-radius: 4px;
-    }
-
-    .scrollable-content::-webkit-scrollbar-thumb:hover {
-        background: #7bb47b;
-    }
-
-    /* For Firefox */
-    .scrollable-content {
-        scrollbar-width: thin;
-        scrollbar-color: #8ACB88 #f1f1f1;
-    }
-</style>
 
 <!-- Proof of Delivery Modal -->
 @if($order->delivery && $order->delivery->proof_of_delivery_image)

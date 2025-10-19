@@ -8,9 +8,9 @@
         </div>
         <div class="col-md-9 col-lg-8 main-content-with-sidebar" style="margin-left: 25%; max-width: calc(75% - 30px);">
             <div class="row">
-                <div class="col-md-7">
+                <div class="col-md-5">
             @if ($orders->isEmpty())
-                <div class="alert alert-info" role="alert">
+                <div class="alert" role="alert" style="background-color: #e8f5e8; border-color: #7bb47b; color: #2d5a2d;">
                     You have no orders to track.
                 </div>
             @else
@@ -43,7 +43,7 @@
                 </div>
             @endif
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-7">
             <div class="card" style="border-radius: 8px;">
                 <div class="card-header d-flex align-items-center" style="background: #eafbe7; border-radius: 8px 8px 0 0;">
                     <span class="fw-bold" id="timeline-order-id" style="color: #4a9448;">Order #</span>

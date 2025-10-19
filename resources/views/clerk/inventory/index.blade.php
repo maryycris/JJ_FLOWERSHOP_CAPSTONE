@@ -168,12 +168,141 @@ thead th {
     z-index: 101 !important;
     background: #e6f4ea !important;
 }
+
+/* Clerk Inventory Font Size Reductions */
+/* Search Bar Styling */
+#inventorySearch {
+    font-size: 0.85rem;
+}
+
+#inventorySearch::placeholder {
+    font-size: 0.8rem;
+}
+
+#clearInventorySearch {
+    font-size: 0.8rem;
+}
+
+/* Action Buttons */
+.btn-success {
+    font-size: 0.85rem;
+}
+
+/* Category Tabs */
+#inventoryTabs .nav-link {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Inventory Table Styling */
+.table {
+    font-size: 0.75rem;
+}
+
+.table thead th {
+    font-size: 0.7rem !important;
+    font-weight: 600;
+    padding: 0.5rem 0.3rem;
+    vertical-align: middle;
+}
+
+.table tbody td {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.3rem;
+    vertical-align: middle;
+}
+
+/* Action Buttons */
+.action-btn {
+    width: 35px !important;
+    height: 30px !important;
+    font-size: 12px !important;
+}
+
+/* Modal Styling */
+.modal-title {
+    font-size: 1.1rem;
+}
+
+.modal-body .form-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.modal-body .form-control,
+.modal-body .form-select {
+    font-size: 0.8rem;
+}
+
+/* Button Styling */
+.btn-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Table Responsive Improvements */
+.table-responsive {
+    font-size: 0.75rem;
+}
+
+/* Badge Styling */
+.badge {
+    font-size: 0.65rem;
+}
+
+/* Form Controls in Table */
+.table .form-control,
+.table .form-select {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+}
+
+/* Input Group Text */
+.input-group-text {
+    font-size: 0.8rem;
+}
+
+/* Content Positioning and Spacing Adjustments */
+.mx-auto {
+    padding-top: 12px !important; /* Reduced from 24px */
+}
+
+/* Search and Action Bar Spacing */
+.d-flex.flex-wrap.justify-content-between.align-items-center.mt-3 {
+    margin-top: 1rem !important; /* Reduced from mt-3 */
+    margin-bottom: 0.5rem !important; /* Added small bottom margin */
+}
+
+/* Category Tabs Spacing */
+#inventoryTabs {
+    margin-bottom: 1rem !important; /* Reduced from mb-3 */
+}
+
+/* Table Container Spacing */
+.tab-content {
+    margin-top: 0.5rem;
+}
+
+/* Inventory Scroll Container */
+.inventory-scroll {
+    margin-top: 0.25rem;
+}
+
+/* Overall Page Spacing */
+.container-fluid {
+    padding-top: 0.5rem;
+}
+
+/* Reduce gap between search bar and category tabs */
+.gap-2 {
+    gap: 0.5rem !important;
+}
 </style>
 @endpush
 
 
 @section('content')
-<div class="mx-auto" style="max-width: 1400px; padding-top: 24px;">
+<div class="mx-auto" style="max-width: 1400px; padding-top: 12px;">
 
 <!-- Add Product Modal -->
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
@@ -250,7 +379,7 @@ thead th {
 </div>
 
 <!-- Toolbar: Search + Update -->
-<div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+<div class="d-flex flex-wrap justify-content-between align-items-center mt-2 gap-2">
     <div class="input-group" style="max-width: 360px;">
         <span class="input-group-text"><i class="bi bi-search"></i></span>
         <input type="text" class="form-control" id="inventorySearch" placeholder="Search code, name, or category..." autocomplete="off">
@@ -311,7 +440,7 @@ thead th {
 
 @if($products->count())
     <!-- Bootstrap Nav Tabs -->
-    <ul class="nav nav-tabs mb-3" id="inventoryTabs" role="tablist">
+    <ul class="nav nav-tabs mb-2" id="inventoryTabs" role="tablist">
         @foreach(['Fresh Flowers', 'Dried Flowers', 'Artificial Flowers', 'Greenery', 'Floral Supplies', 'Packaging Materials', 'Wrappers', 'Ribbon', 'Other Offers'] as $category)
             <li class="nav-item" role="presentation">
                 <button class="nav-link @if($loop->first) active @endif" id="tab-{{ Str::slug($category) }}" data-bs-toggle="tab" data-bs-target="#{{ Str::slug($category) }}" type="button" role="tab" aria-controls="{{ Str::slug($category) }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}">
@@ -324,22 +453,22 @@ thead th {
         @foreach(['Fresh Flowers', 'Dried Flowers', 'Artificial Flowers', 'Greenery', 'Floral Supplies', 'Packaging Materials', 'Wrappers', 'Ribbon', 'Other Offers'] as $category)
             <div class="tab-pane fade @if($loop->first) show active @endif" id="{{ Str::slug($category) }}" role="tabpanel">
                 <div class="table-responsive inventory-scroll">
-                    <table class="table table-bordered align-middle" style="font-size: 0.85rem;">
+                    <table class="table table-bordered align-middle" style="font-size: 0.75rem;">
                         <thead>
                             <tr>
-                                <th style="font-size: 0.8rem;">Product Code</th>
-                                <th style="font-size: 0.8rem;">Name</th>
-                                <th style="font-size: 0.8rem;">Category</th>
-                                <th style="font-size: 0.8rem;">Selling Price</th>
-                                <th style="font-size: 0.8rem;">Acquisition Cost</th>
-                                <th colspan="2" style="font-size: 0.8rem;">Reordering Rules<br><small>(Min / Max)</small></th>
-                                <th style="font-size: 0.8rem;">Qty On Hand</th>
-                                <th style="font-size: 0.8rem;">Qty Consumed</th>
-                                <th style="font-size: 0.8rem;">Qty Damaged</th>
-                                <th style="font-size: 0.8rem;">Qty Sold</th>
-                                <th style="font-size: 0.8rem;">Qty to Purchase<br><small>(Max - On Hand)</small></th>
-                                <th style="font-size: 0.8rem;">Date</th>
-                                <th style="font-size: 0.8rem;">Actions</th>
+                                <th>Product Code</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Selling Price</th>
+                                <th>Acquisition Cost</th>
+                                <th colspan="2">Reordering Rules<br><small>(Min / Max)</small></th>
+                                <th>Qty On Hand</th>
+                                <th>Qty Consumed</th>
+                                <th>Qty Damaged</th>
+                                <th>Qty Sold</th>
+                                <th>Qty to Purchase<br><small>(Max - On Hand)</small></th>
+                                <th>Date</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>

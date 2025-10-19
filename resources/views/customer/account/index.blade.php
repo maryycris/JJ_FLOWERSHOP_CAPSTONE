@@ -81,6 +81,56 @@
     }
     /* Divider styling */
     .profile-divider { border: 0; height: 1px; background: linear-gradient(to right, transparent, #e7efe7, transparent); margin: 10px 0 20px; }
+    
+    /* Custom Success Alert Styling */
+    .custom-success-alert {
+        background: #e8f5e8;
+        border: 1px solid #7bb47b;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+        box-shadow: 0 2px 8px rgba(123, 180, 123, 0.15);
+    }
+    
+    .custom-success-alert .alert-icon {
+        background: #7bb47b;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+    
+    .custom-success-alert .alert-message {
+        color: #2d5a2d;
+        font-weight: 500;
+        flex: 1;
+        font-size: 14px;
+    }
+    
+    .custom-success-alert .alert-close {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+        flex-shrink: 0;
+    }
+    
+    .custom-success-alert .alert-close:hover {
+        background: rgba(0, 0, 0, 0.1);
+        color: #333;
+    }
 </style>
 <div class="container-fluid">
     <div class="row justify-content-center">
@@ -142,9 +192,6 @@
                                 <div class="alert alert-danger py-2 px-3">
                                     {{ $errors->first() }}
                                 </div>
-                                @endif
-                                @if(session('success'))
-                                <div class="alert alert-success py-2 px-3">{{ session('success') }}</div>
                                 @endif
                                 <div class="mb-3">
                                     <label for="current_password" class="form-label">Current Password *</label>

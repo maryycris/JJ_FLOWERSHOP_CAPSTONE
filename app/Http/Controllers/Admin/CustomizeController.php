@@ -41,6 +41,14 @@ class CustomizeController extends Controller
         $customizeItem->status = true;
         $customizeItem->save();
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Item added successfully.',
+                'item' => $customizeItem
+            ]);
+        }
+
         return back()->with('success','Item added successfully.');
     }
 
@@ -70,10 +78,18 @@ class CustomizeController extends Controller
         $customizeItem->inventory_item_id = $validated['inventory_item_id'] ?? null;
         $customizeItem->save();
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Item updated successfully.',
+                'item' => $customizeItem
+            ]);
+        }
+
         return back()->with('success','Item updated successfully.');
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $customizeItem = CustomizeItem::findOrFail($id);
         
@@ -83,6 +99,14 @@ class CustomizeController extends Controller
         }
         
         $customizeItem->delete();
+        
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Item deleted successfully.'
+            ]);
+        }
+        
         return back()->with('success','Item deleted successfully.');
     }
 

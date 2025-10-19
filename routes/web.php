@@ -288,9 +288,6 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\AdminMiddleware::class])-
     Route::put('/inventory/product/{product}', [ProductController::class, 'updateInventory'])->name('inventory.update');
     Route::delete('/inventory/product/{product}', [ProductController::class, 'destroyInventory'])->name('inventory.destroy');
     Route::post('/inventory/approve-changes', [\App\Http\Controllers\Admin\AdminInventoryController::class, 'approveChanges'])->name('inventory.approve-changes');
-    Route::get('/profile', [AdminController::class, 'editProfile'])->name('profile');
-    Route::post('/profile', [AdminController::class, 'updateProfile'])->name('profile.update');
-    Route::post('/profile/password', [AdminController::class, 'updatePassword'])->name('profile.password');
 
     // Promoted banners management
     Route::resource('promoted-banners', \App\Http\Controllers\Admin\PromotedBannerController::class)->names('admin.promoted-banners');
@@ -335,7 +332,7 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\ClerkMiddleware::class])-
     Route::post('products/{product}/images/update', [ProductController::class, 'updateImages'])->name('products.updateImages');
     Route::delete('products/{product}/images/delete', [ProductController::class, 'deleteImage'])->name('products.deleteImage');
     Route::delete('products/{product}/images/delete-all', [ProductController::class, 'deleteAllImages'])->name('products.deleteAllImages');
-    Route::get('/inventory', [ClerkController::class, 'inventory'])->name('clerk.inventory.index');
+    Route::get('/inventory', [ClerkController::class, 'inventory'])->name('inventory.manage');
     Route::get('/inventory/check-approval-status', [ClerkController::class, 'checkApprovalStatus'])->name('clerk.inventory.check-approval');
     Route::post('/inventory', [ClerkController::class, 'storeInventory'])->name('inventory.store');
     Route::put('/inventory/{product}', [ClerkController::class, 'updateProduct'])->name('inventory.update');
@@ -514,6 +511,7 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\CustomerMiddleware::class
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::get('/orders/{order}/status-history', [OrderController::class, 'statusHistory'])->name('orders.statusHistory');
     Route::post('/orders/submit-review', [OrderController::class, 'submitReview'])->name('orders.submitReview');
+    Route::post('/orders/submit-shop-review', [OrderController::class, 'submitShopReview'])->name('orders.submitShopReview');
     Route::post('/orders/{order}/update-delivery-schedule', [OrderController::class, 'updateDeliverySchedule'])->name('orders.update-delivery-schedule');
     Route::get('/track-orders', [OrderController::class, 'trackOrdersPage'])->name('trackOrders.page');
     

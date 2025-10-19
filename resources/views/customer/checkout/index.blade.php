@@ -23,7 +23,7 @@
             @endforeach
         @endif
         <div class="row justify-content-center mt-2" style="height: calc(100vh - 110px);">
-            <div class="col-12 col-lg-8 col-xl-6" style="max-width: 1200px; display: flex; flex-direction: column; height: 100%;">
+            <div class="col-12 col-lg-8 col-xl-6" style="max-width: 1200px; display: flex; flex-direction: column; height: 105%;">
                 <div class="bg-white rounded-3 p-3 mb-4 scrollable-content" style="box-shadow: none; height: 100%; overflow-y: auto;">
                     <div class="mb-3">
                         <a href="{{ url('/cart') }}" class="btn btn-outline-success">
