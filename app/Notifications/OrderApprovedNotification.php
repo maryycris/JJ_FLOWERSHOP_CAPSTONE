@@ -25,7 +25,7 @@ class OrderApprovedNotification extends Notification
     {
         return [
             'type' => 'order_approved',
-            'title' => 'Order Approved',
+            'title' => "Order #{$this->order->id} Approved",
             'message' => "Your order #{$this->order->id} has been approved and is ready for processing!",
             'order_id' => $this->order->id,
             'icon' => 'fas fa-check-circle',

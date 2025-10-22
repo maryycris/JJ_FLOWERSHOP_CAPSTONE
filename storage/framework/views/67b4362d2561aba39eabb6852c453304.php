@@ -290,6 +290,44 @@ unset($__errorArgs, $__bag); ?>
                         <span style="color: #28a745; font-weight: 600;">-₱<span id="loyaltyDiscountDisplay"><?php echo e(number_format($loyaltyDiscount, 2)); ?></span></span>
                     </div>
                     <?php endif; ?>
+                    
+                    <!-- Store Credit Section -->
+                    <?php if($storeCreditBalance > 0): ?>
+                    <div class="mb-3 mt-3">
+                        <div class="card" style="border: 2px solid #e8f5e8; background: linear-gradient(135deg, #f8f9fa, #e8f5e8);">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-wallet me-2" style="color: #28a745; font-size: 1.2rem;"></i>
+                                        <span style="font-weight: 600; color: #2c3e50;">Store Credit Available</span>
+                                    </div>
+                                    <span style="color: #28a745; font-weight: bold; font-size: 1.1rem;">₱<?php echo e(number_format($storeCreditBalance, 2)); ?></span>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="useStoreCredit" name="use_store_credit" value="1">
+                                    <label class="form-check-label" for="useStoreCredit" style="font-weight: 500; color: #2c3e50;">
+                                        Use Store Credit
+                                    </label>
+                                </div>
+                                <div class="mt-2" id="storeCreditAmountDiv" style="display: none;">
+                                    <label for="storeCreditAmount" class="form-label" style="font-size: 0.9rem; color: #666;">Amount to use (max ₱<?php echo e(number_format($storeCreditBalance, 2)); ?>):</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₱</span>
+                                        <input type="number" class="form-control" id="storeCreditAmount" name="store_credit_amount" 
+                                               min="0" max="<?php echo e($storeCreditBalance); ?>" step="0.01" 
+                                               placeholder="0.00" style="font-weight: 500;">
+                                    </div>
+                                    <small class="text-muted">You can use up to ₱<?php echo e(number_format($storeCreditBalance, 2)); ?> of your store credit.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="storeCreditDiscount" class="d-flex justify-content-between mb-2" style="display: none;">
+                        <span style="color: #28a745;">Store Credit Used</span>
+                        <span style="color: #28a745; font-weight: 600;">-₱<span id="storeCreditDiscountDisplay">0.00</span></span>
+                    </div>
+                    <?php endif; ?>
+                    
                     <hr>
                     <div class="d-flex justify-content-between mb-3">
                         <span style="font-weight: 600;">Total</span>
@@ -829,6 +867,120 @@ document.getElementById('checkoutForm').addEventListener('submit', function(e) {
         submitBtn.innerHTML = '<i class="fas fa-arrow-right me-2"></i>Proceed to Payment Method';
         submitBtn.disabled = false;
     }, 5000);
+});
+
+// Store Credit Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const useStoreCreditCheckbox = document.getElementById('useStoreCredit');
+    const storeCreditAmountDiv = document.getElementById('storeCreditAmountDiv');
+    const storeCreditAmountInput = document.getElementById('storeCreditAmount');
+    const storeCreditDiscount = document.getElementById('storeCreditDiscount');
+    const storeCreditDiscountDisplay = document.getElementById('storeCreditDiscountDisplay');
+    
+    if (useStoreCreditCheckbox) {
+        useStoreCreditCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                storeCreditAmountDiv.style.display = 'block';
+                storeCreditDiscount.style.display = 'flex';
+                // Set default amount to the total amount needed (subtotal + shipping fee)
+                const subtotal = parseFloat(document.getElementById('cartSubtotal').textContent.replace(/,/g, '')) || 0;
+                const shippingFee = parseFloat(document.getElementById('shippingFeeDisplay').textContent.replace(/,/g, '')) || 0;
+                const totalNeeded = subtotal + shippingFee;
+                const maxAmount = parseFloat(storeCreditAmountInput.getAttribute('max'));
+                
+                // Use the smaller of: total needed or max balance
+                const amountToUse = Math.min(totalNeeded, maxAmount);
+                storeCreditAmountInput.value = amountToUse.toFixed(2);
+                updateStoreCreditDiscount();
+                
+                // Show info message if store credit is insufficient
+                if (maxAmount < totalNeeded) {
+                    const remainingAmount = totalNeeded - maxAmount;
+                    showStoreCreditInfo(`Store Credit (₱${maxAmount.toFixed(2)}) will be used. You'll need to pay ₱${remainingAmount.toFixed(2)} via other payment method.`);
+                } else {
+                    hideStoreCreditInfo();
+                }
+            } else {
+                storeCreditAmountDiv.style.display = 'none';
+                storeCreditDiscount.style.display = 'none';
+                storeCreditAmountInput.value = '';
+                updateTotal();
+            }
+        });
+    }
+    
+    if (storeCreditAmountInput) {
+        storeCreditAmountInput.addEventListener('input', function() {
+            updateStoreCreditDiscount();
+        });
+    }
+    
+    function updateStoreCreditDiscount() {
+        const amount = parseFloat(storeCreditAmountInput.value) || 0;
+        const maxAmount = parseFloat(storeCreditAmountInput.getAttribute('max'));
+        
+        // Calculate total needed (subtotal + shipping fee)
+        const subtotal = parseFloat(document.getElementById('cartSubtotal').textContent.replace(/,/g, '')) || 0;
+        const shippingFee = parseFloat(document.getElementById('shippingFeeDisplay').textContent.replace(/,/g, '')) || 0;
+        const totalNeeded = subtotal + shippingFee;
+        
+        // Validate amount - cannot exceed balance or total needed
+        const maxAllowed = Math.min(maxAmount, totalNeeded);
+        
+        if (amount > maxAllowed) {
+            storeCreditAmountInput.value = maxAllowed.toFixed(2);
+            amount = maxAllowed;
+        }
+        
+        if (amount < 0) {
+            storeCreditAmountInput.value = '0.00';
+            amount = 0;
+        }
+        
+        // Update display
+        storeCreditDiscountDisplay.textContent = amount.toFixed(2);
+        
+        // Update total
+        updateTotal();
+    }
+    
+    function showStoreCreditInfo(message) {
+        let infoDiv = document.getElementById('storeCreditInfo');
+        if (!infoDiv) {
+            infoDiv = document.createElement('div');
+            infoDiv.id = 'storeCreditInfo';
+            infoDiv.className = 'alert alert-info mt-2';
+            infoDiv.style.cssText = 'font-size: 0.9rem; padding: 0.75rem; border-radius: 6px;';
+            document.getElementById('storeCreditAmountDiv').appendChild(infoDiv);
+        }
+        infoDiv.innerHTML = `<i class="fas fa-info-circle me-2"></i>${message}`;
+        infoDiv.style.display = 'block';
+    }
+    
+    function hideStoreCreditInfo() {
+        const infoDiv = document.getElementById('storeCreditInfo');
+        if (infoDiv) {
+            infoDiv.style.display = 'none';
+        }
+    }
+    
+    function updateTotal() {
+        const subtotalElement = document.getElementById('cartSubtotal');
+        const shippingFeeElement = document.getElementById('shippingFeeDisplay');
+        const loyaltyDiscountElement = document.getElementById('loyaltyDiscountDisplay');
+        const totalElement = document.getElementById('cartTotalFinal');
+        
+        if (!subtotalElement || !totalElement) return;
+        
+        const subtotal = parseFloat(subtotalElement.textContent.replace(/,/g, '')) || 0;
+        const shippingFee = parseFloat(shippingFeeElement.textContent.replace(/,/g, '')) || 0;
+        const loyaltyDiscount = parseFloat(loyaltyDiscountElement.textContent.replace(/,/g, '')) || 0;
+        const storeCreditAmount = parseFloat(storeCreditAmountInput.value) || 0;
+        
+        const total = subtotal + shippingFee - loyaltyDiscount - storeCreditAmount;
+        
+        totalElement.textContent = total.toFixed(2);
+    }
 });
 </script>
 <?php $__env->stopPush(); ?>

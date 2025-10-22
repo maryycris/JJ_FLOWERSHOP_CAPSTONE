@@ -132,7 +132,7 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" name="recipient_relationship" required>
+unset($__errorArgs, $__bag); ?>" name="recipient_relationship">
                   <option value="" selected disabled>Select relationship</option>
                   <option value="Friend" <?php echo e(old('recipient_relationship') == 'Friend' ? 'selected' : ''); ?>>Friend</option>
                   <option value="Family" <?php echo e(old('recipient_relationship') == 'Family' ? 'selected' : ''); ?>>Family</option>
@@ -448,12 +448,15 @@ document.addEventListener('DOMContentLoaded', function(){
       }
       if (recipientName) {
         recipientName.required = true;
+        recipientName.disabled = false;
       }
       if (recipientPhone) {
         recipientPhone.required = true;
+        recipientPhone.disabled = false;
       }
       if (recipientRelationship) {
         recipientRelationship.required = true;
+        recipientRelationship.disabled = false;
       }
       
       // Hide self fields and remove required from self phone
@@ -505,6 +508,7 @@ document.addEventListener('DOMContentLoaded', function(){
       }
       if (recipientRelationship) {
         recipientRelationship.required = false;
+        recipientRelationship.disabled = true; // disable to avoid browser validation when hidden
         recipientRelationship.classList.remove('is-invalid');
       }
     };

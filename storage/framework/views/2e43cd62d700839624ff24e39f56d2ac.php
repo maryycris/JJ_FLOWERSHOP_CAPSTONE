@@ -69,6 +69,8 @@
             overlay.style.display = 'none';
         };
     </script>
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Auto Capitalization Script -->
     <script src="<?php echo e(asset('js/auto-capitalization.js')); ?>"></script>
 </body>

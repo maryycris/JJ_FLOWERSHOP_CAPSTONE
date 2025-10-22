@@ -47,6 +47,8 @@
         <input type="hidden" name="delivery_time" value="{{ session('checkout_data.delivery_time', '') }}">
         <input type="hidden" name="shipping_fee" value="{{ $shippingFee }}">
         <input type="hidden" name="promo_code" value="{{ session('checkout_data.promo_code', '') }}">
+        <input type="hidden" name="use_store_credit" value="{{ $useStoreCredit ? '1' : '0' }}">
+        <input type="hidden" name="store_credit_amount" value="{{ $storeCreditAmount }}">
         @if(request('product_id'))
             <input type="hidden" name="product_id" value="{{ request('product_id') }}">
             <input type="hidden" name="quantity" value="{{ request('quantity', 1) }}">
@@ -182,6 +184,28 @@
                     <!-- Other Payment Methods Section -->
                     <h6 class="mb-3 mt-4" style="font-weight: 600; color: #555; border-bottom: 1px solid #eee; padding-bottom: 8px;">💰 Other Payment Methods</h6>
                     
+                    <!-- Store Credit Payment Option -->
+                    @if($useStoreCredit && $storeCreditAmount > 0)
+                    <div class="payment-option-card mb-3" data-payment="store_credit">
+                        <div class="d-flex align-items-center justify-content-between p-3" style="border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                            <div class="d-flex align-items-center">
+                                <div class="payment-icon me-3" style="width: 50px; height: 50px; background: #ffc107; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-wallet" style="color: white; font-size: 1.2rem;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; color: #222;">Store Credit Payment</div>
+                                    @if($finalTotal <= 0)
+                                        <div style="font-size: 0.9rem; color: #28a745;">✅ FREE ORDER - Store Credit covers everything!</div>
+                                    @else
+                                        <div style="font-size: 0.9rem; color: #666;">Store Credit (₱{{ number_format($storeCreditAmount, 2) }}) + Pay ₱{{ number_format($finalTotal, 2) }} via other method</div>
+                                    @endif
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </div>
+                    </div>
+                    @endif
+                    
                     <!-- COD Payment Option -->
                     <div class="payment-option-card mb-3" data-payment="cod">
                         <div class="d-flex align-items-center justify-content-between p-3" style="border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
@@ -308,6 +332,14 @@
                         <span style="color: #28a745; font-weight: 600;">-₱{{ number_format($loyaltyDiscount, 2) }}</span>
                     </div>
                     @endif
+                    
+                    @if($useStoreCredit && $storeCreditAmount > 0)
+                    <div class="d-flex justify-content-between mb-2">
+                        <span style="color: #28a745;">Store Credit Used</span>
+                        <span style="color: #28a745; font-weight: 600;">-₱{{ number_format($storeCreditAmount, 2) }}</span>
+                    </div>
+                    @endif
+                    
                     <hr>
                     <div class="d-flex justify-content-between mb-3">
                         <span style="font-weight: 600; font-size: 1.1rem;">Total</span>
@@ -356,36 +388,7 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const paymentOptions = document.querySelectorAll('.payment-option-card');
-    const selectedPaymentInput = document.getElementById('selectedPaymentMethod');
-    const completeOrderBtn = document.getElementById('completeOrderBtn');
-    const paymentForm = document.getElementById('paymentForm');
-    
-    // No payment type toggle on this page
-
-    // Payment option selection
-    paymentOptions.forEach(option => {
-        option.addEventListener('click', function(e) {
-            e.preventDefault();
-            paymentOptions.forEach(opt => opt.classList.remove('selected'));
-            this.classList.add('selected');
-            const paymentMethod = this.dataset.payment;
-            selectedPaymentInput.value = paymentMethod;
-            completeOrderBtn.disabled = false;
-        });
-    });
-    
-    // Loyalty stamps are now automatically applied - no manual redemption needed
-
-    // Loyalty toggle handler
-    const useLoyalty = document.getElementById('useLoyalty');
-    if (useLoyalty) {
-        useLoyalty.addEventListener('change', function() {
-            document.getElementById('useLoyaltyInput').value = this.checked ? '1' : '0';
-        });
-    }
-});
+// This script is moved to the main script section below
 </script>
 @endpush
 
@@ -419,34 +422,67 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Main payment options logic
+    const paymentOptions = document.querySelectorAll('.payment-option-card');
     const selectedPaymentInput = document.getElementById('selectedPaymentMethod');
     const completeOrderBtn = document.getElementById('completeOrderBtn');
-    const paymentOptions = document.querySelectorAll('.payment-option-card');
+    const paymentForm = document.getElementById('paymentForm');
+    
+    // Debug: Check if Store Credit option exists
+    const storeCreditOption = document.querySelector('[data-payment="store_credit"]');
+    console.log('Store Credit option found:', storeCreditOption);
+    console.log('Total payment options found:', paymentOptions.length);
+    
+    // Test if Store Credit option is clickable
+    if (storeCreditOption) {
+        console.log('Store Credit option is clickable:', storeCreditOption.style.pointerEvents);
+        console.log('Store Credit option cursor:', storeCreditOption.style.cursor);
+    }
     
     // Payment option selection
-    paymentOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            // Remove active class from all options
-            paymentOptions.forEach(opt => {
-                opt.querySelector('div').style.borderColor = '#e0e0e0';
-                opt.querySelector('div').style.backgroundColor = 'transparent';
-            });
+    paymentOptions.forEach((option, index) => {
+        console.log(`Payment option ${index}:`, option, 'data-payment:', option.dataset.payment);
+        
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Payment option clicked:', this.dataset.payment);
+            alert('Payment option clicked: ' + this.dataset.payment);
             
-            // Add active class to selected option
-            this.querySelector('div').style.borderColor = '#7bb47b';
-            this.querySelector('div').style.backgroundColor = '#f0f8f0';
-            
-            // Set payment method
-            const paymentMethod = this.getAttribute('data-payment');
+            paymentOptions.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            const paymentMethod = this.dataset.payment;
             selectedPaymentInput.value = paymentMethod;
+            completeOrderBtn.disabled = false;
             
-            // If it's not a card modal, directly submit the form
-            if (paymentMethod !== 'card_modal') {
-                console.log('Proceeding to PayMongo with payment method:', paymentMethod);
-                document.getElementById('paymentForm').submit();
+            console.log('Payment method set to:', paymentMethod);
+            
+            // For Store Credit payment, submit immediately
+            if (paymentMethod === 'store_credit') {
+                console.log('Store Credit payment selected - submitting form immediately');
+                console.log('Payment method set to:', selectedPaymentInput.value);
+                console.log('Form element:', document.getElementById('paymentForm'));
+                console.log('Form action:', document.getElementById('paymentForm').action);
+                
+                setTimeout(() => {
+                    console.log('About to submit form...');
+                    try {
+                        document.getElementById('paymentForm').submit();
+                        console.log('Form submitted successfully');
+                    } catch (error) {
+                        console.error('Error submitting form:', error);
+                    }
+                }, 100);
             }
         });
     });
+    
+    // Loyalty toggle handler
+    const useLoyalty = document.getElementById('useLoyalty');
+    if (useLoyalty) {
+        useLoyalty.addEventListener('change', function() {
+            document.getElementById('useLoyaltyInput').value = this.checked ? '1' : '0';
+        });
+    }
     
     // Card selection modal logic
     const cardTypeOptions = document.querySelectorAll('.card-type-option');
@@ -543,20 +579,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Form submission debugging
-    const paymentForm = document.getElementById('paymentForm');
     paymentForm.addEventListener('submit', function(e) {
         console.log('Form submission started');
         console.log('Selected payment method:', selectedPaymentInput.value);
-        console.log('Form data:', new FormData(this));
         
-        // Check if payment method is selected
+        // For Store Credit, allow submission even if value is not set yet
+        if (selectedPaymentInput.value === 'store_credit') {
+            console.log('Store Credit payment - proceeding to order creation');
+            return true; // Allow submission
+        }
+        
+        // Check if payment method is selected for other methods
         if (!selectedPaymentInput.value) {
+            console.log('No payment method selected, preventing submission');
             e.preventDefault();
             alert('Please select a payment method');
             return false;
         }
         
-        console.log('Form submitting to PayMongo...');
+        console.log('Form submitting with payment method:', selectedPaymentInput.value);
+        
+        // For other payment methods
+        console.log('Other payment method - proceeding to PayMongo');
     });
 });
 </script>

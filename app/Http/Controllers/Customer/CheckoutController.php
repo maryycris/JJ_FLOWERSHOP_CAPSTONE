@@ -137,8 +137,8 @@ class CheckoutController extends Controller
             }
         }
         if ($shippingFee === null) {
-            // Calculate shipping fee using the updated helper
-            $shippingFee = 30; // Default for Cordova
+            // Default shipping fee to 0 if no address is set
+            $shippingFee = 0;
             if ($deliveryAddress) {
                 $originAddress = 'Cordova, Cebu'; // Shop location
                 $destinationAddress = $deliveryAddress->street_address . ', ' .
@@ -152,7 +152,14 @@ class CheckoutController extends Controller
         }
         \Log::info('PaymentMethod resolved shipping fee', ['shipping_fee' => $shippingFee]);
 
-        return view('customer.checkout.index', compact('cartItems', 'subtotal', 'deliveryAddress', 'shippingFee', 'addresses', 'loyaltyCard', 'loyaltyDiscount'));
+        // Calculate store credit balance for the customer
+        $storeCreditBalance = Order::where('user_id', $user->id)
+            ->where('refund_method', 'store_credit')
+            ->whereNotNull('refund_amount')
+            ->whereNotNull('refund_processed_at')
+            ->sum('refund_amount');
+
+        return view('customer.checkout.index', compact('cartItems', 'subtotal', 'deliveryAddress', 'shippingFee', 'addresses', 'loyaltyCard', 'loyaltyDiscount', 'storeCreditBalance'));
     }
 
     public function paymentMethod(Request $request)
@@ -171,6 +178,8 @@ class CheckoutController extends Controller
             'delivery_date' => $request->input('delivery_date', ''),
             'delivery_time' => $request->input('delivery_time', ''),
             'promo_code' => $request->input('promo_code', ''),
+            'use_store_credit' => $request->has('use_store_credit'),
+            'store_credit_amount' => $request->input('store_credit_amount', 0),
         ];
 
         // Validate phone number requirement based on recipient type
@@ -277,6 +286,7 @@ class CheckoutController extends Controller
         $shippingFee = $request->query('shipping_fee');
         \Log::info('Payment method shipping fee check', ['url_shipping_fee' => $shippingFee, 'type' => gettype($shippingFee)]);
         if (!$shippingFee || !is_numeric($shippingFee)) {
+            \Log::info('Calculating shipping fee - no valid fee provided');
             // Calculate shipping fee using the updated helper
             $shippingFee = 30; // Default for Cordova
             if ($deliveryAddress) {
@@ -290,15 +300,20 @@ class CheckoutController extends Controller
                 $shippingFee = \App\Helpers\ShippingFeeHelper::calculateShippingFee($originAddress, $destinationAddress);
             }
         } else {
+            \Log::info('Using provided shipping fee', ['shipping_fee' => $shippingFee]);
             $shippingFee = (float) $shippingFee;
         }
 
+        \Log::info('Shipping fee determined', ['final_shipping_fee' => $shippingFee]);
+
         // Load loyalty card data
         $loyaltyCard = \App\Models\LoyaltyCard::where('user_id', $user->id)->first();
+        \Log::info('Loyalty card loaded', ['loyalty_card' => $loyaltyCard ? 'found' : 'not found']);
 
         // Check if customer is eligible for automatic discount (4/5 stamps = 5th order)
         $loyaltyDiscount = 0;
         $discountedItem = null;
+        \Log::info('Starting loyalty discount calculation', ['loyalty_card_stamps' => $loyaltyCard ? $loyaltyCard->stamps_count : 'no card']);
 
         if ($loyaltyCard && $loyaltyCard->stamps_count >= 4) {
             // Find the most expensive item in the cart
@@ -313,10 +328,62 @@ class CheckoutController extends Controller
             }
         }
 
-        // Calculate final total with loyalty discount
-        $finalTotal = $subtotal + $shippingFee - $loyaltyDiscount;
+        \Log::info('Loyalty discount calculation completed', ['loyalty_discount' => $loyaltyDiscount]);
 
-        return view('customer.checkout.payment_method', compact('cartItems', 'subtotal', 'shippingFee', 'loyaltyCard', 'loyaltyDiscount', 'discountedItem', 'finalTotal'));
+        // Calculate store credit amount and validate
+        $useStoreCredit = $request->has('use_store_credit');
+        $storeCreditAmount = 0;
+        $storeCreditBalance = 0;
+        \Log::info('Starting store credit calculation', ['use_store_credit' => $useStoreCredit]);
+        
+        if ($useStoreCredit) {
+            $storeCreditAmount = floatval($request->input('store_credit_amount', 0));
+            \Log::info('Store credit amount from request', ['store_credit_amount' => $storeCreditAmount]);
+            
+            try {
+                $storeCreditBalance = Order::where('user_id', $user->id)
+                    ->where('refund_method', 'store_credit')
+                    ->whereNotNull('refund_amount')
+                    ->whereNotNull('refund_processed_at')
+                    ->sum('refund_amount');
+                \Log::info('Store credit balance calculated', ['store_credit_balance' => $storeCreditBalance]);
+            } catch (\Exception $e) {
+                \Log::error('Error calculating store credit balance', ['error' => $e->getMessage()]);
+                $storeCreditBalance = 0;
+            }
+                
+            // Calculate total amount needed
+            $totalNeeded = $subtotal + $shippingFee - $loyaltyDiscount;
+            \Log::info('Total amount calculation', ['subtotal' => $subtotal, 'shipping_fee' => $shippingFee, 'loyalty_discount' => $loyaltyDiscount, 'total_needed' => $totalNeeded]);
+            
+            // Validate store credit amount
+            if ($storeCreditAmount > $storeCreditBalance) {
+                return back()->withErrors([
+                    'store_credit_amount' => 'Store credit amount cannot exceed your available balance of ₱' . number_format($storeCreditBalance, 2)
+                ])->withInput();
+            }
+            
+            if ($storeCreditAmount > $totalNeeded) {
+                \Log::info('Store credit amount exceeds total needed', ['store_credit_amount' => $storeCreditAmount, 'total_needed' => $totalNeeded]);
+                return back()->withErrors([
+                    'store_credit_amount' => 'Store credit amount cannot exceed the total amount needed (₱' . number_format($totalNeeded, 2) . ')'
+                ])->withInput();
+            }
+            
+            if ($storeCreditAmount < 0) {
+                \Log::info('Store credit amount is negative', ['store_credit_amount' => $storeCreditAmount]);
+                return back()->withErrors([
+                    'store_credit_amount' => 'Store credit amount cannot be negative'
+                ])->withInput();
+            }
+            
+            \Log::info('Store credit validation passed', ['store_credit_amount' => $storeCreditAmount, 'store_credit_balance' => $storeCreditBalance, 'total_needed' => $totalNeeded]);
+        }
+
+        // Calculate final total with loyalty discount and store credit
+        $finalTotal = $subtotal + $shippingFee - $loyaltyDiscount - $storeCreditAmount;
+
+        return view('customer.checkout.payment_method', compact('cartItems', 'subtotal', 'shippingFee', 'loyaltyCard', 'loyaltyDiscount', 'discountedItem', 'finalTotal', 'useStoreCredit', 'storeCreditAmount', 'storeCreditBalance'));
     }
 
     public function processOrder(Request $request)
@@ -507,21 +574,50 @@ class CheckoutController extends Controller
             'delivery_time' => $deliveryTime,
         ]);
 
+        // Get store credit parameters
+        $useStoreCredit = $request->has('use_store_credit');
+        $storeCreditAmount = floatval($request->input('store_credit_amount', 0));
+
+        \Log::info('About to handle payment method', ['payment_method' => $paymentMethod, 'use_store_credit' => $useStoreCredit, 'store_credit_amount' => $storeCreditAmount]);
+
         // Handle different payment methods
         if ($paymentMethod === 'cod') {
             // For COD, create order immediately
-            return $this->createOrder($request, $user, $cartItems, $totalPrice, 'cod', $deliveryDate, $deliveryTime, $deliveryAddress, $recipientName, $recipientPhone, $shippingFee, $loyaltyDiscount, $loyaltyCard);
+            return $this->createOrder($request, $user, $cartItems, $totalPrice, 'cod', $deliveryDate, $deliveryTime, $deliveryAddress, $recipientName, $recipientPhone, $shippingFee, $loyaltyDiscount, $loyaltyCard, $useStoreCredit, $storeCreditAmount);
+        } elseif ($paymentMethod === 'store_credit') {
+            // For Store Credit, create order immediately
+            return $this->createOrder($request, $user, $cartItems, $totalPrice, 'store_credit', $deliveryDate, $deliveryTime, $deliveryAddress, $recipientName, $recipientPhone, $shippingFee, $loyaltyDiscount, $loyaltyCard, $useStoreCredit, $storeCreditAmount);
+        } elseif ($paymentMethod === 'store_credit_hybrid') {
+            // For hybrid payment (Store Credit + Other method), redirect to payment gateway
+            return $this->redirectToPaymentGateway($request, $user, $cartItems, $totalPrice, $paymentMethod, $deliveryDate, $deliveryTime, $deliveryAddress, $recipientName, $recipientPhone, $shippingFee, $loyaltyDiscount, $loyaltyCard, $useStoreCredit, $storeCreditAmount);
         } else {
             // For all online payment methods (e-wallets and cards), redirect to payment gateway
-            return $this->redirectToPaymentGateway($request, $user, $cartItems, $totalPrice, $paymentMethod, $deliveryDate, $deliveryTime, $deliveryAddress, $recipientName, $recipientPhone, $shippingFee, $loyaltyDiscount, $loyaltyCard);
+            return $this->redirectToPaymentGateway($request, $user, $cartItems, $totalPrice, $paymentMethod, $deliveryDate, $deliveryTime, $deliveryAddress, $recipientName, $recipientPhone, $shippingFee, $loyaltyDiscount, $loyaltyCard, $useStoreCredit, $storeCreditAmount);
         }
     }
 
-    private function createOrder(Request $request, $user, $cartItems, $totalPrice, $paymentMethod, $deliveryDate, $deliveryTime, $deliveryAddress, $recipientName, $recipientPhone, $shippingFee, $loyaltyDiscount = 0, $loyaltyCard = null)
+    private function createOrder(Request $request, $user, $cartItems, $totalPrice, $paymentMethod, $deliveryDate, $deliveryTime, $deliveryAddress, $recipientName, $recipientPhone, $shippingFee, $loyaltyDiscount = 0, $loyaltyCard = null, $useStoreCredit = false, $storeCreditAmount = 0)
     {
         try {
+            \Log::info('CreateOrder method called', [
+                'payment_method' => $paymentMethod,
+                'total_price' => $totalPrice,
+                'shipping_fee' => $shippingFee,
+                'loyalty_discount' => $loyaltyDiscount,
+                'store_credit_amount' => $storeCreditAmount,
+                'use_store_credit' => $useStoreCredit
+            ]);
+            
             // Get selected item IDs for cart clearing later
             $selectedItemIds = $request->input('selected_items', []);
+            
+            // Calculate final total after store credit deduction
+            $finalTotal = $totalPrice + $shippingFee - $loyaltyDiscount - $storeCreditAmount;
+            
+            \Log::info('Final total calculated', [
+                'final_total' => $finalTotal,
+                'calculation' => $totalPrice . ' + ' . $shippingFee . ' - ' . $loyaltyDiscount . ' - ' . $storeCreditAmount
+            ]);
 
             // Create the order
             $order = new Order([
@@ -529,7 +625,7 @@ class CheckoutController extends Controller
                 'total_price' => $totalPrice,
                 'status' => 'pending',
                 'order_status' => 'pending',
-                'payment_status' => $paymentMethod === 'cod' ? 'pending' : 'unpaid',
+                'payment_status' => ($paymentMethod === 'cod' || ($paymentMethod === 'store_credit' && $finalTotal <= 0)) ? 'pending' : 'unpaid',
                 'payment_method' => $paymentMethod,
                 'type' => 'online',
                 'notes' => $request->input('notes', ''),
@@ -542,6 +638,11 @@ class CheckoutController extends Controller
                 'status' => 'pending',
                 'message' => 'Order created and pending approval',
             ]);
+
+            // Handle store credit deduction if used
+            if ($useStoreCredit && $storeCreditAmount > 0) {
+                $this->deductStoreCredit($user, $order, $storeCreditAmount);
+            }
 
             \Log::info('Order created successfully', ['order_id' => $order->id]);
 
@@ -599,8 +700,17 @@ class CheckoutController extends Controller
                 }
             }
 
+            $successMessage = 'Order placed successfully! Your order number is #' . $order->id;
+            if ($paymentMethod === 'store_credit') {
+                if ($finalTotal <= 0) {
+                    $successMessage .= ' Payment completed using your store credit balance. Your order is now pending approval.';
+                } else {
+                    $successMessage .= ' Store credit applied. Please complete payment for remaining amount.';
+                }
+            }
+            
             return redirect()->route('customer.orders.show', $order->id)
-                            ->with('success', 'Order placed successfully! Your order number is #' . $order->id);
+                            ->with('success', $successMessage);
 
         } catch (\Exception $e) {
             \Log::error('Error creating order', [
@@ -612,7 +722,7 @@ class CheckoutController extends Controller
         }
     }
 
-    private function redirectToPaymentGateway(Request $request, $user, $cartItems, $totalPrice, $paymentMethod, $deliveryDate, $deliveryTime, $deliveryAddress, $recipientName, $recipientPhone, $shippingFee, $loyaltyDiscount = 0, $loyaltyCard = null)
+    private function redirectToPaymentGateway(Request $request, $user, $cartItems, $totalPrice, $paymentMethod, $deliveryDate, $deliveryTime, $deliveryAddress, $recipientName, $recipientPhone, $shippingFee, $loyaltyDiscount = 0, $loyaltyCard = null, $useStoreCredit = false, $storeCreditAmount = 0)
     {
         \Log::info('TEST: Entered redirectToPaymentGateway', [
             'user_id' => $user->id,
@@ -654,6 +764,11 @@ class CheckoutController extends Controller
                 'status' => 'pending',
                 'message' => 'Order created and pending approval',
             ]);
+
+            // Handle store credit deduction if used
+            if ($useStoreCredit && $storeCreditAmount > 0) {
+                $this->deductStoreCredit($user, $order, $storeCreditAmount);
+            }
 
             // Reset loyalty stamps to 0/5 if discount was applied (complete cycle reset)
             if ($loyaltyDiscount > 0 && $loyaltyCard) {
@@ -770,6 +885,83 @@ class CheckoutController extends Controller
             \Log::info('Notifications created successfully');
         } catch (\Exception $e) {
             \Log::error('Error creating notifications', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Deduct store credit from customer's balance
+     */
+    private function deductStoreCredit($user, $order, $amount)
+    {
+        try {
+            // Find all store credit transactions ordered by most recent
+            $storeCreditOrders = Order::where('user_id', $user->id)
+                ->where('refund_method', 'store_credit')
+                ->whereNotNull('refund_amount')
+                ->whereNotNull('refund_processed_at')
+                ->orderBy('refund_processed_at', 'desc')
+                ->get();
+
+            $totalAvailable = $storeCreditOrders->sum('refund_amount');
+            
+            if ($totalAvailable < $amount) {
+                \Log::error('Insufficient store credit for deduction', [
+                    'user_id' => $user->id,
+                    'order_id' => $order->id,
+                    'amount' => $amount,
+                    'available' => $totalAvailable
+                ]);
+                return false;
+            }
+
+            $remainingAmount = $amount;
+            $usedOrders = [];
+
+            // Deduct from orders starting with the most recent
+            foreach ($storeCreditOrders as $storeCreditOrder) {
+                if ($remainingAmount <= 0) break;
+                
+                $availableInOrder = $storeCreditOrder->refund_amount;
+                $amountToDeduct = min($remainingAmount, $availableInOrder);
+                
+                // Create a store credit usage record
+                $storeCreditOrder->statusHistories()->create([
+                    'status' => 'store_credit_used',
+                    'message' => "Store credit of ₱" . number_format($amountToDeduct, 2) . " used for order #" . $order->id,
+                    'changed_by' => $user->id,
+                    'changed_at' => now()
+                ]);
+                
+                $usedOrders[] = [
+                    'order_id' => $storeCreditOrder->id,
+                    'amount' => $amountToDeduct
+                ];
+                
+                $remainingAmount -= $amountToDeduct;
+            }
+
+            // Update the order to track store credit usage
+            $order->update([
+                'store_credit_used' => $amount,
+                'store_credit_order_id' => $usedOrders[0]['order_id'] // Primary source order
+            ]);
+
+            \Log::info('Store credit deducted successfully', [
+                'user_id' => $user->id,
+                'order_id' => $order->id,
+                'amount' => $amount,
+                'used_orders' => $usedOrders
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('Error deducting store credit', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+                'order_id' => $order->id,
+                'amount' => $amount
+            ]);
+            return false;
         }
     }
 }

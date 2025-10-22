@@ -13,12 +13,12 @@
         border: 1px solid #eef3ef;
     }
     .profile-title {
-        font-size: 1.6rem;
-        font-weight: 700;
+        font-size: 1.2rem;
+        font-weight: 600;
         margin-bottom: 4px;
         color: #2c3e50;
         background: #eafbe7;
-        padding: 10px 12px;
+        padding: 8px 12px;
         border-radius: 8px;
     }
     .profile-section {
@@ -39,9 +39,10 @@
         color: #fff;
         border: none;
         border-radius: 24px;
-        padding: 10px 28px;
-        font-weight: 700;
-        letter-spacing: .2px;
+        padding: 8px 24px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        letter-spacing: .1px;
         transition: transform .15s ease, box-shadow .15s ease;
         display: block;
         margin: 6px auto 0 auto;
@@ -177,7 +178,7 @@
                                     }
                                 @endphp
                             </span></div>
-                            <button class="edit-details-btn" data-bs-toggle="modal" data-bs-target="#editDetailsModal" style="background: #7bb47b; color: #fff; border: none; border-radius: 4px; padding: 8px 28px; font-weight: 600; display: block; margin: 0 auto;">EDIT DETAILS</button>
+                            <button class="edit-details-btn" data-bs-toggle="modal" data-bs-target="#editDetailsModal" style="background: #7bb47b; color: #fff; border: none; border-radius: 4px; padding: 8px 24px; font-weight: 600; font-size: 0.9rem; display: block; margin: 0 auto;">EDIT DETAILS</button>
                         </div>
                     </div>
                     
@@ -205,7 +206,7 @@
                                     <label for="new_password_confirmation" class="form-label">Confirm New Password *</label>
                                     <input type="password" class="form-control" id="new_password_confirmation" name="new_password_confirmation" required>
                                 </div>
-                                <button type="submit" class="edit-details-btn" style="background: #7bb47b; color: #fff; border: none; border-radius: 4px; padding: 8px 28px; font-weight: 600; display: block; margin: 0 auto;">CHANGE PASSWORD</button>
+                                <button type="submit" class="edit-details-btn" style="background: #7bb47b; color: #fff; border: none; border-radius: 4px; padding: 8px 24px; font-weight: 600; font-size: 0.9rem; display: block; margin: 0 auto;">CHANGE PASSWORD</button>
                             </form>
                         </div>
                     </div>

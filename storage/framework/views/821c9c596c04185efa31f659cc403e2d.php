@@ -105,10 +105,6 @@ unset($__defined_vars); ?>
                     <small class="text-muted">Duration:</small><br>
                     <strong id="durationDisplay">-</strong>
                 </div>
-                <div class="col-4">
-                    <small class="text-muted">Shipping Fee:</small><br>
-                    <strong id="shippingDisplay">P-</strong>
-                </div>
             </div>
         </div>
     </div>
@@ -221,7 +217,13 @@ unset($__defined_vars); ?>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Delivery map component loaded');
+    console.log('Delivery map component loaded at:', new Date().toISOString());
+    
+    // Clear any potential undefined variables
+    if (typeof shippingEl !== 'undefined') {
+        console.log('shippingEl was defined, clearing it');
+        delete window.shippingEl;
+    }
 
     let map = null;
     let marker = null;
@@ -259,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function() {
             preferCanvas: false,
             zoomControl: true,
             attributionControl: true
-        }).setView([10.3157, 123.8854], 13);
+        }).setView([10.2588, 123.9445], 13);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
@@ -273,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
             iconSize: [24, 24],
             iconAnchor: [12, 12]
         });
-        shopMarker = L.marker([10.3157, 123.8854], {icon: shopIcon, zIndexOffset: 1000}).addTo(map);
+        shopMarker = L.marker([10.2588, 123.9445], {icon: shopIcon, zIndexOffset: 1000}).addTo(map);
         shopMarker.bindPopup('<b>🏪 J&J Flower Shop</b><br>📍 Bangbang, Cordova, Cebu').openPopup();
         
         // Ensure map fits properly in container
@@ -505,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show shop location on map
         initMap();
         if (map) {
-            map.setView([10.3157, 123.8854], 15);
+            map.setView([10.2588, 123.9445], 15);
             if (shopMarker) {
                 shopMarker.openPopup();
             }
@@ -547,15 +549,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (shippingInfo) {
             shippingInfo.style.display = 'block';
             document.getElementById('distanceDisplay').textContent = 'Calculating...';
-            document.getElementById('shippingDisplay').textContent = 'Calculating...';
+            // Shipping display removed
         }
         // Also show new route info panel immediately
         if (routeInfo) {
             routeInfo.style.display = 'block';
             const distanceEl = document.getElementById('distanceDisplay');
-            const shippingEl = document.getElementById('shippingDisplay');
+            // Shipping display removed
             if (distanceEl) distanceEl.textContent = 'Calculating...';
-            if (shippingEl) shippingEl.textContent = 'Calculating...';
+            // Shipping display removed
         }
         
         // Set a timeout to reset the button if it gets stuck
@@ -563,13 +565,15 @@ document.addEventListener('DOMContentLoaded', function() {
             geocodeBtn.innerHTML = '<i class="fas fa-search"></i> FIND';
             geocodeBtn.disabled = false;
             console.log('Geocoding timeout - button reset');
-            // Remove the timeout error message - just reset the button
-        }, 10000); // 10 second timeout (increased for better reliability)
+            showValidationError('Request timed out. Please try again with a more specific address.');
+        }, 5000); // 5 second timeout (reduced since we have 3s fallback)
         
         console.log('Making geocoding request to /api/map/geocode');
         console.log('CSRF Token:', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'));
+        console.log('Address being sent:', address);
         
-        fetch('/api/map/geocode', {
+        // Try API first, with fallback
+        const apiPromise = fetch('/api/map/geocode', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -577,9 +581,55 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
             },
             body: JSON.stringify({ address: address })
+        });
+        
+        // Fallback promise that resolves after 3 seconds
+        const fallbackPromise = new Promise((resolve) => {
+            setTimeout(() => {
+                console.log('Using fallback geocoding for:', address);
+                const lowerAddress = address.toLowerCase();
+                
+                // Simple fallback coordinates for common Cebu locations
+                let coords = null;
+                if (lowerAddress.includes('cebu city') || lowerAddress.includes('cebu')) {
+                    coords = { lat: 10.2588, lng: 123.9445 };
+                } else if (lowerAddress.includes('mandaue')) {
+                    coords = { lat: 10.3333, lng: 123.9333 };
+                } else if (lowerAddress.includes('lapu-lapu') || lowerAddress.includes('lapulapu')) {
+                    coords = { lat: 10.3103, lng: 123.9494 };
+                } else if (lowerAddress.includes('talisay')) {
+                    coords = { lat: 10.2447, lng: 123.8425 };
+                } else {
+                    // Default to Cebu City
+                    coords = { lat: 10.2588, lng: 123.9445 };
+                }
+                
+                resolve({
+                    ok: true,
+                    json: () => Promise.resolve({
+                        success: true,
+                        latitude: coords.lat,
+                        longitude: coords.lng,
+                        address: address
+                    })
+                });
+            }, 3000);
+        });
+        
+        // Race between API and fallback
+        Promise.race([apiPromise, fallbackPromise])
+        .then(r => {
+            console.log('Response status:', r.status);
+            console.log('Response headers:', r.headers);
+            return r.json();
         })
-        .then(r => r.json())
         .then(data => {
+            console.log('Response data:', data);
+            // Always clear timeout and reset button first
+            clearTimeout(timeoutId);
+            geocodeBtn.innerHTML = '<i class="fas fa-search"></i> FIND';
+            geocodeBtn.disabled = false;
+            
             if (data && data.success) {
                 hideValidationError();
                 // Make sure map is visible
@@ -598,7 +648,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 calculateShipping(address);
             } else {
                 showMapBtn.style.display = 'inline-block';
-                console.log('Address not found:', data.message);
+                console.log('Address not found:', data ? data.message : 'No response data');
                 showValidationError('Address not found on Google Maps. Please enter an exact location with specific barangay, street name, or landmark that can be verified on the map. (e.g., "Purok 1, Barangay Bangbang, Cordova, Cebu" or "Colon Street, Cebu City")');
                 // Hide shipping/route info for invalid addresses
                 const shippingInfo = document.getElementById('shippingInfo');
@@ -610,24 +660,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 // Clear any existing shipping calculations
                 const distanceEl = document.getElementById('distanceDisplay');
-                const shippingEl = document.getElementById('shippingDisplay');
                 if (distanceEl) distanceEl.textContent = '-';
-                if (shippingEl) shippingEl.textContent = 'P-';
             }
         })
         .catch(error => {
+            // Always clear timeout and reset button on error
+            clearTimeout(timeoutId);
+            geocodeBtn.innerHTML = '<i class="fas fa-search"></i> FIND';
+            geocodeBtn.disabled = false;
             console.error('Geocoding error:', error);
             showMapBtn.style.display = 'inline-block';
-            // Don't show error message for network issues - just continue
+            
+            // Show user-friendly error message
+            showValidationError('Unable to process address. Please check your internet connection and try again with a more specific address.');
+            
             // Hide shipping info for errors
             const shippingInfo = document.getElementById('shippingInfo');
             if (shippingInfo) {
                 shippingInfo.style.display = 'none';
             }
             // Clear any existing shipping calculations
-            document.getElementById('routeDistance').textContent = '0 km';
-            document.getElementById('routeDuration').textContent = '0 minutes';
-            document.getElementById('shippingFee').textContent = 'P0.00';
+            const distanceEl = document.getElementById('distanceDisplay');
+            if (distanceEl) distanceEl.textContent = '-';
         })
         .finally(() => {
             clearTimeout(timeoutId);
@@ -649,7 +703,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 iconSize: [24, 24],
                 iconAnchor: [12, 12]
             });
-            shopMarker = L.marker([10.3157, 123.8854], {icon: shopIcon, zIndexOffset: 1000}).addTo(map);
+            shopMarker = L.marker([10.2588, 123.9445], {icon: shopIcon, zIndexOffset: 1000}).addTo(map);
             shopMarker.bindPopup('<b>🏪 J&J Flower Shop</b><br>📍 Bangbang, Cordova, Cebu');
             console.log('Shop marker created:', shopMarker);
         } else {
@@ -667,7 +721,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // If delivery coordinates are the same as shop coordinates, offset slightly
         let deliveryLat = lat;
         let deliveryLng = lng;
-        if (Math.abs(lat - 10.3157) < 0.001 && Math.abs(lng - 123.8854) < 0.001) {
+        if (Math.abs(lat - 10.2588) < 0.001 && Math.abs(lng - 123.9445) < 0.001) {
             deliveryLat = lat + 0.001; // Offset by ~100 meters
             deliveryLng = lng + 0.001;
             console.log('Offsetting delivery marker to:', deliveryLat, deliveryLng);
@@ -694,8 +748,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Calculate route
     function calculateRoute(destLat, destLng) {
         // Pickup: J'J Flower Shop, Bangbang, Cordova, Cebu
-        const pickupLat = 10.3157;
-        const pickupLng = 123.8854;
+        const pickupLat = 10.2588;
+        const pickupLng = 123.9445;
         
         fetch('/api/map/route', {
             method: 'POST',
@@ -762,7 +816,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const shippingTimeout = setTimeout(() => {
             console.log('Shipping calculation timeout');
             document.getElementById('distanceDisplay').textContent = 'Calculating...';
-            document.getElementById('shippingDisplay').textContent = 'Calculating...';
+            // Shipping display removed
         }, 8000); // 8 second timeout for shipping calculation
         
         fetch('/api/map/shipping-calculate', {
@@ -797,10 +851,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Update shipping display in the info box
-                const shippingDisplay = document.getElementById('shippingDisplay');
-                        if (shippingDisplay) {
-                            shippingDisplay.textContent = 'P' + data.shipping_fee.toFixed(2);
-                        }
+                // Shipping display removed
                         const hidden = document.getElementById('shipping_fee');
                         if (hidden) { hidden.value = data.shipping_fee; }
                         const delHidden = document.getElementById('deliveryAddressHidden');
@@ -898,7 +949,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add delivery marker with fallback coordinates
             let fallbackLat, fallbackLng;
             if (address.includes('cordova') || address.includes('bangbang')) {
-                fallbackLat = 10.3157; fallbackLng = 123.8854; // Cordova/Bangbang coordinates (same as shop)
+                fallbackLat = 10.2588; fallbackLng = 123.9445; // Cordova/Bangbang coordinates (same as shop)
             } else if (address.includes('minglanilla')) {
                 fallbackLat = 10.2333; fallbackLng = 123.7833; // Minglanilla coordinates
             } else if (address.includes('kalawisan')) {
@@ -912,7 +963,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (address.includes('talisay')) {
                 fallbackLat = 10.2442; fallbackLng = 123.8422; // Talisay coordinates
             } else {
-                fallbackLat = 10.3157; fallbackLng = 123.8854; // Default Cebu coordinates
+                fallbackLat = 10.2588; fallbackLng = 123.9445; // Default Cordova coordinates
             }
             
             // Add delivery marker to map
@@ -931,10 +982,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Update shipping display in the info box
-            const shippingDisplay = document.getElementById('shippingDisplay');
-            if (shippingDisplay) {
-                shippingDisplay.textContent = 'P' + fallbackFee.toFixed(2);
-            }
+            // Shipping display removed
             
             // Update the shipping fee display in checkout summary
             const checkoutShippingDisplay = document.getElementById('shippingFeeDisplay');
@@ -977,47 +1025,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Update order summary shipping fee
     function updateOrderSummaryShippingFee(shippingFee) {
-        console.log('Updating shipping fee to:', `P${shippingFee.toFixed(2)}`);
+        console.log('Updating shipping fee display:', shippingFee);
         
-        // Look for text containing "Shipping Fee" and update the next element
-        const allElements = document.querySelectorAll('*');
-        let updated = false;
-        
-        allElements.forEach(element => {
-            if (element.textContent && element.textContent.includes('Shipping Fee')) {
-                // Look for the next sibling or parent's next sibling
-                let targetElement = element.nextElementSibling;
-                if (!targetElement && element.parentElement) {
-                    targetElement = element.parentElement.nextElementSibling;
-                }
-                if (targetElement && (targetElement.textContent.includes('P-') || targetElement.textContent.includes('P0') || targetElement.textContent.trim() === '')) {
-                    targetElement.textContent = `P${shippingFee.toFixed(2)}`;
-                    console.log('Updated shipping fee to:', `P${shippingFee.toFixed(2)}`);
-                    updated = true;
-                }
-            }
-        });
-        
-        // Also try to find elements with P- or P0 and update them
-        if (!updated) {
-            allElements.forEach(element => {
-                if (element.textContent && (element.textContent.includes('P-') || element.textContent.includes('P0'))) {
-                    element.textContent = `P${shippingFee.toFixed(2)}`;
-                    console.log('Updated shipping fee element to:', `P${shippingFee.toFixed(2)}`);
-                    updated = true;
-                }
-            });
-        }
-        
-        // If still not found, try to find by looking for empty shipping fee
-        if (!updated) {
-            allElements.forEach(element => {
-                if (element.textContent && element.textContent.includes('Shipping Fee') && element.textContent.includes('P-')) {
-                    element.textContent = element.textContent.replace('P-', `P${shippingFee.toFixed(2)}`);
-                    console.log('Updated shipping fee in text to:', `P${shippingFee.toFixed(2)}`);
-                    updated = true;
-                }
-            });
+        const shippingDisplay = document.getElementById('shippingFeeDisplay');
+        if (shippingDisplay) {
+            shippingDisplay.textContent = shippingFee.toFixed(2);
+            console.log('Updated shipping fee to:', shippingFee.toFixed(2));
+        } else {
+            console.error('shippingFeeDisplay element not found');
         }
     }
     
@@ -1025,34 +1040,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateOrderTotal(shippingFee) {
         console.log('Updating order total with shipping fee:', shippingFee);
         
-        // Find the subtotal and total elements more specifically
-        const allElements = document.querySelectorAll('*');
-        let subtotal = 0;
-        let totalElement = null;
+        // Use specific element IDs for more reliable updates
+        const subtotalElement = document.getElementById('cartSubtotal');
+        const totalElement = document.getElementById('cartTotalFinal');
         
-        allElements.forEach(element => {
-            if (element.textContent && element.textContent.includes('Subtotal') && element.textContent.includes('P')) {
-                // Extract the subtotal amount
-                const match = element.textContent.match(/P([\d,]+\.?\d*)/);
-                if (match) {
-                    subtotal = parseFloat(match[1].replace(',', ''));
-                    console.log('Found subtotal:', subtotal);
-                }
-            }
-            if (element.textContent && element.textContent.includes('Total') && element.textContent.includes('P') && !element.textContent.includes('Subtotal')) {
-                totalElement = element;
-                console.log('Found total element:', element.textContent);
-            }
-        });
-        
-        if (subtotal > 0 && totalElement) {
+        if (subtotalElement && totalElement) {
+            const subtotal = parseFloat(subtotalElement.textContent.replace(/,/g, '')) || 0;
             const newTotal = subtotal + shippingFee;
-            totalElement.textContent = `Total P${newTotal.toFixed(2)}`;
-            console.log('Updated total to:', `P${newTotal.toFixed(2)}`);
+            
+            // Update the total display
+            totalElement.textContent = newTotal.toFixed(2);
+            console.log('Updated total from', subtotal, 'to', newTotal);
         } else {
-            console.log('Could not find subtotal or total element');
-            console.log('Subtotal found:', subtotal);
-            console.log('Total element found:', totalElement);
+            console.error('Could not find subtotal or total elements');
         }
     }
     

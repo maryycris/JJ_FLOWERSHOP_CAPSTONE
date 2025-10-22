@@ -61,4 +61,46 @@ class CustomerNotificationController extends Controller
         $notification->delete();
         return back()->with('success', 'Notification deleted.');
     }
+
+    public function hide($id)
+    {
+        $notification = auth()->user()->notifications()->findOrFail($id);
+        
+        // Add a hidden flag to the notification data
+        $data = $notification->data;
+        $data['hidden'] = true;
+        $notification->update(['data' => $data]);
+        
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Notification hidden.']);
+        }
+        
+        return back()->with('success', 'Notification hidden.');
+    }
+
+    public function unhide($id)
+    {
+        $notification = auth()->user()->notifications()->findOrFail($id);
+        
+        // Remove the hidden flag from the notification data
+        $data = $notification->data;
+        unset($data['hidden']);
+        $notification->update(['data' => $data]);
+        
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Notification unhidden.']);
+        }
+        
+        return back()->with('success', 'Notification unhidden.');
+    }
+
+    public function getHidden()
+    {
+        $hiddenNotifications = auth()->user()->notifications()
+            ->whereJsonContains('data->hidden', true)
+            ->latest()
+            ->get();
+        
+        return response()->json($hiddenNotifications);
+    }
 }

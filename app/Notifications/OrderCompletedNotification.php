@@ -25,7 +25,7 @@ class OrderCompletedNotification extends Notification
     {
         return [
             'type' => 'order_completed',
-            'title' => 'Order Completed',
+            'title' => "Order #{$this->order->id} Completed",
             'message' => "Your order #{$this->order->id} has been completed! Thank you for your purchase.",
             'order_id' => $this->order->id,
             'icon' => 'fas fa-check-double',

@@ -1,4 +1,21 @@
 <?php $__env->startSection('content'); ?>
+<style>
+/* Animation for delivery count update */
+#deliveryCount {
+    transition: all 0.3s ease;
+}
+
+/* Animation for pending order removal */
+.order-card-clickable {
+    transition: opacity 0.5s ease-out;
+}
+
+/* Loading state for buttons */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+</style>
 <div class="text-center mb-4">
     <!-- Banner/UI Reference -->
     <img src="/images/rider_UI.png" alt="Driver UI Reference" style="max-width: 100%; border-radius: 15px; margin-bottom: 24px; box-shadow: 0 4px 16px #dbe7db;">
@@ -9,7 +26,7 @@
     <div class="card-body text-center">
         <div style="font-size: 2.3rem; color: #2a7e2a;"><i class="bi bi-truck"></i></div>
         <h5 class="card-title mt-2 mb-2" style="color: #3a5d37; font-weight: 600;">Today's Deliveries</h5>
-        <p class="display-5 fw-bold mb-1" style="color: #216f21;"><?php echo e(isset($toDeliver) ? $toDeliver->count() : 0); ?></p>
+        <p class="display-5 fw-bold mb-1" style="color: #216f21;" id="deliveryCount"><?php echo e(isset($toDeliver) ? $toDeliver->count() : 0); ?></p>
         <div class="small text-muted mb-0">Deliveries assigned to you today</div>
     </div>
 </div>
@@ -23,12 +40,13 @@
     </div>
     <div class="card-body p-0">
         <?php $__currentLoopData = $pendingAcceptance; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-        <div class="border-bottom p-3" style="border-color: #e9ecef !important;">
+        <div class="border-bottom p-3 order-card-clickable" id="pendingOrder<?php echo e($order->id); ?>" style="border-color: #e9ecef !important; cursor: pointer; transition: background-color 0.2s;" onclick="viewOrderDetails(<?php echo e($order->id); ?>)" onmouseover="this.style.backgroundColor='#fff3cd'" onmouseout="this.style.backgroundColor='transparent'">
             <div class="d-flex justify-content-between align-items-start">
                 <div class="flex-grow-1">
                     <h6 class="mb-1" style="color: #2c3e50; font-weight: 600;">
                         Order #<?php echo e($order->id); ?>
 
+                        <i class="bi bi-arrow-right-circle ms-2" style="color: #007bff; font-size: 0.8rem;"></i>
                     </h6>
                     <p class="mb-1 text-muted small">
                         <i class="bi bi-person me-1"></i><?php echo e($order->user->name ?? 'N/A'); ?>
@@ -48,16 +66,18 @@
                     <br>
                     <small class="text-muted"><?php echo e($order->created_at->format('M d, Y')); ?></small>
                     <br>
+                    <small class="text-primary" style="font-size: 0.75rem;">Click to view details</small>
+                    <br>
                     <div class="mt-2">
                         <?php if($order->delivery && $order->delivery->driver_decision === 'accepted'): ?>
                             <span class="badge bg-success">Accepted</span>
                         <?php elseif($order->delivery && $order->delivery->driver_decision === 'declined'): ?>
                             <span class="badge bg-danger">Declined</span>
                         <?php else: ?>
-                            <button class="btn btn-success btn-sm me-1" onclick="acceptOrder(<?php echo e($order->id); ?>)">
+                            <button class="btn btn-success btn-sm me-1" onclick="event.stopPropagation(); acceptOrder(<?php echo e($order->id); ?>)">
                                 <i class="bi bi-check-circle"></i> Accept
                             </button>
-                            <button class="btn btn-danger btn-sm" onclick="declineOrder(<?php echo e($order->id); ?>)">
+                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); declineOrder(<?php echo e($order->id); ?>)">
                                 <i class="bi bi-x-circle"></i> Decline
                             </button>
                         <?php endif; ?>
@@ -79,12 +99,13 @@
     </div>
     <div class="card-body p-0">
         <?php $__currentLoopData = $toDeliver; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-        <div class="border-bottom p-3" style="border-color: #e9ecef !important;">
+        <div class="border-bottom p-3 order-card-clickable" style="border-color: #e9ecef !important; cursor: pointer; transition: background-color 0.2s;" onclick="viewOrderDetails(<?php echo e($order->id); ?>)" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'">
             <div class="d-flex justify-content-between align-items-start">
                 <div class="flex-grow-1">
                     <h6 class="mb-1" style="color: #2c3e50; font-weight: 600;">
                         Order #<?php echo e($order->id); ?>
 
+                        <i class="bi bi-arrow-right-circle ms-2" style="color: #007bff; font-size: 0.8rem;"></i>
                     </h6>
                     <p class="mb-1 text-muted small">
                         <i class="bi bi-person me-1"></i><?php echo e($order->user->name ?? 'N/A'); ?>
@@ -103,6 +124,8 @@
                     <span class="badge bg-info text-white mb-2">On Delivery</span>
                     <br>
                     <small class="text-muted"><?php echo e($order->created_at->format('M d, Y')); ?></small>
+                    <br>
+                    <small class="text-primary" style="font-size: 0.75rem;">Click to view details</small>
                 </div>
             </div>
         </div>
@@ -122,6 +145,10 @@
     <li class="list-group-item d-flex justify-content-between align-items-center" style="font-size: 1.08rem;">
         <span class="fw-semibold"><i class="bi bi-truck me-2"></i>Go to your Orders</span>
         <a href="<?php echo e(route('driver.orders.index')); ?>" class="btn btn-success btn-sm px-3"><i class="bi bi-chevron-right"></i></a>
+    </li>
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-clock-history me-2"></i>Delivery History</span>
+        <a href="<?php echo e(route('driver.history.index')); ?>" class="btn btn-outline-info btn-sm px-3"><i class="bi bi-chevron-right"></i></a>
     </li>
     <li class="list-group-item d-flex justify-content-between align-items-center">
         <span class="fw-semibold"><i class="bi bi-person me-2"></i>Account/Profile</span>
@@ -172,6 +199,12 @@ let currentOrderId = null;
 
 function acceptOrder(orderId) {
     if (confirm('Are you sure you want to accept this order?')) {
+        // Show loading state
+        const acceptBtn = document.querySelector(`button[onclick="acceptOrder(${orderId})"]`);
+        const originalText = acceptBtn.innerHTML;
+        acceptBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Accepting...';
+        acceptBtn.disabled = true;
+        
         fetch(`/driver/orders/${orderId}/accept`, {
             method: 'POST',
             headers: {
@@ -182,16 +215,24 @@ function acceptOrder(orderId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // Update delivery count automatically
+                updateDeliveryCount();
+                
+                // Remove the accepted order from pending list
+                removePendingOrder(orderId);
+                
                 Swal.fire({
                     icon: 'success',
                     title: 'Order Accepted!',
                     text: data.message,
                     timer: 2000,
                     showConfirmButton: false
-                }).then(() => {
-                    location.reload();
                 });
             } else {
+                // Reset button on error
+                acceptBtn.innerHTML = originalText;
+                acceptBtn.disabled = false;
+                
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -201,6 +242,11 @@ function acceptOrder(orderId) {
         })
         .catch(error => {
             console.error('Error:', error);
+            
+            // Reset button on error
+            acceptBtn.innerHTML = originalText;
+            acceptBtn.disabled = false;
+            
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
@@ -214,6 +260,56 @@ function declineOrder(orderId) {
     currentOrderId = orderId;
     const modal = new bootstrap.Modal(document.getElementById('declineModal'));
     modal.show();
+}
+
+function viewOrderDetails(orderId) {
+    // Redirect to order details page
+    window.location.href = `<?php echo e(url('/driver/orders')); ?>/${orderId}`;
+}
+
+// Function to update delivery count automatically
+function updateDeliveryCount() {
+    const deliveryCountElement = document.getElementById('deliveryCount');
+    if (deliveryCountElement) {
+        const currentCount = parseInt(deliveryCountElement.textContent);
+        deliveryCountElement.textContent = currentCount + 1;
+        
+        // Add a nice animation effect
+        deliveryCountElement.style.transform = 'scale(1.2)';
+        deliveryCountElement.style.color = '#28a745';
+        setTimeout(() => {
+            deliveryCountElement.style.transform = 'scale(1)';
+            deliveryCountElement.style.color = '#216f21';
+        }, 300);
+    }
+}
+
+// Function to remove accepted order from pending list
+function removePendingOrder(orderId) {
+    const pendingOrderElement = document.getElementById(`pendingOrder${orderId}`);
+    if (pendingOrderElement) {
+        // Add fade out animation
+        pendingOrderElement.style.transition = 'opacity 0.5s ease-out';
+        pendingOrderElement.style.opacity = '0';
+        
+        setTimeout(() => {
+            pendingOrderElement.remove();
+            
+            // Check if no more pending orders
+            const pendingContainer = document.querySelector('.card-body.p-0');
+            if (pendingContainer && pendingContainer.children.length === 0) {
+                // Hide the entire pending acceptance section
+                const pendingSection = pendingContainer.closest('.card');
+                if (pendingSection) {
+                    pendingSection.style.transition = 'opacity 0.5s ease-out';
+                    pendingSection.style.opacity = '0';
+                    setTimeout(() => {
+                        pendingSection.remove();
+                    }, 500);
+                }
+            }
+        }, 500);
+    }
 }
 
 // Handle custom reason input
@@ -265,14 +361,19 @@ function submitDecline() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Remove the declined order from pending list
+            removePendingOrder(currentOrderId);
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('declineModal'));
+            modal.hide();
+            
             Swal.fire({
                 icon: 'success',
                 title: 'Order Declined',
                 text: data.message,
                 timer: 2000,
                 showConfirmButton: false
-            }).then(() => {
-                location.reload();
             });
         } else {
             Swal.fire({

@@ -8,6 +8,8 @@
             : 'https://via.placeholder.com/80'
     }}" class="rounded-circle mb-2" style="width: 80px; height: 80px; object-fit: cover; background: #e0e0e0; cursor:pointer;" data-bs-toggle="modal" data-bs-target="#editImageModal" alt="">
     <div class="fw-bold mb-2" style="font-size: 1.1rem; color: #222; text-transform: uppercase;">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</div>
+    
+    
     <div class="sidebar-label mb-2" style="color: #888; font-size: 1rem; font-weight: 500;">Manage Account</div>
     <div class="w-100" style="max-width: 260px;">
         <div class="sidebar-links d-flex flex-column gap-1">
@@ -19,6 +21,9 @@
             </a>
             <a href="{{ route('customer.orders.index') }}" class="sidebar-link d-flex align-items-center @if(request()->routeIs('customer.orders.index')) active-link @endif" style="color: #222; font-weight: @if(request()->routeIs('customer.orders.index')) 600 @else 400 @endif;">
                 <i class="fas fa-shopping-bag me-2" style="color: #222;"></i> My Purchase
+            </a>
+            <a href="{{ route('customer.store-credit.history') }}" class="sidebar-link d-flex align-items-center @if(request()->routeIs('customer.store-credit.history')) active-link @endif" style="color: #222; font-weight: @if(request()->routeIs('customer.store-credit.history')) 600 @else 400 @endif;">
+                <i class="fas fa-wallet me-2" style="color: #222;"></i> Store Credit
             </a>
             <a href="{{ route('customer.trackOrders.page') }}" class="sidebar-link d-flex align-items-center @if(request()->routeIs('customer.trackOrders.page')) active-link @endif" style="color: #222; font-weight: @if(request()->routeIs('customer.trackOrders.page')) 600 @else 400 @endif;">
                 <i class="fas fa-map-marked-alt me-2" style="color: #222;"></i> Track Order

@@ -3,7 +3,10 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="fw-bold">Delivery History</h4>
-    <span class="badge bg-success">{{ $completedDeliveries->count() }} completed</span>
+    <div class="d-flex gap-2">
+        <span class="badge bg-success">{{ $completedDeliveries->count() }} completed</span>
+        <span class="badge bg-warning">{{ $returnedOrders->count() }} returned</span>
+    </div>
 </div>
 
 @if($completedDeliveries->isEmpty())
@@ -74,10 +77,90 @@
 @endif
 @endif
 
+<!-- Returned Orders Section -->
+@if($returnedOrders->isNotEmpty())
+<div class="mt-5">
+    <h5 class="fw-bold text-warning mb-3">
+        <i class="bi bi-arrow-return-left me-2"></i>Returned Orders
+    </h5>
+    <div class="row">
+        @foreach($returnedOrders as $order)
+        <div class="col-12 mb-3">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="card-title mb-0">Order #{{ $order->id }}</h6>
+                        <span class="badge" style="background-color: #ffc107; color: #000; font-weight: 600;">
+                            <i class="bi bi-arrow-return-left me-1"></i>Returned
+                        </span>
+                    </div>
+                    
+                    <div class="row mb-2">
+                        <div class="col-6">
+                            <small class="text-muted">Customer:</small><br>
+                            <strong>{{ $order->user->name }}</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Contact:</small><br>
+                            <strong>{{ $order->user->contact_number ?? 'N/A' }}</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted">Delivery Address:</small><br>
+                        <strong>{{ $order->delivery->delivery_address ?? 'N/A' }}</strong>
+                    </div>
+                    
+                    <div class="row mb-2">
+                        <div class="col-6">
+                            <small class="text-muted">Total Amount:</small><br>
+                            <strong>₱{{ number_format($order->total_price, 2) }}</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Return Date:</small><br>
+                            <strong>{{ $order->returned_at ? $order->returned_at->format('M d, Y H:i') : 'N/A' }}</strong>
+                        </div>
+                    </div>
+                    
+                    @if($order->return_reason)
+                    <div class="mb-2">
+                        <small class="text-muted">Return Reason:</small><br>
+                        <strong class="text-warning">{{ $order->return_reason }}</strong>
+                    </div>
+                    @endif
+                    
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('driver.orders.show', $order->id) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i>View Details
+                        </a>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="showReturnNotes({{ $order->id }})">
+                            <i class="bi bi-sticky me-1"></i>Notes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+    
+    <!-- Pagination for returned orders -->
+    @if($returnedOrders->hasPages())
+    <div class="d-flex justify-content-center mt-4">
+        {{ $returnedOrders->links() }}
+    </div>
+    @endif
+</div>
+@endif
+
 <script>
 function showDeliveryNotes(deliveryId) {
     // This would open a modal or navigate to a notes page
     alert('Delivery notes feature coming soon!');
+}
+
+function showReturnNotes(orderId) {
+    // This would open a modal or navigate to a notes page
+    alert('Return notes feature coming soon!');
 }
 </script>
 @endsection 

@@ -86,6 +86,49 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Refund Information -->
+                        <?php if($order->refund_amount && $order->refund_processed_at): ?>
+                        <div class="col-12 mt-3">
+                            <div class="alert alert-success border-0" style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border-radius: 8px;">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-money-bill-wave me-3 text-success" style="font-size: 1.2rem;"></i>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 text-success fw-bold">
+                                            <i class="fas fa-check-circle me-1"></i>Refund Processed
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block">Refund Amount</small>
+                                                <strong class="text-success">₱<?php echo e(number_format($order->refund_amount, 2)); ?></strong>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block">Refund Method</small>
+                                                <strong class="text-dark"><?php echo e(ucwords(str_replace('_', ' ', $order->refund_method))); ?></strong>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block">Processed Date</small>
+                                                <strong class="text-dark">
+                                                    <?php if($order->refund_processed_at): ?>
+                                                        <?php echo e($order->refund_processed_at instanceof \Carbon\Carbon ? $order->refund_processed_at->format('M d, Y g:i A') : \Carbon\Carbon::parse($order->refund_processed_at)->format('M d, Y g:i A')); ?>
+
+                                                    <?php else: ?>
+                                                        N/A
+                                                    <?php endif; ?>
+                                                </strong>
+                                            </div>
+                                        </div>
+                                        <?php if($order->refund_reason): ?>
+                                        <div class="mt-2">
+                                            <small class="text-muted d-block">Reason</small>
+                                            <span class="text-dark"><?php echo e($order->refund_reason); ?></span>
+                                        </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                         <div class="col-md-6">
                             <div class="d-flex align-items-center p-2" style="background: #f8f9fa; border-radius: 6px;">
                                 <i class="fas fa-credit-card me-2 text-primary" style="font-size: 0.9rem;"></i>

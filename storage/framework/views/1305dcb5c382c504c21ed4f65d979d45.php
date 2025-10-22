@@ -44,6 +44,7 @@
         </div>
     </div>
 
+
     <!-- Search Bar -->
     <div class="mx-auto mb-3" style="max-width: 1000px;">
         <div class="p-0">
@@ -165,6 +166,9 @@
 <?php endif; ?>
         <?php endif; ?>
     </div>
+
+    
+
     <?php echo $__env->make('customer.products.modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 </div>
 <?php $__env->stopSection(); ?>
@@ -172,6 +176,177 @@
 <?php $__env->startPush('styles'); ?>
 <style>
     body { background: #f4faf4; }
+    
+    /* Mobile Responsive Design (480px and below) */
+    @media (max-width: 480px) {
+        .container-fluid {
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+        
+        /* Make carousel responsive */
+        .carousel-inner img {
+            height: 70px !important;
+        }
+        
+        /* Make search bar responsive */
+        .input-group {
+            margin:  15px 0 -15px;
+            align-items: stretch; /* keep children same height */
+        }
+        
+        #productSearchInput {
+            font-size: 14px;
+            padding: 10px 12px;
+            height: 42px;
+        }
+        
+        #productFilterBtn {
+            padding: 0 14px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Make category tabs responsive */
+        .category-tabs {
+            margin: 0 10px;
+            padding: 0 !important;
+        }
+        
+        .category-tabs .nav-link {
+            font-size: 12px !important;
+            padding: 8px 4px !important;
+            margin: 0 !important;
+        }
+        
+        /* Make products responsive */
+        .product-grid {
+            margin: 0 10px;
+            padding: 0 !important;
+        }
+        
+        .product-grid .col-6 {
+            padding: 5px;
+        }
+        
+        .product-card {
+            margin-bottom: 10px;
+        }
+        
+        .product-image {
+            height: 150px !important;
+        }
+        
+        .card-title {
+            font-size: 0.7rem !important;
+        }
+        
+        .product-price {
+            font-size: 0.75rem !important;
+        }
+        
+        .card-body {
+            padding: 10px 8px !important;
+        }
+        
+        /* Make section title responsive */
+        .fs-5 {
+            font-size: 1rem !important;
+            margin: 10px 0 5px 0;
+        }
+        
+        /* Make hr responsive */
+        .my-2 {
+            margin: 5px 0 !important;
+        }
+        
+        /* Mobile Bottom Navigation */
+        /* bottom nav now global in layout */
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.3s;
+            position: relative;
+            flex: 1 1 0; /* spread items evenly in a row */
+            text-align: center;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .nav-item i {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-item .bi {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item span {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Profile Dropdown */
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+            padding: 10px 0;
+            min-width: 200px;
+            display: none;
+            z-index: 1001;
+        }
+
+        .profile-dropdown:hover .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            text-decoration: none;
+            color: #333;
+            transition: background 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+        }
+
+        .dropdown-item i,
+        .dropdown-item .bi {
+            margin-right: 12px;
+            width: 16px;
+            text-align: center;
+            color: #A0C49D;
+        }
+
+        .dropdown-item span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+    }
+    
+    /* Desktop Styles */
     .category-tabs .nav-link {
         border: none !important;
         color: #7f8c8d !important;
@@ -305,6 +480,39 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Dashboard initialization
     console.log('Dashboard loaded');
+    
+    // Mobile bottom navigation functionality
+    const navItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            // Remove active class from all items
+            navItems.forEach(nav => nav.classList.remove('active'));
+            // Add active class to clicked item
+            this.classList.add('active');
+        });
+    });
+    
+    // Profile dropdown functionality
+    const profileDropdown = document.querySelector('.profile-dropdown');
+    if (profileDropdown) {
+        profileDropdown.addEventListener('click', function(e) {
+            e.preventDefault();
+            const dropdown = this.querySelector('.dropdown-menu');
+            if (dropdown) {
+                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            }
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!profileDropdown.contains(e.target)) {
+                const dropdown = profileDropdown.querySelector('.dropdown-menu');
+                if (dropdown) {
+                    dropdown.style.display = 'none';
+                }
+            }
+        });
+    }
 });
 </script>
 <?php $__env->stopPush(); ?>

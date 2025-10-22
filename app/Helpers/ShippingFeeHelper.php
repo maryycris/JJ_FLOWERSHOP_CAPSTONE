@@ -11,8 +11,15 @@ class ShippingFeeHelper
         $baseFee = 30; // P30.00 within Cordova
         $additionalRatePerKm = 10; // P10.00 per kilometer beyond Cordova
 
+        \Log::info('Shipping calculation debug', [
+            'origin' => $originAddress,
+            'destination' => $destinationAddress,
+            'contains_cordova' => self::containsCordova($destinationAddress)
+        ]);
+
         // If destination is within Cordova, always return base fee
         if (self::containsCordova($destinationAddress)) {
+            \Log::info('Address contains Cordova, returning base fee', ['fee' => $baseFee]);
             return $baseFee;
         }
 
@@ -27,7 +34,13 @@ class ShippingFeeHelper
                     $distanceInKm = $distance / 1000.0;
                     // Add P10.00 for every kilometer beyond Cordova
                     $additionalFee = $distanceInKm * $additionalRatePerKm;
-                    return $baseFee + $additionalFee;
+                    $totalFee = $baseFee + $additionalFee;
+                    \Log::info('OSRM calculation result', [
+                        'distance_km' => $distanceInKm,
+                        'additional_fee' => $additionalFee,
+                        'total_fee' => $totalFee
+                    ]);
+                    return $totalFee;
                 }
             }
         } catch (\Throwable $e) {
@@ -35,7 +48,9 @@ class ShippingFeeHelper
         }
 
         // Fallback: if OSRM fails, use fallback calculation
-        return self::calculateFallbackFee($destinationAddress, $baseFee, $additionalRatePerKm);
+        $fallbackFee = self::calculateFallbackFee($destinationAddress, $baseFee, $additionalRatePerKm);
+        \Log::info('Using fallback calculation', ['fee' => $fallbackFee]);
+        return $fallbackFee;
     }
 
     /**
@@ -99,6 +114,11 @@ class ShippingFeeHelper
     private static function containsCordova($address)
     {
         $address = strtolower($address);
+        \Log::info('Checking if address contains Cordova', [
+            'address' => $address,
+            'contains_cordova' => strpos($address, 'cordova') !== false,
+            'contains_corfova' => strpos($address, 'corfova') !== false
+        ]);
         return strpos($address, 'cordova') !== false || strpos($address, 'corfova') !== false;
     }
 

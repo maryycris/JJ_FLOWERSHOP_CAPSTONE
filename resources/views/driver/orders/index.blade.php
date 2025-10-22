@@ -81,7 +81,7 @@
                         <button class="btn btn-success btn-sm" onclick="showCompleteModal({{ $order->id }})">
                             <i class="bi bi-camera me-1"></i>Mark Complete
                         </button>
-                        <button class="btn btn-warning btn-sm" onclick="showReturnModal({{ $order->id }}, '{{ $order->user->first_name }} {{ $order->user->last_name }}', '{{ $order->delivery_address }}', '₱{{ number_format($order->total_price, 2) }}', '{{ $order->created_at->format('M d, Y') }}')">
+                        <button class="btn btn-warning btn-sm" onclick="returnOrder({{ $order->id }})">
                             <i class="bi bi-arrow-return-left me-1"></i>Return
                         </button>
                     </div>
@@ -397,7 +397,22 @@ function showCompleteModal(orderId) {
 
 // Simple and direct approach
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, setting up Complete Delivery button');
+    try {
+        console.log('DOM loaded, setting up Complete Delivery button');
+        console.log('Setting up Return button listeners');
+    
+    // Debug: Check if Return button exists
+    const returnButtons = document.querySelectorAll('a[href*="return-form"]');
+    console.log('Found return buttons:', returnButtons.length);
+    
+    // Add click listener to all return buttons
+    returnButtons.forEach((button, index) => {
+        console.log(`Setting up return button ${index + 1}`);
+        button.addEventListener('click', function(e) {
+            console.log('Return button clicked via event listener');
+            // Let the default behavior (navigation) happen
+        });
+    });
     
     // Image preview functionality
     const proofOfDeliveryInput = document.getElementById('proofOfDelivery');
@@ -442,7 +457,98 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.log('Complete Delivery button NOT found!');
     }
+    } catch (error) {
+        console.error('Error in DOMContentLoaded:', error);
+    }
 });
+
+// Function to handle order return
+function returnOrder(orderId) {
+    console.log('Return order called for:', orderId);
+    
+    if (confirm('Are you sure you want to return this order?')) {
+        // Show loading state
+        const returnBtn = document.querySelector(`button[onclick="returnOrder(${orderId})"]`);
+        const originalText = returnBtn.innerHTML;
+        returnBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Returning...';
+        returnBtn.disabled = true;
+        
+        fetch(`/driver/orders/${orderId}/return`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                reason: 'Order returned by driver - customer not available'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the order from the page
+                const orderCard = returnBtn.closest('.col-12');
+                if (orderCard) {
+                    orderCard.style.transition = 'opacity 0.5s ease-out';
+                    orderCard.style.opacity = '0';
+                    setTimeout(() => {
+                        orderCard.remove();
+                        
+                        // Check if no more orders
+                        const ordersContainer = document.querySelector('.row');
+                        if (ordersContainer && ordersContainer.children.length === 0) {
+                            // Show no orders message
+                            ordersContainer.innerHTML = `
+                                <div class="col-12">
+                                    <div class="text-center py-5">
+                                        <i class="bi bi-inbox display-1 text-muted"></i>
+                                        <h5 class="mt-3 text-muted">No orders assigned yet</h5>
+                                        <p class="text-muted">You'll see your delivery orders here when they're assigned to you.</p>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }, 500);
+                }
+                
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Order Returned!',
+                    text: 'Order has been marked as returned and moved to delivery history.',
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    // Navigate to delivery history
+                    window.location.href = '{{ route("driver.history.index") }}';
+                });
+            } else {
+                // Reset button on error
+                returnBtn.innerHTML = originalText;
+                returnBtn.disabled = false;
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to return order'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            
+            // Reset button on error
+            returnBtn.innerHTML = originalText;
+            returnBtn.disabled = false;
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while returning the order'
+            });
+        });
+    }
+}
 
 // Simple function to handle complete delivery
 function handleCompleteDelivery() {

@@ -19,13 +19,20 @@ class CustomerMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::check()) {
-            return redirect()->route('login');
+            return redirect()->route('login')->with('error', 'Please log in to access this page.');
         }
 
         if (Auth::user()->role !== 'customer') {
             abort(403, 'Unauthorized action.');
         }
 
-        return $next($request);
+        $response = $next($request);
+        
+        // Add cache control headers to prevent browser caching
+        $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', '0');
+        
+        return $response;
     }
 } 

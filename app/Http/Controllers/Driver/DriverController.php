@@ -62,19 +62,31 @@ class DriverController extends Controller
             abort(403, 'Unauthorized access to this order.');
         }
 
+        // Load necessary relationships
+        $order->load(['user', 'delivery', 'products', 'statusHistories']);
+
         return view('driver.orders.show', compact('order'));
     }
 
     public function history()
     {
         $driver = Auth::user();
+        
+        // Get completed deliveries
         $completedDeliveries = $driver->deliveries()
             ->where('status', 'completed')
             ->with('order.user')
             ->latest()
             ->paginate(10);
+            
+        // Get returned orders
+        $returnedOrders = \App\Models\Order::where('assigned_driver_id', $driver->id)
+            ->where('order_status', 'returned')
+            ->with(['user', 'products'])
+            ->latest()
+            ->paginate(10);
         
-        return view('driver.history.index', compact('completedDeliveries'));
+        return view('driver.history.index', compact('completedDeliveries', 'returnedOrders'));
     }
 
     public function showHistory(Delivery $delivery)
@@ -347,12 +359,25 @@ class DriverController extends Controller
             ]);
 
             // Update order status to 'returned'
-            $order->update([
-                'order_status' => 'returned',
-                'returned_at' => now(),
-                'return_reason' => $request->reason,
-                'returned_by' => Auth::id()
-            ]);
+            $updateData = [
+                'order_status' => 'returned'
+            ];
+            
+            // Only update return fields if they exist
+            if (\Illuminate\Support\Facades\Schema::hasColumn('orders', 'returned_at')) {
+                $updateData['returned_at'] = now();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('orders', 'return_reason')) {
+                $updateData['return_reason'] = $request->reason;
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('orders', 'returned_by')) {
+                $updateData['returned_by'] = Auth::id();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('orders', 'return_status')) {
+                $updateData['return_status'] = 'pending';
+            }
+            
+            $order->update($updateData);
 
             // Create status history only if the same status wasn't created recently (within 1 minute)
             $recentHistory = $order->statusHistories()
@@ -373,9 +398,12 @@ class DriverController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Return order error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return response()->json([
                 'success' => false, 
-                'message' => 'Error sending return notification: ' . $e->getMessage()
+                'message' => 'Error processing return: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -84,6 +84,253 @@
         margin-bottom: 10px;
         border: 1px solid #e0e0e0;
     }
+    
+    /* Custom Pagination Styling */
+    .pagination {
+        margin: 0;
+        gap: 8px;
+    }
+    
+    .pagination .page-link {
+        background: #f4f9f4;
+        border: 1px solid #7bb47b;
+        color: #2d5a2d;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        min-width: 40px;
+        text-align: center;
+    }
+    
+    .pagination .page-link:hover {
+        background: #7bb47b;
+        color: white;
+        border-color: #7bb47b;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(123, 180, 123, 0.3);
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: #7bb47b;
+        color: white;
+        border-color: #7bb47b;
+        box-shadow: 0 4px 12px rgba(123, 180, 123, 0.4);
+    }
+    
+    .pagination .page-item.disabled .page-link {
+        background: #f8f9fa;
+        color: #6c757d;
+        border-color: #dee2e6;
+        cursor: not-allowed;
+    }
+    
+    .pagination .page-item.disabled .page-link:hover {
+        background: #f8f9fa;
+        color: #6c757d;
+        border-color: #dee2e6;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    /* Responsive Design */
+    
+    /* Tablet View (768px - 1024px) */
+    @media (max-width: 1024px) and (min-width: 769px) {
+        .main-content-with-sidebar {
+            margin-left: 30% !important;
+            max-width: calc(70% - 20px) !important;
+            padding: 20px;
+        }
+        
+        .sidebar-container {
+            width: 30%;
+            max-width: 280px;
+        }
+        
+        .order-list-row {
+            padding: 15px;
+        }
+        
+        .order-product-img {
+            width: 55px;
+            height: 55px;
+        }
+        
+        .order-tabs .nav-link {
+            padding: 10px 16px;
+            font-size: 0.9rem;
+        }
+    }
+    
+    /* Phone View (576px - 768px) */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 10px;
+        }
+        
+        .main-content-with-sidebar {
+            margin-left: 0 !important;
+            max-width: 100% !important;
+            padding: 15px;
+        }
+        
+        .sidebar-container {
+            position: relative;
+            top: 0;
+            width: 100%;
+            max-width: none;
+            min-height: auto;
+            margin-bottom: 20px;
+        }
+        
+        .order-tabs {
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .order-tabs .nav-link {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .order-list-row {
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .order-product-img {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .order-status-btn {
+            font-size: 0.7rem;
+            padding: 6px 10px;
+        }
+        
+        .order-search-bar {
+            margin-bottom: 15px;
+        }
+        
+        .pagination .page-link {
+            padding: 6px 10px;
+            font-size: 0.9rem;
+            min-width: 35px;
+        }
+    }
+    
+    /* Extra Small Phone View (320px - 576px) */
+    @media (max-width: 576px) {
+        .container-fluid {
+            padding: 5px;
+        }
+        
+        .main-content-with-sidebar {
+            padding: 10px;
+        }
+        
+        .sidebar-container {
+            padding: 20px 15px;
+        }
+        
+        .sidebar .profile-img {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .sidebar .fw-bold {
+            font-size: 1rem;
+        }
+        
+        .order-tabs {
+            padding: 5px;
+        }
+        
+        .order-tabs .nav-link {
+            padding: 6px 8px;
+            font-size: 0.75rem;
+            margin-bottom: 3px;
+        }
+        
+        .order-list-row {
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .order-product-img {
+            width: 45px;
+            height: 45px;
+        }
+        
+        .order-status-btn {
+            font-size: 0.65rem;
+            padding: 4px 8px;
+        }
+        
+        .order-search-bar {
+            padding: 6px 10px;
+            margin-bottom: 10px;
+        }
+        
+        .order-search-bar input {
+            font-size: 0.9rem;
+        }
+        
+        .pagination {
+            gap: 4px;
+        }
+        
+        .pagination .page-link {
+            padding: 5px 8px;
+            font-size: 0.8rem;
+            min-width: 30px;
+        }
+        
+        /* Stack columns on very small screens */
+        .order-list-row .col-md-1,
+        .order-list-row .col-md-2,
+        .order-list-row .col-md-3 {
+            margin-bottom: 8px;
+        }
+        
+        .order-list-row .col-md-2:last-child {
+            text-align: left !important;
+        }
+    }
+    
+    /* Extra Extra Small Phone View (320px and below) */
+    @media (max-width: 320px) {
+        .order-tabs .nav-link {
+            padding: 4px 6px;
+            font-size: 0.7rem;
+        }
+        
+        .order-list-row {
+            padding: 8px;
+        }
+        
+        .order-product-img {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .pagination .page-link {
+            padding: 4px 6px;
+            font-size: 0.75rem;
+            min-width: 28px;
+        }
+        
+        .sidebar .profile-img {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .sidebar .fw-bold {
+            font-size: 0.9rem;
+        }
+    }
     .review-dropdown {
         position: relative;
         display: inline-block;
@@ -204,12 +451,12 @@
 <div class="container-fluid py-4">
     <div class="row justify-content-center">
         <!-- Sidebar -->
-        <div class="col-md-3 col-lg-3">
+        <div class="col-12 col-md-3 col-lg-3">
             <?php echo $__env->make('customer.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         </div>
         
         <!-- Main Content -->
-        <div class="col-md-9 col-lg-8 main-content-with-sidebar" style="margin-left: 25%; max-width: calc(75% - 30px);">
+        <div class="col-12 col-md-9 col-lg-8 main-content-with-sidebar" style="margin-left: 25%; max-width: calc(75% - 30px);">
             <div class="py-4 px-3">
                 <div class="mb-3 d-flex align-items-center">
                     <ul class="nav nav-tabs order-tabs" id="orderTabs" role="tablist">
@@ -279,7 +526,7 @@
                     </div>
                 <?php else: ?>
                     <div class="bg-white rounded shadow-sm p-3">
-                        <div class="row fw-bold text-muted mb-2" style="border-bottom:1px solid #e0e0e0;">
+                        <div class="row fw-bold text-muted mb-2 d-none d-md-flex" style="border-bottom:1px solid #e0e0e0;">
                             <div class="col-md-1"></div>
                             <div class="col-md-3">Product Info</div>
                             <div class="col-md-2">Price</div>
@@ -296,7 +543,9 @@
                                         data-review="<?php echo e(isset($product->pivot->reviewed) && $product->pivot->reviewed ? 'reviewed' : 'to_be_review'); ?>"
                                         style="cursor: pointer; transition: all 0.3s ease;"
                                         onclick="window.location.href='<?php echo e(route('customer.orders.show', $order->id)); ?>'">
-                                        <div class="col-md-1 d-flex align-items-center justify-content-center">
+                                        
+                                        <!-- Desktop View -->
+                                        <div class="col-md-1 d-none d-md-flex align-items-center justify-content-center">
                                             <?php if($product->image_url): ?>
                                                 <img src="<?php echo e($product->image_url); ?>" class="order-product-img" alt="<?php echo e($product->name); ?>">
                                             <?php elseif($product->image): ?>
@@ -307,19 +556,20 @@
                                                 </div>
                                             <?php endif; ?>
                                         </div>
-                                        <div class="col-md-3 d-flex flex-column justify-content-center">
+                                        <div class="col-md-3 d-none d-md-flex flex-column justify-content-center">
                                             <div class="fw-bold"><?php echo e($product->name); ?></div>
                                             <div class="text-muted small">Order #<?php echo e($order->id); ?></div>
                                         </div>
-                                        <div class="col-md-2 d-flex align-items-center">₱<?php echo e(number_format($product->price, 2)); ?></div>
-                                        <div class="col-md-2 d-flex align-items-center">x<?php echo e($product->pivot->quantity); ?></div>
-                                        <div class="col-md-2 d-flex align-items-center"><?php echo e($order->created_at->format('M d, Y')); ?></div>
-                                        <div class="col-md-2 d-flex align-items-center justify-content-end">
+                                        <div class="col-md-2 d-none d-md-flex align-items-center">₱<?php echo e(number_format($product->price, 2)); ?></div>
+                                        <div class="col-md-2 d-none d-md-flex align-items-center">x<?php echo e($product->pivot->quantity); ?></div>
+                                        <div class="col-md-2 d-none d-md-flex align-items-center"><?php echo e($order->created_at->format('M d, Y')); ?></div>
+                                        <div class="col-md-2 d-none d-md-flex align-items-center justify-content-end">
                                             <?php
                                                 $orderStatus = $order->order_status ?? $order->status;
                                                 $statusLabel = \App\Services\OrderStatusService::getStatusLabel($orderStatus);
                                             ?>
                                             
+                                            <!-- Desktop Status -->
                                             <div class="d-flex flex-column align-items-end">
                                                 <?php if($orderStatus === 'pending'): ?>
                                                     <span class="btn btn-sm btn-warning order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
@@ -333,8 +583,93 @@
                                                     <span class="btn btn-sm btn-success order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
                                                 <?php elseif($orderStatus === 'cancelled'): ?>
                                                     <span class="btn btn-sm btn-danger order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
+                                                <?php elseif($orderStatus === 'returned'): ?>
+                                                    <span class="btn btn-sm btn-warning order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
                                                 <?php else: ?>
                                                     <span class="btn btn-sm btn-secondary order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
+                                                <?php endif; ?>
+                                                
+                                                <!-- Refund Information for Desktop -->
+                                                <?php if($order->refund_amount && $order->refund_processed_at): ?>
+                                                <div class="mt-2">
+                                                    <div class="d-flex align-items-center justify-content-end">
+                                                        <i class="fas fa-money-bill-wave me-1 text-success" style="font-size: 0.8rem;"></i>
+                                                        <small class="text-success fw-bold">Refunded ₱<?php echo e(number_format($order->refund_amount, 2)); ?></small>
+                                                    </div>
+                                                    <small class="text-muted">
+                                                        <?php if($order->refund_processed_at): ?>
+                                                            <?php echo e($order->refund_processed_at instanceof \Carbon\Carbon ? $order->refund_processed_at->format('M d, Y') : \Carbon\Carbon::parse($order->refund_processed_at)->format('M d, Y')); ?>
+
+                                                        <?php else: ?>
+                                                            N/A
+                                                        <?php endif; ?>
+                                                    </small>
+                                                </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                            
+                                        <!-- Mobile View -->
+                                        <div class="col-12 d-md-none">
+                                            <div class="d-flex align-items-start">
+                                                <div class="me-3">
+                                                    <?php if($product->image_url): ?>
+                                                        <img src="<?php echo e($product->image_url); ?>" class="order-product-img" alt="<?php echo e($product->name); ?>">
+                                                    <?php elseif($product->image): ?>
+                                                        <img src="<?php echo e(asset('storage/' . $product->image)); ?>" class="order-product-img" alt="<?php echo e($product->name); ?>">
+                                                    <?php else: ?>
+                                                        <div class="order-product-img d-flex align-items-center justify-content-center bg-light text-muted">
+                                                            <i class="fas fa-image"></i>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold mb-1"><?php echo e($product->name); ?></div>
+                                                    <div class="text-muted small mb-2">Order #<?php echo e($order->id); ?></div>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <span class="text-success fw-bold">₱<?php echo e(number_format($product->price, 2)); ?></span>
+                                                            <span class="text-muted ms-2">x<?php echo e($product->pivot->quantity); ?></span>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <div class="text-muted small mb-1"><?php echo e($order->created_at->format('M d, Y')); ?></div>
+                                            
+                                            <!-- Mobile Status -->
+                                            <div class="d-md-none">
+                                                <?php if($orderStatus === 'pending'): ?>
+                                                    <span class="btn btn-sm btn-warning order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
+                                                <?php elseif($orderStatus === 'approved'): ?>
+                                                    <span class="btn btn-sm btn-info order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
+                                                <?php elseif($orderStatus === 'on_delivery'): ?>
+                                                    <span class="btn btn-sm btn-primary order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
+                                                <?php elseif($orderStatus === 'delivered'): ?>
+                                                    <span class="btn btn-sm btn-success order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
+                                                <?php elseif($orderStatus === 'completed'): ?>
+                                                    <span class="btn btn-sm btn-success order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
+                                                <?php elseif($orderStatus === 'cancelled'): ?>
+                                                    <span class="btn btn-sm btn-danger order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
+                                                <?php elseif($orderStatus === 'returned'): ?>
+                                                    <span class="btn btn-sm btn-warning order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
+                                                <?php else: ?>
+                                                    <span class="btn btn-sm btn-secondary order-status-btn" style="font-weight:bold;"><?php echo e($statusLabel); ?></span>
+                                                <?php endif; ?>
+                                                
+                                                <!-- Refund Information for Mobile -->
+                                                <?php if($order->refund_amount && $order->refund_processed_at): ?>
+                                                <div class="mt-2">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-money-bill-wave me-1 text-success" style="font-size: 0.7rem;"></i>
+                                                        <small class="text-success fw-bold">Refunded ₱<?php echo e(number_format($order->refund_amount, 2)); ?></small>
+                                                    </div>
+                                                    <small class="text-muted">
+                                                        <?php if($order->refund_processed_at): ?>
+                                                            <?php echo e($order->refund_processed_at instanceof \Carbon\Carbon ? $order->refund_processed_at->format('M d, Y') : \Carbon\Carbon::parse($order->refund_processed_at)->format('M d, Y')); ?>
+
+                                                        <?php else: ?>
+                                                            N/A
+                                                        <?php endif; ?>
+                                                    </small>
+                                                </div>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -556,13 +891,49 @@
                         </div>
                     </div>
                 </div>
-        <div class="d-flex justify-content-center mt-4">
-            <?php echo e($orders->links('pagination::bootstrap-5')); ?>
-
+            </div>
         </div>
-    <?php endif; ?>
-</div>
     </div>
+    
+    <!-- Pagination -->
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <?php if($orders->onFirstPage()): ?>
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;</span>
+                    </li>
+                <?php else: ?>
+                    <li class="page-item">
+                        <a class="page-link" href="<?php echo e($orders->previousPageUrl()); ?>" rel="prev">&laquo;</a>
+                    </li>
+                <?php endif; ?>
+
+                <?php $__currentLoopData = $orders->getUrlRange(1, $orders->lastPage()); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $page => $url): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php if($page == $orders->currentPage()): ?>
+                        <li class="page-item active">
+                            <span class="page-link"><?php echo e($page); ?></span>
+                        </li>
+                    <?php else: ?>
+                        <li class="page-item">
+                            <a class="page-link" href="<?php echo e($url); ?>"><?php echo e($page); ?></a>
+                        </li>
+                    <?php endif; ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+                <?php if($orders->hasMorePages()): ?>
+                    <li class="page-item">
+                        <a class="page-link" href="<?php echo e($orders->nextPageUrl()); ?>" rel="next">&raquo;</a>
+                    </li>
+                <?php else: ?>
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                <?php endif; ?>
+            </ul>
+        </nav>
+    </div>
+    <?php endif; ?>
 </div>
 
 <!-- Review Modal -->

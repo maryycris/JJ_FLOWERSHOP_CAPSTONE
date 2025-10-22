@@ -86,7 +86,11 @@
 
             <div class="profile-card d-flex align-items-start">
                 <div class="me-4 d-flex flex-column align-items-center" style="min-width: 90px;">
-                    <img id="profileImagePreview" src="{{ $user->profile_picture ? asset('storage/' . $user->profile_picture) : 'https://via.placeholder.com/80' }}" class="profile-image mb-2" alt="Profile Picture">
+                    @php
+                        $pp = $user->profile_picture;
+                        $profileSrc = $pp ? (filter_var($pp, FILTER_VALIDATE_URL) ? $pp : asset('storage/' . $pp)) : 'https://via.placeholder.com/80';
+                    @endphp
+                    <img id="profileImagePreview" src="{{ $profileSrc }}" class="profile-image mb-2" alt="Profile Picture" onerror="this.onerror=null;this.src='https://via.placeholder.com/80';">
                     <button type="button" class="edit-image-btn" data-bs-toggle="modal" data-bs-target="#editImageModal">Edit Image</button>
                 </div>
                 <div class="flex-grow-1">

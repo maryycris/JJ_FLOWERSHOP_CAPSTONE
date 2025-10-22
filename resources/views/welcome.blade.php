@@ -356,9 +356,9 @@
                 <p>J & J Flower Shop offers handcrafted bouquets and floral gifts perfect for any occasion. We deliver love across Cebu City and nearby provinces fresh, fast, and always with care.</p>
                 <a href="{{ route('customer.login') }}" class="btn btn-shop">Shop Now</a>
                 </div>
+                </div>
             </div>
         </div>
-    </div>
     </div>
 </div>
 <!-- About Us Section -->
@@ -431,11 +431,11 @@
                                             <span style="color:#888;">
                                                 <?= $slide['price'] ? 'P' . number_format($slide['price']) : 'P1000' ?>
                                             </span>
-                                        </div>
-                                    </div>
+            </div>
+        </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
-                        </div>
+    </div>
                         <?php if(count($bestSellerSlides) > 1): ?>
                             <button class="carousel-control-prev" type="button" data-bs-target="#bestSellerCarousel" data-bs-slide="prev">
                                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -446,11 +446,11 @@
                                 <span class="visually-hidden">Next</span>
                             </button>
                         <?php endif; ?>
-                    </div>
+        </div>
+    </div>
                 </div>
             </div>
         </div>
-    </div>
     </div>
 </div>
 <!-- Check Our Products Section -->
@@ -558,19 +558,19 @@
                                 <div class="review-stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i></div>
                                 <div class="review-text">Nice bouquet and reasonable price. The bouquet was fresh and fragrant.</div>
                                 <div class="review-name">KAYE L.</div>
-                            </div>
+                        </div>
                             <div class="review-card role-center">
                                 <div class="review-stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i></div>
                                 <div class="review-text">This site offers beautiful flowers. I love this shop. I will surely buy more in future.</div>
                                 <div class="review-name">CATHERINE LOPEZ</div>
-                            </div>
+                    </div>
                             <div class="review-card role-right">
                                 <div class="review-stars"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
                                 <div class="review-text">Amazing flowers! I told my friends about it. Thank you for the fast service.</div>
                                 <div class="review-name">JOHANNA ESCOBAR</div>
-                            </div>
-                        </div>
                     </div>
+                </div>
+            </div>
                 </div>
                 <button class="carousel-control-prev" type="button" onclick="jjCycleCenter(-1, event)">
                     <span class="ctrl" aria-hidden="true"><i class="bi bi-chevron-left"></i></span>
@@ -580,9 +580,9 @@
                     <span class="ctrl" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
                     <span class="visually-hidden">Next</span>
                 </button>
+                </div>
             </div>
         </div>
-    </div>
     </div>
 <script>
   // Keep role-based slide effect

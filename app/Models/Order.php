@@ -28,6 +28,19 @@ class Order extends Model
         'completed_at',
         'approved_by',
         'assigned_driver_id',
+        'return_reason',
+        'return_notes',
+        'returned_at',
+        'returned_by',
+        'return_status',
+        'refund_amount',
+        'refund_reason',
+        'refund_method',
+        'refund_processed_at',
+        'refund_processed_by',
+        'admin_notes',
+        'store_credit_used',
+        'store_credit_order_id',
         'invoice_status',
         'invoice_generated_at',
         'invoice_paid_at',
@@ -48,6 +61,9 @@ class Order extends Model
         'invoice_generated_at' => 'datetime',
         'invoice_paid_at' => 'datetime',
         'returned_at' => 'datetime',
+        'refund_amount' => 'decimal:2',
+        'refund_processed_at' => 'datetime',
+        'store_credit_used' => 'decimal:2',
     ];
 
     /**
@@ -102,6 +118,14 @@ class Order extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Get the driver who returned the order.
+     */
+    public function returnedByDriver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'returned_by');
     }
 
     /**

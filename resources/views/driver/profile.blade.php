@@ -3,10 +3,15 @@
 @section('content')
 <div class="text-center mb-4">
     <div class="position-relative d-inline-block">
-        <img src="{{ Auth::user()->profile_picture ? asset('storage/' . Auth::user()->profile_picture) : asset('images/default-avatar.png') }}" 
+        @php
+            $pp = Auth::user()->profile_picture;
+            $profileSrc = $pp ? (filter_var($pp, FILTER_VALIDATE_URL) ? $pp : asset('storage/' . $pp)) : asset('images/default-avatar.png');
+        @endphp
+        <img src="{{ $profileSrc }}" 
              alt="Profile Picture" 
              class="rounded-circle" 
-             style="width: 100px; height: 100px; object-fit: cover;">
+             style="width: 100px; height: 100px; object-fit: cover;"
+             onerror="this.onerror=null;this.src='{{ asset('images/default-avatar.png') }}';">
         <button class="btn btn-sm btn-primary position-absolute bottom-0 end-0" onclick="document.getElementById('profilePicture').click()">
             <i class="bi bi-camera"></i>
         </button>

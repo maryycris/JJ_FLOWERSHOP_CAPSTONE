@@ -10,6 +10,8 @@ use App\Notifications\OrderStatusNotification;
 use App\Notifications\ProductApprovalNotification;
 use App\Notifications\LowStockNotification;
 use App\Notifications\NewChatMessageNotification;
+use App\Notifications\OrderReturnedNotification;
+use App\Notifications\ReturnApprovedNotification;
 
 class NotificationService
 {
@@ -22,7 +24,7 @@ class NotificationService
         
         $notificationData = [
             'type' => 'order_status',
-            'title' => $this->getOrderStatusTitle($status),
+            'title' => $this->getOrderStatusTitle($status, $order),
             'message' => $message ?? $this->getOrderStatusMessage($order, $status),
             'order_id' => $order->id,
             'action_url' => route('customer.orders.show', $order->id),
@@ -100,16 +102,16 @@ class NotificationService
     /**
      * Get order status title
      */
-    private function getOrderStatusTitle(string $status): string
+    private function getOrderStatusTitle(string $status, Order $order): string
     {
         return match($status) {
-            'pending' => 'Order Pending',
-            'approved' => 'Order Approved',
-            'processing' => 'Order Processing',
-            'on_delivery' => 'Order On Delivery',
-            'completed' => 'Order Completed',
-            'cancelled' => 'Order Cancelled',
-            default => 'Order Update'
+            'pending' => "Order #{$order->id} Pending",
+            'approved' => "Order #{$order->id} Approved",
+            'processing' => "Order #{$order->id} Processing",
+            'on_delivery' => "Order #{$order->id} On Delivery",
+            'completed' => "Order #{$order->id} Completed",
+            'cancelled' => "Order #{$order->id} Cancelled",
+            default => "Order #{$order->id} Update"
         };
     }
 
@@ -159,6 +161,62 @@ class NotificationService
             'cancelled' => 'danger',
             default => 'secondary'
         };
+    }
+
+    /**
+     * Send order return notification to customer
+     */
+    public function sendOrderReturnNotification(Order $order, User $customer)
+    {
+        $customer->notify(new OrderReturnedNotification($order, 'customer'));
+    }
+
+    /**
+     * Send admin return notification
+     */
+    public function sendAdminReturnNotification(Order $order, User $admin)
+    {
+        $admin->notify(new OrderReturnedNotification($order, 'admin'));
+    }
+
+    /**
+     * Send clerk return notification
+     */
+    public function sendClerkReturnNotification(Order $order, User $clerk)
+    {
+        $clerk->notify(new OrderReturnedNotification($order, 'clerk'));
+    }
+
+    /**
+     * Send return approved notification to customer
+     */
+    public function sendReturnApprovedNotification(Order $order, User $customer)
+    {
+        $customer->notify(new ReturnApprovedNotification($order));
+    }
+
+    /**
+     * Send return rejected notification to customer
+     */
+    public function sendReturnRejectedNotification(Order $order, User $customer)
+    {
+        $customer->notify(new OrderReturnedNotification($order, 'customer_rejected'));
+    }
+
+    /**
+     * Send return resolved notification to customer
+     */
+    public function sendReturnResolvedNotification(Order $order, User $customer)
+    {
+        $customer->notify(new OrderReturnedNotification($order, 'customer_resolved'));
+    }
+
+    /**
+     * Send refund processed notification to customer
+     */
+    public function sendRefundProcessedNotification(Order $order, User $customer)
+    {
+        $customer->notify(new OrderReturnedNotification($order, 'customer_refunded'));
     }
 
 }

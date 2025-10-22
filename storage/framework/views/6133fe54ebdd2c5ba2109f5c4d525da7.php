@@ -83,6 +83,26 @@
   #productModal .review-item:last-child { border-bottom: 0; }
   #productModal .star { color:#d3d7d4; }
   #productModal .star.filled { color:#f3c04b; }
+
+  /* Mobile optimization for 480x1000 and below */
+  @media (max-width: 480px) {
+    #productModal .modal-dialog { max-width: 92vw; margin: 0 auto; }
+    #productModal .modal-content { border-radius: 14px; }
+    #productModal .modal-body { padding: 14px !important; }
+    #productModal .modal-body > .d-flex { align-items: center !important; }
+    #productModal .modal-body [style*="min-width: 260px"] { min-width: 0 !important; max-width: 100% !important; }
+    #productModal img#modalProductImage { max-width: 220px !important; }
+    #productModal #modalProductDescription { font-size: 0.82rem !important; }
+    #productModal #modalProductName { font-size: 1.05rem !important; }
+    #productModal #modalProductPrice { font-size: 0.95rem !important; }
+    #productModal [id^="modalQty"] { width: 28px !important; height: 28px !important; font-size: 1rem !important; }
+    #productModal #modalProductQty { width: 42px !important; font-size: 0.95rem !important; }
+    #productModal #modalProductTotal { font-size: 1rem !important; }
+    #productModal .btn { padding: 6px 10px !important; font-size: 0.85rem !important; }
+    #productModal #modalReviewsSection { padding: 8px !important; }
+    #productModal #modalReviewsSection h6 { font-size: 0.95rem !important; }
+    #productModal #modalReviewsList { max-height: 100px !important; }
+  }
 </style>
 <script>
   let modalProduct = null;

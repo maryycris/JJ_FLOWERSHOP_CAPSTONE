@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::table('orders', function (Blueprint $table) {
             $table->timestamp('returned_at')->nullable();
             $table->text('return_reason')->nullable();
+            $table->text('return_notes')->nullable()->after('return_reason');
             $table->unsignedBigInteger('returned_by')->nullable();
+            $table->string('return_status')->default('pending')->after('returned_by');
             
             $table->foreign('returned_by')->references('id')->on('users')->onDelete('set null');
         });
@@ -27,7 +29,7 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             $table->dropForeign(['returned_by']);
-            $table->dropColumn(['returned_at', 'return_reason', 'returned_by']);
+            $table->dropColumn(['returned_at', 'return_reason', 'return_notes', 'returned_by', 'return_status']);
         });
     }
 };

@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 
     <title><?php echo e(config('app.name', 'JJ Flowershop')); ?></title>
 
@@ -304,7 +307,8 @@
 
                     <!-- Center block: links (top) + icons (bottom) -->
                     <div class="d-flex flex-column flex-grow-1" style="max-width: 1000px; margin: 0 20px;">
-                        <div class="d-flex align-items-center justify-content-center customer-nav-links" style="gap: 2.2rem; padding-top: 0;">
+                        <!-- Desktop Nav Links (Hidden on Mobile) -->
+                        <div class="d-flex align-items-center justify-content-center customer-nav-links d-none d-lg-flex" style="gap: 2.2rem; padding-top: 0;">
                         <a href="<?php echo e(route('customer.dashboard')); ?>" class="nav-link text-white d-flex align-items-center gap-2 <?php if(request()->routeIs('customer.dashboard')): ?> active <?php endif; ?>" style="font-size: 0.95rem;"><i class="bi <?php if(request()->routeIs('customer.dashboard')): ?> bi-house-fill <?php else: ?> bi-house-door <?php endif; ?>"></i> Home</a>
                         <a href="<?php echo e(route('customer.products.bouquet-customize')); ?>" class="nav-link text-white d-flex align-items-center gap-2 <?php if(request()->routeIs('customer.products.bouquet-customize')): ?> active <?php endif; ?>" style="font-size: 0.95rem;"><i class="bi <?php if(request()->routeIs('customer.products.bouquet-customize')): ?> bi-brush-fill <?php else: ?> bi-brush <?php endif; ?>"></i> Customize</a>
                         <a href="<?php echo e(route('customer.notifications.index')); ?>" class="nav-link text-white d-flex align-items-center gap-2 position-relative <?php if(request()->routeIs('customer.notifications.index')): ?> active <?php endif; ?>" style="font-size: 0.95rem;">
@@ -319,7 +323,14 @@
                                         $profileSrc = null;
                                         if (Auth::check()) {
                                             $pp = Auth::user()->profile_picture ?? null;
-                                            if ($pp) { $profileSrc = asset('storage/' . ltrim($pp, '/')); }
+                                            if ($pp) { 
+                                                // Check if it's a full URL (from social login) or a local path
+                                                if (filter_var($pp, FILTER_VALIDATE_URL)) {
+                                                    $profileSrc = $pp;
+                                                } else {
+                                                    $profileSrc = asset('storage/' . ltrim($pp, '/'));
+                                                }
+                                            }
                                         }
                                         if (!$profileSrc) { $profileSrc = asset('images/default-avatar.png'); }
                                     ?>
@@ -354,6 +365,26 @@
                 <?php endif; ?>
             </div>
         </main>
+
+        <!-- Global Mobile Bottom Navigation (<=480px) -->
+        <div class="mobile-bottom-nav d-lg-none">
+            <a href="<?php echo e(route('customer.dashboard')); ?>" class="nav-item <?php if(request()->routeIs('customer.dashboard')): ?> active <?php endif; ?>">
+                <i class="bi <?php if(request()->routeIs('customer.dashboard')): ?> bi-house-fill <?php else: ?> bi-house-door <?php endif; ?>"></i>
+                <span>Home</span>
+            </a>
+            <a href="<?php echo e(route('customer.products.bouquet-customize')); ?>" class="nav-item <?php if(request()->routeIs('customer.products.bouquet-customize')): ?> active <?php endif; ?>">
+                <i class="bi <?php if(request()->routeIs('customer.products.bouquet-customize')): ?> bi-brush-fill <?php else: ?> bi-brush <?php endif; ?>"></i>
+                <span>Customize</span>
+            </a>
+            <a href="<?php echo e(route('customer.notifications.index')); ?>" class="nav-item <?php if(request()->routeIs('customer.notifications.index')): ?> active <?php endif; ?>">
+                <i class="bi <?php if(request()->routeIs('customer.notifications.index')): ?> bi-bell-fill <?php else: ?> bi-bell <?php endif; ?>"></i>
+                <span>Notifications</span>
+            </a>
+            <a href="<?php echo e(route('customer.account.index')); ?>" class="nav-item <?php if(request()->routeIs('customer.account.index')): ?> active <?php endif; ?>">
+                <i class="bi bi-person"></i>
+                <span>My Profile</span>
+            </a>
+        </div>
         
         <!-- Alert Component -->
         <?php echo $__env->make('components.alert', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
@@ -367,6 +398,7 @@
                 'customer.orders.show',
                 'customer.trackOrders.page',
                 'customer.checkout.*',
+                'customer.store-credit.history',
             ];
         ?>
         <?php if (! (request()->routeIs($hideFooterOnRoutes))): ?>
@@ -405,9 +437,87 @@
             background: rgba(255,255,255,0.6);
         }
         /* Place right icons visually below the divider line */
-        .customer-right-icons { padding-top: 8px; align-self: flex-end; }
+        .customer-right-icons { 
+            padding-top: 14px; 
+            align-self: flex-end; 
+            display: flex;
+            align-items: center;
+            padding-right: 10px; /* slight nudge to the right */
+        }
         .customer-right-icons a,
-        .customer-right-icons button { margin-top: 2px; }
+        .customer-right-icons button { 
+            margin-top: 2px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 29px;
+            height: 29px;
+        }
+        
+        /* Mobile Responsive Navbar */
+        @media (max-width: 480px) {
+            /* Reserve space for bottom nav */
+            body { padding-bottom: 76px; }
+
+            /* Global Mobile Bottom Nav */
+            .mobile-bottom-nav {
+                position: fixed;
+                bottom: 0; left: 0; right: 0;
+                background: #A0C49D;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: stretch;
+                padding: 0;
+                z-index: 1000;
+                box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+                height: 56px;
+            }
+            .mobile-bottom-nav .nav-item {
+                flex: 1 1 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                text-decoration: none;
+                gap: 2px;
+            }
+            .mobile-bottom-nav .nav-item.active { background: rgba(255,255,255,0.18); }
+            .mobile-bottom-nav .nav-item i,
+            .mobile-bottom-nav .nav-item .bi { font-size: 20px; }
+            .mobile-bottom-nav .nav-item span { font-size: 11px; }
+            .customer-top-navbar {
+                padding: 0 15px !important;
+            }
+            
+            .customer-brand {
+                gap: 0.4rem !important;
+            }
+            
+            .customer-brand img {
+                height: 40px !important;
+            }
+            
+            .brand-inclusive {
+                font-size: 1.2rem !important;
+            }
+            
+            .customer-right-icons {
+                padding-top: 12px !important;
+                padding-right: 12px !important; /* nudge right on mobile */
+                gap: 15px !important;
+            }
+            
+            .customer-right-icons a,
+            .customer-right-icons button {
+                font-size: 1.1rem !important;
+                margin-top: 0 !important;
+                width: 28px !important;
+                height: 28px !important;
+            }
+        }
+        
         @media (max-width: 992px) {
             .customer-right-icons { padding-top: 10px; }
         }
@@ -427,6 +537,38 @@
     <?php echo $__env->yieldPushContent('scripts'); ?>
 
     <script>
+        // Check authentication status on page load and back button
+        function checkAuthStatus() {
+            fetch('<?php echo e(route("customer.dashboard")); ?>', {
+                method: 'HEAD',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
+                }
+            })
+            .then(response => {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '<?php echo e(route("login")); ?>';
+                }
+            })
+            .catch(error => {
+                console.log('Auth check failed:', error);
+            });
+        }
+
+        // Check auth on page load
+        checkAuthStatus();
+
+        // Check auth when page becomes visible (back button, tab switch)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                checkAuthStatus();
+            }
+        });
+
+        // Check auth on focus (when user returns to tab)
+        window.addEventListener('focus', checkAuthStatus);
+
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
                 document.querySelectorAll('.alert-dismissible').forEach(function(alert) {
@@ -530,13 +672,13 @@
             }
         }
         
-        // Auto-dismiss after 4 seconds
+        // Auto-dismiss after 3 seconds
         document.addEventListener('DOMContentLoaded', function() {
             const alert = document.getElementById('successAlert');
             if (alert) {
                 setTimeout(() => {
                     dismissAlert();
-                }, 4000);
+                }, 3000);
             }
         });
     </script>

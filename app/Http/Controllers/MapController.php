@@ -28,7 +28,7 @@ class MapController extends Controller
             $lowerAddress = strtolower(trim($address));
             
             // Add timeout to prevent long waits
-            $timeout = 10; // 10 seconds timeout
+            $timeout = 5; // 5 seconds timeout
             
             // Handle common variations with better formatting
             if ($lowerAddress === 'cebu city' || $lowerAddress === 'cebu') {

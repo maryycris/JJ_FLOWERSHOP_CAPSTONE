@@ -3,7 +3,10 @@
 <?php $__env->startSection('content'); ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="fw-bold">Delivery History</h4>
-    <span class="badge bg-success"><?php echo e($completedDeliveries->count()); ?> completed</span>
+    <div class="d-flex gap-2">
+        <span class="badge bg-success"><?php echo e($completedDeliveries->count()); ?> completed</span>
+        <span class="badge bg-warning"><?php echo e($returnedOrders->count()); ?> returned</span>
+    </div>
 </div>
 
 <?php if($completedDeliveries->isEmpty()): ?>
@@ -75,10 +78,91 @@
 <?php endif; ?>
 <?php endif; ?>
 
+<!-- Returned Orders Section -->
+<?php if($returnedOrders->isNotEmpty()): ?>
+<div class="mt-5">
+    <h5 class="fw-bold text-warning mb-3">
+        <i class="bi bi-arrow-return-left me-2"></i>Returned Orders
+    </h5>
+    <div class="row">
+        <?php $__currentLoopData = $returnedOrders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <div class="col-12 mb-3">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="card-title mb-0">Order #<?php echo e($order->id); ?></h6>
+                        <span class="badge" style="background-color: #ffc107; color: #000; font-weight: 600;">
+                            <i class="bi bi-arrow-return-left me-1"></i>Returned
+                        </span>
+                    </div>
+                    
+                    <div class="row mb-2">
+                        <div class="col-6">
+                            <small class="text-muted">Customer:</small><br>
+                            <strong><?php echo e($order->user->name); ?></strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Contact:</small><br>
+                            <strong><?php echo e($order->user->contact_number ?? 'N/A'); ?></strong>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted">Delivery Address:</small><br>
+                        <strong><?php echo e($order->delivery->delivery_address ?? 'N/A'); ?></strong>
+                    </div>
+                    
+                    <div class="row mb-2">
+                        <div class="col-6">
+                            <small class="text-muted">Total Amount:</small><br>
+                            <strong>₱<?php echo e(number_format($order->total_price, 2)); ?></strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Return Date:</small><br>
+                            <strong><?php echo e($order->returned_at ? $order->returned_at->format('M d, Y H:i') : 'N/A'); ?></strong>
+                        </div>
+                    </div>
+                    
+                    <?php if($order->return_reason): ?>
+                    <div class="mb-2">
+                        <small class="text-muted">Return Reason:</small><br>
+                        <strong class="text-warning"><?php echo e($order->return_reason); ?></strong>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="<?php echo e(route('driver.orders.show', $order->id)); ?>" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i>View Details
+                        </a>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="showReturnNotes(<?php echo e($order->id); ?>)">
+                            <i class="bi bi-sticky me-1"></i>Notes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+    </div>
+    
+    <!-- Pagination for returned orders -->
+    <?php if($returnedOrders->hasPages()): ?>
+    <div class="d-flex justify-content-center mt-4">
+        <?php echo e($returnedOrders->links()); ?>
+
+    </div>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
+
 <script>
 function showDeliveryNotes(deliveryId) {
     // This would open a modal or navigate to a notes page
     alert('Delivery notes feature coming soon!');
+}
+
+function showReturnNotes(orderId) {
+    // This would open a modal or navigate to a notes page
+    alert('Return notes feature coming soon!');
 }
 </script>
 <?php $__env->stopSection(); ?> 

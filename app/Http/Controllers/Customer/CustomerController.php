@@ -63,5 +63,27 @@ class CustomerController extends Controller
         // The original dashboard logic for orders is removed as per new UI
         return view('customer.dashboard', compact('products', 'unreadCount', 'promotedProducts', 'productAvailability', 'promotedProductAvailability'));
     }
+
+    /**
+     * Show store credit history for customer
+     */
+    public function storeCreditHistory()
+    {
+        $user = Auth::user();
+        
+        // Get all store credit transactions (refunds)
+        $storeCreditTransactions = Order::where('user_id', $user->id)
+            ->where('refund_method', 'store_credit')
+            ->whereNotNull('refund_amount')
+            ->whereNotNull('refund_processed_at')
+            ->with(['products'])
+            ->latest('refund_processed_at')
+            ->paginate(15);
+            
+        // Calculate total store credit balance
+        $totalStoreCredit = $storeCreditTransactions->sum('refund_amount');
+        
+        return view('customer.store-credit.history', compact('storeCreditTransactions', 'totalStoreCredit'));
+    }
 }
  

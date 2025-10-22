@@ -18,7 +18,6 @@
                                 <small class="text-muted">Deliver</small>
                                 <span class="badge bg-primary">1</span>
                             </div>
-                            <button class="btn btn-success">Sales Order</button>
                             <a href="{{ route('admin.orders.online.validate', $order->id) }}" class="btn btn-sm btn-success">Validate Order</a>
                             <button class="btn btn-sm btn-outline-secondary">Cancel</button>
                         </div>

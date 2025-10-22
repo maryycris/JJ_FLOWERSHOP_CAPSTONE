@@ -212,7 +212,7 @@
               </div>
             </div>
             <div class="text-end">
-              <button type="submit" class="btn btn-primary" id="createOrderBtn">Create Order</button>
+              <button type="submit" class="btn btn-primary" id="createOrderBtn">Proceed</button>
             </div>
           </div>
         </div>
@@ -460,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function(){
       
       // Disable button to prevent double submission
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Order...';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
       
       // Let the form submit normally - the server will redirect to quotation page
       console.log('Form submitting to:', form.action);

@@ -6,59 +6,94 @@
         <div class="col-lg-10">
             <div class="card shadow-sm">
                 <div class="card-body p-0">
-                    <div class="p-3 d-flex align-items-center gap-3" style="border-bottom:1px solid #e6f0e6;">
-                        <div class="ms-2 small text-muted">{{ sprintf('%05d', $order->id) }}</div>
-                        <div class="ms-2 small text-muted">{{ $inventoryMovement ? $inventoryMovement->movement_number : 'OUT / 0001' }}</div>
-                        <div class="ms-auto d-flex align-items-center gap-2">
-                            <button type="button" class="btn btn-light d-flex align-items-center" style="border:1px solid #e6e6e6;">
-                                <i class="bi bi-list me-1"></i>
-                                Moves
-                            </button>
+                    <!-- Header with Navigation and Workflow -->
+                    <div class="p-3" style="border-bottom:1px solid #e6f0e6;">
+                        <!-- Navigation and Order Info -->
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <a href="{{ route('admin.orders.walkin.create_invoice', $order->id) }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center" title="Back" aria-label="Back" style="width:34px;height:34px;padding:0;">
+                                <i class="bi bi-arrow-left"></i>
+                            </a>
+                            <span class="badge bg-info">New</span>
+                            <div class="ms-2 small text-muted">Quotations / {{ sprintf('%05d', $order->id) }}</div>
+                            <div class="ms-2 small text-muted">{{ $inventoryMovement ? $inventoryMovement->movement_number : 'OUT / 0001' }}</div>
+                        </div>
+                        
+                        <!-- Action Buttons and Workflow -->
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#confirmModal">
+                                    <i class="bi bi-check-circle me-1"></i>Validate
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="printOrder()">
+                                    <i class="bi bi-printer me-1"></i>Print
+                                </button>
+                                <a href="{{ route('admin.orders.index', ['type' => 'walkin']) }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle me-1"></i>Cancel
+                                </a>
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-outline-primary d-flex align-items-center" id="movesBtn">
+                                    <i class="bi bi-list me-1"></i>Moves
+                                </button>
+                                
+                                <!-- Workflow Indicator -->
+                                <div class="d-flex align-items-center gap-1 ms-3">
+                                    <div class="badge bg-secondary text-white px-2 py-1">Draft</div>
+                                    <i class="bi bi-chevron-right text-muted"></i>
+                                    <div class="badge bg-secondary text-white px-2 py-1">Waiting</div>
+                                    <i class="bi bi-chevron-right text-muted"></i>
+                                    <div class="badge bg-success text-white px-2 py-1">Ready</div>
+                                    <i class="bi bi-chevron-right text-muted"></i>
+                                    <div class="badge bg-secondary text-white px-2 py-1">Done</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="px-3 py-2 d-flex align-items-center gap-2" style="border-bottom:1px solid #e6f0e6;">
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#confirmModal">Validate</button>
-                        <button type="button" class="btn btn-light" onclick="window.print()">Print</button>
-                        <a href="{{ route('admin.orders.index', ['type' => 'walkin']) }}" class="btn btn-outline-secondary">Cancel</a>
-                        <div class="ms-auto d-flex align-items-center gap-2">
-                            <span class="btn btn-sm btn-success disabled">Ready</span>
-                            <span class="btn btn-sm btn-light disabled">Done</span>
-                        </div>
-                    </div>
-
+                    <!-- Order Details Section -->
                     <div class="px-3 pt-3 pb-4">
                         <div class="row g-0">
                             <div class="col-md-6">
-                                <div class="p-3 fw-semibold">INVENTORY / {{ $inventoryMovement ? $inventoryMovement->movement_number : 'OUT / 0001' }}</div>
+                                <div class="p-3">
+                                    <h4 class="fw-bold mb-2">{{ $inventoryMovement ? $inventoryMovement->movement_number : 'OUT / 0001' }}</h4>
+                                    <div class="text-muted">Delivery Address</div>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="p-3 fw-semibold">Delivery Address</div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="p-3 small"></div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="p-3 small">
-                                    @if($order->delivery)
-                                        <div class="mb-1">{{ $order->delivery->delivery_address }}</div>
-                                    @endif
-                                    <div class="mt-2"><span class="fw-semibold">Schedule Date:</span> <span class="text-muted">{{ optional($order->created_at)->format('m/d/Y') }}</span></div>
-                                    <div class="mt-1"><span class="fw-semibold">Order Number:</span> <span class="text-muted">{{ sprintf('%05d', $order->id) }}</span></div>
+                                <div class="p-3">
+                                    <div class="fw-semibold mb-2">Customer Information</div>
+                                    <div class="small">
+                                        <div class="mb-1">{{ $order->user->name ?? 'Walk-in Customer' }}</div>
+                                        @if($order->delivery)
+                                            <div class="mb-1">{{ $order->delivery->delivery_address }}</div>
+                                        @endif
+                                        <div class="mt-2">
+                                            <div class="mb-1"><span class="fw-semibold">Schedule Date:</span> <span class="text-muted">{{ optional($order->created_at)->format('m/d/Y') }}</span></div>
+                                            <div><span class="fw-semibold">Order Number:</span> <span class="text-muted">{{ sprintf('%05d', $order->id) }}</span></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Operations Section -->
                         <div class="mt-3">
-                            <div class="px-3 py-2 fw-semibold" style="display:inline-block;background:#e6f5e6;border:1px solid #d9ecd9;border-bottom:0;border-top-left-radius:4px;border-top-right-radius:4px;">Operations</div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="px-3 py-2 fw-semibold" style="display:inline-block;background:#e6f5e6;border:1px solid #d9ecd9;border-bottom:0;border-top-left-radius:4px;border-top-right-radius:4px;">Operations</div>
+                                <button class="btn btn-outline-primary btn-sm" id="operationsBtn">
+                                    <i class="bi bi-gear me-1"></i>Operations
+                                </button>
+                            </div>
                             <div class="table-responsive" style="border:1px solid #d9ecd9;">
-                                <table class="table mb-0">
+                                <table class="table mb-0" id="operationsTable">
                                     <thead style="background:#e6f5e6;">
                                         <tr>
-                                            <th>Product</th>
-                                            <th>Demand</th>
-                                            <th>Quantity</th>
+                                            <th style="width:30%">Product</th>
+                                            <th style="width:20%">Demand</th>
+                                            <th style="width:20%">Quantity</th>
+                                            <th style="width:15%">UoM</th>
+                                            <th style="width:15%">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -93,17 +128,39 @@
                                                 }
                                             @endphp
                                             <tr class="{{ $isInsufficientStock ? 'table-warning' : '' }}">
-                                                <td>{{ $product->name }}</td>
-                                                <td>{{ $demand }}</td>
                                                 <td>
-                                                    <span class="{{ $isInsufficientStock ? 'text-warning' : '' }}">
-                                                        {{ $quantityToProvide }}
-                                                        @if($isInsufficientStock)
-                                                            <small class="text-muted">({{ $stockMessage }})</small>
-                                                        @else
-                                                            <small class="text-success">({{ $stockMessage }})</small>
-                                                        @endif
-                                                    </span>
+                                                    <div class="fw-semibold">{{ $product->name }}</div>
+                                                    @if($isInsufficientStock)
+                                                        <small class="text-warning">{{ $stockMessage }}</small>
+                                                    @else
+                                                        <small class="text-success">{{ $stockMessage }}</small>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <input type="number" class="form-control form-control-sm demand-input" value="{{ $demand }}" min="0" data-product-id="{{ $product->id }}">
+                                                </td>
+                                                <td>
+                                                    <input type="number" class="form-control form-control-sm quantity-input" value="{{ $quantityToProvide }}" min="0" data-product-id="{{ $product->id }}">
+                                                </td>
+                                                <td>
+                                                    <select class="form-select form-select-sm uom-select" data-product-id="{{ $product->id }}">
+                                                        <option value="pcs">PCS</option>
+                                                        <option value="dozen">Dozen</option>
+                                                        <option value="box">Box</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        <button type="button" class="btn btn-outline-success" onclick="validateProduct({{ $product->id }})" title="Validate">
+                                                            <i class="bi bi-check-circle"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-warning" onclick="editProduct({{ $product->id }})" title="Edit">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-danger" onclick="removeProduct({{ $product->id }})" title="Remove">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -223,4 +280,397 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize event listeners
+    initializeEventListeners();
+    
+    // Initialize table interactions
+    initializeTableInteractions();
+});
+
+function initializeEventListeners() {
+    // Moves button functionality
+    document.getElementById('movesBtn').addEventListener('click', function() {
+        showMovesModal();
+    });
+    
+    // Operations button functionality
+    document.getElementById('operationsBtn').addEventListener('click', function() {
+        showOperationsMenu();
+    });
+    
+    // Input change listeners
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('demand-input') || e.target.classList.contains('quantity-input')) {
+            updateProductValidation(e.target);
+        }
+    });
+}
+
+function initializeTableInteractions() {
+    // Add row highlighting on hover
+    const tableRows = document.querySelectorAll('#operationsTable tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#f8f9fa';
+        });
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+}
+
+function showMovesModal() {
+    Swal.fire({
+        title: 'Inventory Moves',
+        html: `
+            <div class="text-start">
+                <h6>Movement Details</h6>
+                <p><strong>Movement Number:</strong> {{ $inventoryMovement ? $inventoryMovement->movement_number : 'OUT / 0001' }}</p>
+                <p><strong>Type:</strong> Outbound</p>
+                <p><strong>Status:</strong> Ready for validation</p>
+                <p><strong>Created:</strong> {{ $order->created_at->format('M d, Y H:i') }}</p>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'View Details',
+        cancelButtonText: 'Close'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirect to detailed moves view
+            window.location.href = '{{ route("admin.orders.walkin.validate", $order->id) }}?view=moves';
+        }
+    });
+}
+
+function showOperationsMenu() {
+    Swal.fire({
+        title: 'Operations Menu',
+        html: `
+            <div class="d-grid gap-2">
+                <button class="btn btn-outline-primary" onclick="bulkValidate()">
+                    <i class="bi bi-check-all me-2"></i>Validate All Products
+                </button>
+                <button class="btn btn-outline-secondary" onclick="exportData()">
+                    <i class="bi bi-download me-2"></i>Export Data
+                </button>
+                <button class="btn btn-outline-info" onclick="refreshStock()">
+                    <i class="bi bi-arrow-clockwise me-2"></i>Refresh Stock
+                </button>
+                <button class="btn btn-outline-warning" onclick="adjustQuantities()">
+                    <i class="bi bi-sliders me-2"></i>Adjust Quantities
+                </button>
+            </div>
+        `,
+        showCancelButton: true,
+        cancelButtonText: 'Close',
+        showConfirmButton: false
+    });
+}
+
+function validateProduct(productId) {
+    const row = document.querySelector(`tr:has([data-product-id="${productId}"])`);
+    const demandInput = row.querySelector('.demand-input');
+    const quantityInput = row.querySelector('.quantity-input');
+    
+    const demand = parseInt(demandInput.value);
+    const quantity = parseInt(quantityInput.value);
+    
+    if (quantity > demand) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Validation Warning',
+            text: 'Quantity cannot exceed demand. Please adjust the quantity.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    // Show validation success
+    Swal.fire({
+        icon: 'success',
+        title: 'Product Validated!',
+        text: `Product validated successfully. Quantity: ${quantity}`,
+        timer: 1500
+    });
+    
+    // Update row styling
+    row.classList.remove('table-warning');
+    row.classList.add('table-success');
+}
+
+function editProduct(productId) {
+    const row = document.querySelector(`tr:has([data-product-id="${productId}"])`);
+    const productName = row.querySelector('.fw-semibold').textContent;
+    
+    Swal.fire({
+        title: 'Edit Product',
+        html: `
+            <div class="mb-3">
+                <label class="form-label">Product Name</label>
+                <input type="text" class="form-control" id="editProductName" value="${productName}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Demand</label>
+                <input type="number" class="form-control" id="editDemand" min="0">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="editQuantity" min="0">
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Save Changes',
+        cancelButtonText: 'Cancel',
+        preConfirm: () => {
+            const name = document.getElementById('editProductName').value;
+            const demand = document.getElementById('editDemand').value;
+            const quantity = document.getElementById('editQuantity').value;
+            
+            if (!name || !demand || !quantity) {
+                Swal.showValidationMessage('Please fill in all fields');
+            }
+            
+            return { name, demand, quantity };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Update the row with new values
+            row.querySelector('.fw-semibold').textContent = result.value.name;
+            row.querySelector('.demand-input').value = result.value.demand;
+            row.querySelector('.quantity-input').value = result.value.quantity;
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Product Updated!',
+                text: 'Product information has been updated successfully.',
+                timer: 1500
+            });
+        }
+    });
+}
+
+function removeProduct(productId) {
+    Swal.fire({
+        title: 'Remove Product',
+        text: 'Are you sure you want to remove this product from the order?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, remove it!',
+        cancelButtonText: 'No, keep it'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const row = document.querySelector(`tr:has([data-product-id="${productId}"])`);
+            row.remove();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Product Removed!',
+                text: 'Product has been removed from the order.',
+                timer: 1500
+            });
+        }
+    });
+}
+
+function updateProductValidation(input) {
+    const productId = input.getAttribute('data-product-id');
+    const row = input.closest('tr');
+    const demandInput = row.querySelector('.demand-input');
+    const quantityInput = row.querySelector('.quantity-input');
+    
+    const demand = parseInt(demandInput.value) || 0;
+    const quantity = parseInt(quantityInput.value) || 0;
+    
+    // Update row styling based on validation
+    if (quantity > demand) {
+        row.classList.add('table-warning');
+        row.classList.remove('table-success');
+    } else if (quantity === demand && quantity > 0) {
+        row.classList.add('table-success');
+        row.classList.remove('table-warning');
+    } else {
+        row.classList.remove('table-success', 'table-warning');
+    }
+}
+
+function bulkValidate() {
+    const rows = document.querySelectorAll('#operationsTable tbody tr');
+    let validatedCount = 0;
+    
+    rows.forEach(row => {
+        const demandInput = row.querySelector('.demand-input');
+        const quantityInput = row.querySelector('.quantity-input');
+        
+        const demand = parseInt(demandInput.value) || 0;
+        const quantity = parseInt(quantityInput.value) || 0;
+        
+        if (quantity <= demand && quantity > 0) {
+            row.classList.add('table-success');
+            validatedCount++;
+        }
+    });
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Bulk Validation Complete!',
+        text: `${validatedCount} products have been validated successfully.`,
+        timer: 2000
+    });
+}
+
+function exportData() {
+    Swal.fire({
+        icon: 'info',
+        title: 'Export Data',
+        text: 'Exporting order data...',
+        timer: 1500
+    });
+    
+    // Here you would implement actual export functionality
+    console.log('Exporting order data...');
+}
+
+function refreshStock() {
+    Swal.fire({
+        icon: 'info',
+        title: 'Refreshing Stock',
+        text: 'Updating stock information...',
+        timer: 1500
+    });
+    
+    // Here you would implement actual stock refresh functionality
+    console.log('Refreshing stock...');
+}
+
+function adjustQuantities() {
+    Swal.fire({
+        title: 'Adjust Quantities',
+        html: `
+            <div class="mb-3">
+                <label class="form-label">Adjustment Type</label>
+                <select class="form-select" id="adjustmentType">
+                    <option value="increase">Increase All</option>
+                    <option value="decrease">Decrease All</option>
+                    <option value="set">Set to Demand</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Amount</label>
+                <input type="number" class="form-control" id="adjustmentAmount" min="0" value="1">
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Apply',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const type = document.getElementById('adjustmentType').value;
+            const amount = parseInt(document.getElementById('adjustmentAmount').value);
+            
+            const rows = document.querySelectorAll('#operationsTable tbody tr');
+            rows.forEach(row => {
+                const quantityInput = row.querySelector('.quantity-input');
+                const demandInput = row.querySelector('.demand-input');
+                
+                let currentQuantity = parseInt(quantityInput.value) || 0;
+                let newQuantity = currentQuantity;
+                
+                switch(type) {
+                    case 'increase':
+                        newQuantity = currentQuantity + amount;
+                        break;
+                    case 'decrease':
+                        newQuantity = Math.max(0, currentQuantity - amount);
+                        break;
+                    case 'set':
+                        newQuantity = parseInt(demandInput.value) || 0;
+                        break;
+                }
+                
+                quantityInput.value = newQuantity;
+                updateProductValidation(quantityInput);
+            });
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Quantities Adjusted!',
+                text: 'All quantities have been adjusted successfully.',
+                timer: 1500
+            });
+        }
+    });
+}
+
+function printOrder() {
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    const orderData = {
+        orderNumber: '{{ sprintf("%05d", $order->id) }}',
+        movementNumber: '{{ $inventoryMovement ? $inventoryMovement->movement_number : "OUT / 0001" }}',
+        customerName: '{{ $order->user->name ?? "Walk-in Customer" }}',
+        deliveryAddress: '{{ $order->delivery->delivery_address ?? "" }}',
+        orderDate: '{{ $order->created_at->format("m/d/Y") }}'
+    };
+    
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Order Validation - ${orderData.orderNumber}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .order-info { margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>J'J FLOWER SHOP</h1>
+                <h2>Order Validation Report</h2>
+            </div>
+            <div class="order-info">
+                <p><strong>Order Number:</strong> ${orderData.orderNumber}</p>
+                <p><strong>Movement Number:</strong> ${orderData.movementNumber}</p>
+                <p><strong>Customer:</strong> ${orderData.customerName}</p>
+                <p><strong>Delivery Address:</strong> ${orderData.deliveryAddress}</p>
+                <p><strong>Order Date:</strong> ${orderData.orderDate}</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Demand</th>
+                        <th>Quantity</th>
+                        <th>UoM</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${Array.from(document.querySelectorAll('#operationsTable tbody tr')).map(row => {
+                        const cells = row.querySelectorAll('td');
+                        return `
+                            <tr>
+                                <td>${cells[0].querySelector('.fw-semibold').textContent}</td>
+                                <td>${cells[1].querySelector('input').value}</td>
+                                <td>${cells[2].querySelector('input').value}</td>
+                                <td>${cells[3].querySelector('select').value}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.print();
+}
+</script>
 @endsection

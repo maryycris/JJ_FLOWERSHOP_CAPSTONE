@@ -67,6 +67,9 @@ Route::get('/api/analytics/compact', function () {
 
 // Map API routes (temporary fix)
 Route::post('/api/map/geocode', [\App\Http\Controllers\MapController::class, 'geocode']);
+Route::get('/api/map/test', function() {
+    return response()->json(['success' => true, 'message' => 'API is working', 'timestamp' => now()]);
+});
 Route::post('/api/map/route', [\App\Http\Controllers\MapController::class, 'getRoute']);
 Route::post('/api/map/shipping-calculate', [\App\Http\Controllers\MapController::class, 'calculateShippingWithDistance']);
 
@@ -312,6 +315,14 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\AdminMiddleware::class])-
     Route::get('loyalty/{card}/history', [\App\Http\Controllers\Admin\LoyaltyController::class, 'history'])->name('loyalty.history');
     
     // Payment Verification Management
+    
+    // Return Management
+    Route::get('returns', [\App\Http\Controllers\Admin\ReturnManagementController::class, 'index'])->name('returns.index');
+    Route::get('returns/{order}', [\App\Http\Controllers\Admin\ReturnManagementController::class, 'show'])->name('returns.show');
+    Route::post('returns/{order}/update-status', [\App\Http\Controllers\Admin\ReturnManagementController::class, 'updateStatus'])->name('returns.update-status');
+    Route::post('returns/{order}/process-refund', [\App\Http\Controllers\Admin\ReturnManagementController::class, 'processRefund'])->name('returns.process-refund');
+    Route::get('returns/analytics', [\App\Http\Controllers\Admin\ReturnManagementController::class, 'analytics'])->name('returns.analytics');
+    Route::get('returns/analytics/export', [\App\Http\Controllers\Admin\ReturnManagementController::class, 'exportAnalytics'])->name('returns.analytics.export');
 });
 
 // Clerk Routes
@@ -485,6 +496,12 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\CustomerMiddleware::class
     Route::delete('/notifications/{id}', [CustomerNotificationController::class, 'destroy'])->name('notifications.delete');
     Route::post('/notifications/{id}/read', [CustomerNotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('/notifications/{id}/unread', [CustomerNotificationController::class, 'markAsUnread'])->name('notifications.markAsUnread');
+    Route::post('/notifications/{id}/hide', [CustomerNotificationController::class, 'hide'])->name('notifications.hide');
+    Route::post('/notifications/{id}/unhide', [CustomerNotificationController::class, 'unhide'])->name('notifications.unhide');
+    Route::get('/notifications/hidden', [CustomerNotificationController::class, 'getHidden'])->name('notifications.hidden');
+
+    // Store Credit
+    Route::get('/store-credit/history', [CustomerController::class, 'storeCreditHistory'])->name('store-credit.history');
 
     // Order Reviews
     Route::post('/orders/submit-review', [OrderController::class, 'submitReview'])->name('orders.submitReview');
@@ -539,6 +556,11 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\DriverMiddleware::class])
     Route::post('/orders/{order}/decline', [DriverController::class, 'declineOrder'])->name('orders.decline');
     Route::post('/orders/{order}/complete', [DriverController::class, 'completeOrder'])->name('orders.complete');
     Route::post('/orders/{order}/return', [DriverController::class, 'returnOrder'])->name('orders.return');
+    
+    // Return Order Routes
+    Route::get('/orders/{order}/return-form', [\App\Http\Controllers\Driver\ReturnOrderController::class, 'show'])->name('orders.return.show');
+    Route::post('/orders/{order}/return-store', [\App\Http\Controllers\Driver\ReturnOrderController::class, 'store'])->name('orders.return.store');
+    
 
     // History
     Route::get('/history', [DriverController::class, 'history'])->name('history.index');

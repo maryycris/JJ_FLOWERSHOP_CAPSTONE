@@ -187,7 +187,11 @@
         <div class="admin-user dropdown">
             <a href="#" class="d-flex align-items-center gap-2 text-white text-decoration-none" id="adminProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="cursor:pointer;">
                 <?php if(auth()->user()->profile_picture): ?>
-                    <img src="<?php echo e(asset('storage/' . auth()->user()->profile_picture)); ?>" alt="Profile Picture" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid white;">
+                    <?php
+                        $pp = auth()->user()->profile_picture;
+                        $profileSrc = filter_var($pp, FILTER_VALIDATE_URL) ? $pp : asset('storage/' . $pp);
+                    ?>
+                    <img src="<?php echo e($profileSrc); ?>" alt="Profile Picture" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid white;" onerror="this.onerror=null;this.src='<?php echo e(asset('images/default-avatar.png')); ?>';">
                 <?php else: ?>
                     <i class="bi bi-person-circle text-white"></i>
                 <?php endif; ?>
@@ -222,6 +226,13 @@
                 <li><a class="dropdown-item" href="<?php echo e(route('admin.orders.index', ['type' => 'walkin'])); ?>" style="padding: 0.75rem 1rem; color: #333; transition: background-color 0.2s;">
                     <i class="bi bi-shop me-2"></i> Walk-in Orders
                 </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="<?php echo e(route('admin.returns.index')); ?>" style="padding: 0.75rem 1rem; color: #333; transition: background-color 0.2s;">
+                    <i class="bi bi-arrow-return-left me-2"></i> Return Management
+                </a></li>
+                <li><a class="dropdown-item" href="<?php echo e(route('admin.returns.analytics')); ?>" style="padding: 0.75rem 1rem; color: #333; transition: background-color 0.2s;">
+                    <i class="bi bi-graph-up me-2"></i> Return Analytics
+                </a></li>
             </ul>
         </div>
         <a href="<?php echo e(route('admin.customize.index')); ?>" class="nav-link <?php if(request()->routeIs('admin.customize.*')): ?> active <?php endif; ?>"><i class="bi bi-palette"></i> Customize</a>
@@ -235,7 +246,11 @@
         <div class="sidebar-profile text-center mb-4">
             <div class="sidebar-profile-icon mx-auto mb-2">
                 <?php if(auth()->user()->profile_picture): ?>
-                    <img src="<?php echo e(asset('storage/' . auth()->user()->profile_picture)); ?>" alt="Profile Picture" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #4CAF50;">
+                    <?php
+                        $pp = auth()->user()->profile_picture;
+                        $profileSrc = filter_var($pp, FILTER_VALIDATE_URL) ? $pp : asset('storage/' . $pp);
+                    ?>
+                    <img src="<?php echo e($profileSrc); ?>" alt="Profile Picture" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #4CAF50;" onerror="this.onerror=null;this.src='<?php echo e(asset('images/default-avatar.png')); ?>';">
                 <?php else: ?>
                     <i class="bi bi-person-circle" style="font-size: 3.5rem; color: #888;"></i>
                 <?php endif; ?>

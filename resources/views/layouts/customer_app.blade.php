@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 
     <title>{{ config('app.name', 'JJ Flowershop') }}</title>
 
@@ -303,7 +306,8 @@
 
                     <!-- Center block: links (top) + icons (bottom) -->
                     <div class="d-flex flex-column flex-grow-1" style="max-width: 1000px; margin: 0 20px;">
-                        <div class="d-flex align-items-center justify-content-center customer-nav-links" style="gap: 2.2rem; padding-top: 0;">
+                        <!-- Desktop Nav Links (Hidden on Mobile) -->
+                        <div class="d-flex align-items-center justify-content-center customer-nav-links d-none d-lg-flex" style="gap: 2.2rem; padding-top: 0;">
                         <a href="{{ route('customer.dashboard') }}" class="nav-link text-white d-flex align-items-center gap-2 @if(request()->routeIs('customer.dashboard')) active @endif" style="font-size: 0.95rem;"><i class="bi @if(request()->routeIs('customer.dashboard')) bi-house-fill @else bi-house-door @endif"></i> Home</a>
                         <a href="{{ route('customer.products.bouquet-customize') }}" class="nav-link text-white d-flex align-items-center gap-2 @if(request()->routeIs('customer.products.bouquet-customize')) active @endif" style="font-size: 0.95rem;"><i class="bi @if(request()->routeIs('customer.products.bouquet-customize')) bi-brush-fill @else bi-brush @endif"></i> Customize</a>
                         <a href="{{ route('customer.notifications.index') }}" class="nav-link text-white d-flex align-items-center gap-2 position-relative @if(request()->routeIs('customer.notifications.index')) active @endif" style="font-size: 0.95rem;">
@@ -318,7 +322,14 @@
                                         $profileSrc = null;
                                         if (Auth::check()) {
                                             $pp = Auth::user()->profile_picture ?? null;
-                                            if ($pp) { $profileSrc = asset('storage/' . ltrim($pp, '/')); }
+                                            if ($pp) { 
+                                                // Check if it's a full URL (from social login) or a local path
+                                                if (filter_var($pp, FILTER_VALIDATE_URL)) {
+                                                    $profileSrc = $pp;
+                                                } else {
+                                                    $profileSrc = asset('storage/' . ltrim($pp, '/'));
+                                                }
+                                            }
                                         }
                                         if (!$profileSrc) { $profileSrc = asset('images/default-avatar.png'); }
                                     @endphp
@@ -352,6 +363,26 @@
                 @endauth
             </div>
         </main>
+
+        <!-- Global Mobile Bottom Navigation (<=480px) -->
+        <div class="mobile-bottom-nav d-lg-none">
+            <a href="{{ route('customer.dashboard') }}" class="nav-item @if(request()->routeIs('customer.dashboard')) active @endif">
+                <i class="bi @if(request()->routeIs('customer.dashboard')) bi-house-fill @else bi-house-door @endif"></i>
+                <span>Home</span>
+            </a>
+            <a href="{{ route('customer.products.bouquet-customize') }}" class="nav-item @if(request()->routeIs('customer.products.bouquet-customize')) active @endif">
+                <i class="bi @if(request()->routeIs('customer.products.bouquet-customize')) bi-brush-fill @else bi-brush @endif"></i>
+                <span>Customize</span>
+            </a>
+            <a href="{{ route('customer.notifications.index') }}" class="nav-item @if(request()->routeIs('customer.notifications.index')) active @endif">
+                <i class="bi @if(request()->routeIs('customer.notifications.index')) bi-bell-fill @else bi-bell @endif"></i>
+                <span>Notifications</span>
+            </a>
+            <a href="{{ route('customer.account.index') }}" class="nav-item @if(request()->routeIs('customer.account.index')) active @endif">
+                <i class="bi bi-person"></i>
+                <span>My Profile</span>
+            </a>
+        </div>
         
         <!-- Alert Component -->
         @include('components.alert')
@@ -365,6 +396,7 @@
                 'customer.orders.show',
                 'customer.trackOrders.page',
                 'customer.checkout.*',
+                'customer.store-credit.history',
             ];
         @endphp
         @unless (request()->routeIs($hideFooterOnRoutes))
@@ -403,9 +435,87 @@
             background: rgba(255,255,255,0.6);
         }
         /* Place right icons visually below the divider line */
-        .customer-right-icons { padding-top: 8px; align-self: flex-end; }
+        .customer-right-icons { 
+            padding-top: 14px; 
+            align-self: flex-end; 
+            display: flex;
+            align-items: center;
+            padding-right: 10px; /* slight nudge to the right */
+        }
         .customer-right-icons a,
-        .customer-right-icons button { margin-top: 2px; }
+        .customer-right-icons button { 
+            margin-top: 2px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 29px;
+            height: 29px;
+        }
+        
+        /* Mobile Responsive Navbar */
+        @media (max-width: 480px) {
+            /* Reserve space for bottom nav */
+            body { padding-bottom: 76px; }
+
+            /* Global Mobile Bottom Nav */
+            .mobile-bottom-nav {
+                position: fixed;
+                bottom: 0; left: 0; right: 0;
+                background: #A0C49D;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: stretch;
+                padding: 0;
+                z-index: 1000;
+                box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+                height: 56px;
+            }
+            .mobile-bottom-nav .nav-item {
+                flex: 1 1 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                text-decoration: none;
+                gap: 2px;
+            }
+            .mobile-bottom-nav .nav-item.active { background: rgba(255,255,255,0.18); }
+            .mobile-bottom-nav .nav-item i,
+            .mobile-bottom-nav .nav-item .bi { font-size: 20px; }
+            .mobile-bottom-nav .nav-item span { font-size: 11px; }
+            .customer-top-navbar {
+                padding: 0 15px !important;
+            }
+            
+            .customer-brand {
+                gap: 0.4rem !important;
+            }
+            
+            .customer-brand img {
+                height: 40px !important;
+            }
+            
+            .brand-inclusive {
+                font-size: 1.2rem !important;
+            }
+            
+            .customer-right-icons {
+                padding-top: 12px !important;
+                padding-right: 12px !important; /* nudge right on mobile */
+                gap: 15px !important;
+            }
+            
+            .customer-right-icons a,
+            .customer-right-icons button {
+                font-size: 1.1rem !important;
+                margin-top: 0 !important;
+                width: 28px !important;
+                height: 28px !important;
+            }
+        }
+        
         @media (max-width: 992px) {
             .customer-right-icons { padding-top: 10px; }
         }
@@ -425,6 +535,38 @@
     @stack('scripts')
 
     <script>
+        // Check authentication status on page load and back button
+        function checkAuthStatus() {
+            fetch('{{ route("customer.dashboard") }}', {
+                method: 'HEAD',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '{{ route("login") }}';
+                }
+            })
+            .catch(error => {
+                console.log('Auth check failed:', error);
+            });
+        }
+
+        // Check auth on page load
+        checkAuthStatus();
+
+        // Check auth when page becomes visible (back button, tab switch)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                checkAuthStatus();
+            }
+        });
+
+        // Check auth on focus (when user returns to tab)
+        window.addEventListener('focus', checkAuthStatus);
+
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
                 document.querySelectorAll('.alert-dismissible').forEach(function(alert) {
@@ -528,13 +670,13 @@
             }
         }
         
-        // Auto-dismiss after 4 seconds
+        // Auto-dismiss after 3 seconds
         document.addEventListener('DOMContentLoaded', function() {
             const alert = document.getElementById('successAlert');
             if (alert) {
                 setTimeout(() => {
                     dismissAlert();
-                }, 4000);
+                }, 3000);
             }
         });
     </script>

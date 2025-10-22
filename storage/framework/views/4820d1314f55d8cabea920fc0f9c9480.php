@@ -15,15 +15,31 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h4 class="mb-1"><i class="fas fa-bell me-2"></i>Notifications</h4>
-                    <p class="text-muted mb-0">Stay updated with your event status</p>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary" onclick="markAllAsRead()">
-                        <i class="fas fa-check-double me-1"></i>Mark All Read
-                    </button>
                 </div>
             </div>
 
+            <!-- Tabs for All and Hidden Notifications -->
+            <ul class="nav nav-tabs mb-4" id="notificationTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-notifications" type="button" role="tab" aria-controls="all-notifications" aria-selected="true" style="color: #000 !important; font-weight: 600 !important;">
+                        <i class="fas fa-list me-1" style="color: #000 !important;"></i>
+                        <span style="color: #000 !important; font-weight: 600 !important;">All Notifications</span>
+                        <span class="badge bg-primary ms-2" id="all-count"><?php echo e($notifications->count()); ?></span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="hidden-tab" data-bs-toggle="tab" data-bs-target="#hidden-notifications" type="button" role="tab" aria-controls="hidden-notifications" aria-selected="false" style="color: #000 !important; font-weight: 600 !important;">
+                        <i class="fas fa-eye-slash me-1" style="color: #000 !important;"></i>
+                        <span style="color: #000 !important; font-weight: 600 !important;">Hidden Notifications</span>
+                        <span class="badge bg-secondary ms-2" id="hidden-count">0</span>
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="notificationTabsContent">
+                <!-- All Notifications Tab -->
+                <div class="tab-pane fade show active" id="all-notifications" role="tabpanel" aria-labelledby="all-tab">
             <div class="notifications-container">
                 <?php if($notifications->count() > 0): ?>
                     <?php $__currentLoopData = $notifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -81,11 +97,44 @@
                                         <div class="badge bg-<?php echo e($color); ?> rounded-pill me-2" style="font-size: 0.7rem;">New</div>
                                     <?php endif; ?>
                                     <?php if($isClickable): ?>
-                                        <div class="d-flex align-items-center text-primary" style="font-size: 0.8rem;">
+                                        <div class="d-flex align-items-center text-primary me-2" style="font-size: 0.8rem;">
                                             <i class="fas fa-external-link-alt me-1"></i>
                                             <span>Click to view</span>
                                         </div>
                                     <?php endif; ?>
+                                    
+                                    <!-- Three dots menu -->
+                                    <div class="dropdown" style="position: relative;">
+                                        <button class="btn btn-link text-muted p-1" type="button" id="notificationMenu<?php echo e($notification->id); ?>" data-bs-toggle="dropdown" aria-expanded="false" onclick="event.stopPropagation();">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu notification-dropdown-right" aria-labelledby="notificationMenu<?php echo e($notification->id); ?>">
+                                            <?php if($notification->read_at): ?>
+                                                <li>
+                                                    <a class="dropdown-item" href="#" onclick="event.preventDefault(); event.stopPropagation(); markAsUnread('<?php echo e($notification->id); ?>')">
+                                                        <i class="fas fa-envelope me-2"></i>Mark as Unread
+                                                    </a>
+                                                </li>
+                                            <?php else: ?>
+                                                <li>
+                                                    <a class="dropdown-item" href="#" onclick="event.preventDefault(); event.stopPropagation(); markAsRead('<?php echo e($notification->id); ?>')">
+                                                        <i class="fas fa-envelope-open me-2"></i>Mark as Read
+                                                    </a>
+                                                </li>
+                                            <?php endif; ?>
+                                            <li>
+                                                <a class="dropdown-item" href="#" onclick="event.preventDefault(); event.stopPropagation(); hideNotification('<?php echo e($notification->id); ?>')">
+                                                    <i class="fas fa-eye-slash me-2"></i>Hide
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); event.stopPropagation(); deleteNotification('<?php echo e($notification->id); ?>')">
+                                                    <i class="fas fa-trash me-2"></i>Delete
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -97,6 +146,19 @@
                         <p class="text-muted">You'll receive notifications when your order status changes</p>
                     </div>
                 <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Hidden Notifications Tab -->
+                <div class="tab-pane fade" id="hidden-notifications" role="tabpanel" aria-labelledby="hidden-tab">
+                    <div class="notifications-container" id="hidden-notifications-container">
+                        <div class="text-center py-5" style="background: #f8f9fa; border-radius: 8px; margin: 2rem 0;">
+                            <i class="fas fa-eye-slash text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">No hidden notifications</h5>
+                            <p class="text-muted">Hidden notifications will appear here</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             </div>
         </div>
@@ -104,40 +166,314 @@
 </div>
 <?php $__env->stopSection(); ?>
 
+<?php $__env->startSection('styles'); ?>
+<style>
+.nav-tabs#notificationTabs .nav-link,
+#notificationTabs .nav-link {
+    color: #000 !important; /* make tab labels black for visibility */
+    font-weight: 500 !important;
+}
+
+#notificationTabs .nav-link.active {
+    color: #000 !important;
+    font-weight: 600 !important;
+    background-color: #e9ecef !important;
+}
+
+#notificationTabs .nav-link:hover {
+    color: #000 !important;
+}
+
+/* Ensure text is always visible */
+#notificationTabs .nav-link span,
+#notificationTabs .nav-link i {
+    color: #000 !important;
+}
+
+.notification-dropdown-right {
+    position: absolute !important;
+    right: 0 !important;
+    top: 0 !important;
+    transform: translateX(100%) !important;
+    margin-left: 8px !important;
+    z-index: 1050 !important;
+    min-width: 180px !important;
+}
+
+/* Ensure the dropdown appears to the right on smaller screens too */
+@media (max-width: 768px) {
+    .notification-dropdown-right {
+        transform: translateX(0) !important;
+        right: auto !important;
+        left: 0 !important;
+        margin-left: 0 !important;
+    }
+}
+</style>
+<?php $__env->stopSection(); ?>
+
 <?php $__env->startSection('scripts'); ?>
 <script>
-function markAllAsRead() {
-    // Show loading state
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Marking as read...';
-    button.disabled = true;
-
-    // Make AJAX request
-    fetch('<?php echo e(route("customer.notifications.markAllAsRead")); ?>', {
+// Individual notification actions
+function markAsRead(notificationId) {
+    fetch(`<?php echo e(url('customer/notifications')); ?>/${notificationId}/read`, {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            // Update the notification item visually
+            const notificationItem = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            if (notificationItem) {
+                notificationItem.classList.remove('bg-light');
+                notificationItem.style.backgroundColor = '';
+                
+                // Update the title to show as read
+                const title = notificationItem.querySelector('h6');
+                if (title) {
+                    title.classList.add('text-muted');
+                    title.classList.remove('fw-bold');
+                }
+                
+                // Remove "New" badge
+                const newBadge = notificationItem.querySelector('.badge');
+                if (newBadge) {
+                    newBadge.remove();
+                }
+                
+                // Update the menu
+                const menuButton = notificationItem.querySelector(`#notificationMenu${notificationId}`);
+                if (menuButton) {
+                    const menu = menuButton.nextElementSibling;
+                    const readOption = menu.querySelector('a[onclick*="markAsRead"]');
+                    const unreadOption = menu.querySelector('a[onclick*="markAsUnread"]');
+                    if (readOption && unreadOption) {
+                        readOption.style.display = 'none';
+                        unreadOption.style.display = 'block';
+                    }
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error marking notification as read:', error);
+    });
+}
+
+function markAsUnread(notificationId) {
+    fetch(`<?php echo e(url('customer/notifications')); ?>/${notificationId}/unread`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            // Update the notification item visually
+            const notificationItem = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            if (notificationItem) {
+                notificationItem.classList.add('bg-light');
+                notificationItem.style.backgroundColor = '#f8f9fa';
+                
+                // Update the title to show as unread
+                const title = notificationItem.querySelector('h6');
+                if (title) {
+                    title.classList.remove('text-muted');
+                    title.classList.add('fw-bold');
+                }
+                
+                // Add "New" badge
+                const badgeContainer = notificationItem.querySelector('.d-flex.align-items-center');
+                if (badgeContainer && !badgeContainer.querySelector('.badge')) {
+                    const newBadge = document.createElement('div');
+                    newBadge.className = 'badge bg-primary rounded-pill me-2';
+                    newBadge.style.fontSize = '0.7rem';
+                    newBadge.textContent = 'New';
+                    badgeContainer.insertBefore(newBadge, badgeContainer.firstChild);
+                }
+                
+                // Update the menu
+                const menuButton = notificationItem.querySelector(`#notificationMenu${notificationId}`);
+                if (menuButton) {
+                    const menu = menuButton.nextElementSibling;
+                    const readOption = menu.querySelector('a[onclick*="markAsRead"]');
+                    const unreadOption = menu.querySelector('a[onclick*="markAsUnread"]');
+                    if (readOption && unreadOption) {
+                        readOption.style.display = 'block';
+                        unreadOption.style.display = 'none';
+                    }
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error marking notification as unread:', error);
+    });
+}
+
+function hideNotification(notificationId) {
+    if (confirm('Are you sure you want to hide this notification?')) {
+        fetch(`<?php echo e(url('customer/notifications')); ?>/${notificationId}/hide`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Hide the notification item
+                const notificationItem = document.querySelector(`[data-notification-id="${notificationId}"]`);
+                if (notificationItem) {
+                    notificationItem.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error hiding notification:', error);
+        });
+    }
+}
+
+function deleteNotification(notificationId) {
+    if (confirm('Are you sure you want to delete this notification? This action cannot be undone.')) {
+        fetch(`<?php echo e(url('customer/notifications')); ?>/${notificationId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Remove the notification item
+                const notificationItem = document.querySelector(`[data-notification-id="${notificationId}"]`);
+                if (notificationItem) {
+                    notificationItem.remove();
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting notification:', error);
+        });
+    }
+}
+
+function unhideNotification(notificationId) {
+    fetch(`<?php echo e(url('customer/notifications')); ?>/${notificationId}/unhide`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            // Remove the notification from hidden list
+            const notificationItem = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            if (notificationItem) {
+                notificationItem.remove();
+            }
+            
+            // Reload the page to show the unhidden notification in the main list
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error unhiding notification:', error);
+    });
+}
+
+function loadHiddenNotifications() {
+    fetch('<?php echo e(route("customer.notifications.hidden")); ?>', {
+        method: 'GET',
+        headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
     })
     .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Reload page to show updated notifications
-            location.reload();
+    .then(notifications => {
+        const container = document.getElementById('hidden-notifications-container');
+        const hiddenCount = document.getElementById('hidden-count');
+        
+        // Update hidden count
+        hiddenCount.textContent = notifications.length;
+        
+        if (notifications.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-5" style="background: #f8f9fa; border-radius: 8px; margin: 2rem 0;">
+                    <i class="fas fa-eye-slash text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="text-muted mt-3">No hidden notifications</h5>
+                    <p class="text-muted">Hidden notifications will appear here</p>
+                </div>
+            `;
         } else {
-            alert('Error: ' + (data.message || 'Failed to mark notifications as read'));
-            button.innerHTML = originalText;
-            button.disabled = false;
+            let html = '';
+            notifications.forEach(notification => {
+                const data = notification.data;
+                const title = data.title || 'Notification';
+                const message = data.message || 'No message';
+                const icon = data.icon || 'fas fa-bell';
+                const color = data.color || 'primary';
+                const createdAt = new Date(notification.created_at).toLocaleString();
+                
+                html += `
+                    <div class="notification-item p-3 border-bottom bg-light" 
+                         data-notification-id="${notification.id}"
+                         style="cursor: pointer; transition: all 0.2s ease; border-radius: 8px; margin-bottom: 8px; opacity: 0.7;">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <i class="${icon} text-${color}"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 text-muted" style="font-size: 1.1rem; color: #2c3e50;">
+                                    ${title}
+                                </h6>
+                                <p class="mb-1" style="color: #555; font-size: 0.95rem; line-height: 1.4;">${message}</p>
+                                <small class="text-muted" style="font-size: 0.8rem;">${createdAt}</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="badge bg-secondary rounded-pill me-2" style="font-size: 0.7rem;">Hidden</div>
+                                
+                                <!-- Three dots menu for hidden notifications -->
+                                <div class="dropdown" style="position: relative;">
+                                    <button class="btn btn-link text-muted p-1" type="button" id="hiddenMenu${notification.id}" data-bs-toggle="dropdown" aria-expanded="false" onclick="event.stopPropagation();">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu notification-dropdown-right" aria-labelledby="hiddenMenu${notification.id}">
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="event.preventDefault(); event.stopPropagation(); unhideNotification('${notification.id}')">
+                                                <i class="fas fa-eye me-2"></i>Unhide
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); event.stopPropagation(); deleteNotification('${notification.id}')">
+                                                <i class="fas fa-trash me-2"></i>Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Error marking notifications as read');
-        button.innerHTML = originalText;
-        button.disabled = false;
+        console.error('Error loading hidden notifications:', error);
     });
 }
 
@@ -154,11 +490,11 @@ function handleNotificationClick(notificationId, actionUrl) {
     
     // Then navigate if there's an action URL
     if (actionUrl) {
-        // Show loading indicator
+        // Show "Open" status without loading spinner
         if (notificationItem) {
             const clickIndicator = notificationItem.querySelector('.text-primary');
             if (clickIndicator) {
-                clickIndicator.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Opening...';
+                clickIndicator.innerHTML = '<i class="fas fa-external-link-alt me-1"></i><span>Open</span>';
             }
         }
         
@@ -206,10 +542,16 @@ function markNotificationAsRead(notificationId) {
     });
 }
 
-// Add hover effects
+// Add hover effects and reset any loading states
 document.addEventListener('DOMContentLoaded', function() {
     const notificationItems = document.querySelectorAll('.notification-item');
     notificationItems.forEach(item => {
+        // Reset any loading states that might be persisted
+        const clickIndicator = item.querySelector('.text-primary');
+        if (clickIndicator && clickIndicator.innerHTML.includes('Opening')) {
+            clickIndicator.innerHTML = '<i class="fas fa-external-link-alt me-1"></i><span>Click to view</span>';
+        }
+        
         item.addEventListener('mouseenter', function() {
             this.style.backgroundColor = '#f8f9fa';
         });
@@ -220,6 +562,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Load hidden notifications when hidden tab is clicked
+    const hiddenTab = document.getElementById('hidden-tab');
+    if (hiddenTab) {
+        hiddenTab.addEventListener('click', function() {
+            loadHiddenNotifications();
+        });
+    }
 });
 </script>
 <?php $__env->stopSection(); ?>
