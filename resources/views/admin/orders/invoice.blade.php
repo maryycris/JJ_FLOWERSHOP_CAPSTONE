@@ -25,9 +25,28 @@
             <div class="row mb-4">
                 <div class="col-md-6">
                     <h5>Bill To:</h5>
-                    <p class="mb-0">{{ $order->user->name ?? 'N/A' }}</p>
-                    <p class="mb-0">{{ $order->user->email ?? 'N/A' }}</p>
-                    <p>{{ $order->user->contact_number ?? 'N/A' }}</p>
+                    @php
+                        // For walk-in orders, extract customer name from notes
+                        $customerName = $order->user->name ?? 'N/A';
+                        $customerEmail = $order->user->email ?? 'N/A';
+                        $customerPhone = $order->user->contact_number ?? 'N/A';
+                        
+                        if ($order->type === 'walk-in') {
+                            // Extract customer name from notes (format: "Customer: [Name]")
+                            if ($order->notes && preg_match('/Customer:\s*(.+)/', $order->notes, $matches)) {
+                                $customerName = trim($matches[1]);
+                            } else {
+                                $customerName = 'Walk-in Customer';
+                            }
+                            
+                            // For walk-in orders, email and phone are not available
+                            $customerEmail = 'N/A';
+                            $customerPhone = 'N/A';
+                        }
+                    @endphp
+                    <p class="mb-0">{{ $customerName }}</p>
+                    <p class="mb-0">{{ $customerEmail }}</p>
+                    <p>{{ $customerPhone }}</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <h5>Ship To:</h5>
@@ -46,21 +65,95 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($order->products as $index => $product)
+                    @php $rowIndex = 0; @endphp
+                    @foreach($order->products as $product)
+                    @php $rowIndex++; @endphp
                     <tr>
-                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $rowIndex }}</td>
                         <td>{{ $product->name }}</td>
                         <td class="text-end">{{ $product->pivot->quantity }}</td>
                         <td class="text-end">₱{{ number_format($product->price, 2) }}</td>
                         <td class="text-end">₱{{ number_format($product->pivot->quantity * $product->price, 2) }}</td>
                     </tr>
                     @endforeach
+                    @foreach($order->customBouquets as $bouquet)
+                    @php 
+                        $rowIndex++;
+                        $orderQty = $bouquet->pivot->quantity;
+                        $customData = $bouquet->customization_data ?? [];
+                        $freshFlowerQty = $customData['freshFlowerQuantity'] ?? 1;
+                        $artificialFlowerQty = $customData['artificialFlowerQuantity'] ?? 1;
+                        
+                        $components = [];
+                        
+                        // Wrapper
+                        if ($bouquet->wrapper) {
+                            $components[] = "Wrapper: {$bouquet->wrapper} (x{$orderQty})";
+                        }
+                        
+                        // Fresh Flowers
+                        $freshFlowers = [];
+                        if ($bouquet->focal_flower_1) {
+                            $freshFlowers[] = $bouquet->focal_flower_1;
+                        }
+                        if ($bouquet->focal_flower_2) {
+                            $freshFlowers[] = $bouquet->focal_flower_2;
+                        }
+                        if ($bouquet->focal_flower_3) {
+                            $freshFlowers[] = $bouquet->focal_flower_3;
+                        }
+                        if (!empty($freshFlowers)) {
+                            $totalFreshQty = $freshFlowerQty * $orderQty;
+                            $components[] = "Fresh Flowers: " . implode(', ', $freshFlowers) . " (x{$totalFreshQty})";
+                        }
+                        
+                        // Greenery
+                        if ($bouquet->greenery) {
+                            $components[] = "Greenery: {$bouquet->greenery} (x{$orderQty})";
+                        }
+                        
+                        // Artificial Flowers (Filler)
+                        if ($bouquet->filler) {
+                            $totalArtificialQty = $artificialFlowerQty * $orderQty;
+                            $components[] = "Artificial Flowers: {$bouquet->filler} (x{$totalArtificialQty})";
+                        }
+                        
+                        // Ribbon
+                        if ($bouquet->ribbon) {
+                            $components[] = "Ribbon: {$bouquet->ribbon} (x{$orderQty})";
+                        }
+                        
+                        $componentDescription = !empty($components) ? implode('<br>', $components) : '';
+                        $unitPrice = $bouquet->unit_price ?? ($bouquet->total_price / max($orderQty, 1));
+                    @endphp
+                    <tr>
+                        <td>{{ $rowIndex }}</td>
+                        <td>
+                            <div><strong>Custom Bouquet</strong></div>
+                            @if(!empty($componentDescription))
+                                <div style="font-size: 0.85rem; color: #666; margin-top: 4px; line-height: 1.6;">
+                                    {!! $componentDescription !!}
+                                </div>
+                            @endif
+                        </td>
+                        <td class="text-end">{{ $orderQty }}</td>
+                        <td class="text-end">₱{{ number_format($unitPrice, 2) }}</td>
+                        <td class="text-end">₱{{ number_format($unitPrice * $orderQty, 2) }}</td>
+                    </tr>
+                    @endforeach
                 </tbody>
                 <tfoot>
                     @php
-                        $subtotal = $order->products->sum(function($product) {
+                        $productsSubtotal = $order->products->sum(function($product) {
                             return $product->pivot->quantity * $product->price;
                         });
+                        
+                        $customBouquetsSubtotal = $order->customBouquets->sum(function($bouquet) {
+                            $unitPrice = $bouquet->unit_price ?? ($bouquet->total_price / max($bouquet->pivot->quantity, 1));
+                            return $unitPrice * $bouquet->pivot->quantity;
+                        });
+                        
+                        $subtotal = $productsSubtotal + $customBouquetsSubtotal;
                         $shippingFee = $order->delivery->shipping_fee ?? 0;
                         
                         // If shipping_fee is 0 or null, calculate it from the difference between total_price and subtotal

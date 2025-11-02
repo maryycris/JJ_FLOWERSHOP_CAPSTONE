@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Order;
 use App\Models\InventoryTransaction;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class InventoryService
 {
@@ -203,6 +204,138 @@ class InventoryService
             'stock_after' => $product->stock,
             'created_by' => auth()->id()
         ]);
+    }
+    
+    /**
+     * Deduct materials/components for a product based on its composition
+     */
+    public static function deductMaterialsForProduct($product, $quantity, $orderId = null)
+    {
+        try {
+            $product->load('compositions');
+            
+            $compositions = $product->compositions;
+            
+            // Fallback: if no product-level compositions, try catalog product compositions by name
+            if (!$compositions || $compositions->isEmpty()) {
+                $catalog = \App\Models\CatalogProduct::where('name', $product->name)
+                    ->where('status', true)
+                    ->where('is_approved', true)
+                    ->with('compositions')
+                    ->first();
+                if ($catalog && $catalog->compositions && $catalog->compositions()->count() > 0) {
+                    $compositions = $catalog->compositions;
+                }
+            }
+            
+            if (!$compositions || $compositions->isEmpty()) {
+                // No compositions anywhere - this is a finished product (like teddy bear, cake, balloon)
+                // Deduct from stock and update qty_sold for finished products
+                $product->stock = max(0, $product->stock - $quantity);
+                $product->qty_sold = ($product->qty_sold ?? 0) + $quantity;
+                $product->save();
+                
+                // Log the transaction for finished product sales
+                InventoryTransaction::create([
+                    'order_id' => $orderId,
+                    'product_id' => $product->id,
+                    'quantity' => $quantity,
+                    'type' => 'sold',
+                    'stock_before' => $product->stock + $quantity,
+                    'stock_after' => $product->stock,
+                    'created_by' => auth()->id()
+                ]);
+                
+                return [
+                    'success' => true,
+                    'message' => 'Finished product stock deducted successfully',
+                    'components' => [[
+                        'product_id' => $product->id,
+                        'stock_after' => $product->stock,
+                        'unit' => 'pcs',
+                    ]]
+                ];
+            }
+            
+            $insufficientMaterials = [];
+            
+            // Deduct each component material (transaction for consistency)
+            $componentsResults = [];
+            foreach ($compositions as $composition) {
+                $component = Product::find($composition->component_id);
+                
+                if (!$component) {
+                    continue;
+                }
+                
+                $requiredQuantity = $composition->quantity * $quantity;
+                $availableStock = $component->stock;
+                
+                if ($availableStock < $requiredQuantity) {
+                    $insufficientMaterials[] = [
+                        'component' => $component->name,
+                        'required' => $requiredQuantity,
+                        'available' => $availableStock,
+                        'shortage' => $requiredQuantity - $availableStock
+                    ];
+                } else {
+                    // Deduct the material atomically and log in a single DB transaction
+                    $componentFresh = DB::transaction(function () use ($component, $availableStock, $requiredQuantity, $orderId, $composition) {
+                        $deductQty = min((int)$requiredQuantity, (int)$availableStock);
+                        Product::where('id', $component->id)->decrement('stock', $deductQty);
+                        Product::where('id', $component->id)->increment('qty_consumed', $deductQty);
+                        $fresh = Product::find($component->id);
+                        InventoryTransaction::create([
+                            'order_id' => $orderId,
+                            'product_id' => $component->id,
+                            'quantity' => $deductQty,
+                            'type' => 'consumed',
+                            'stock_before' => $availableStock,
+                            'stock_after' => $fresh->stock,
+                            'created_by' => auth()->id()
+                        ]);
+                        return $fresh;
+                    });
+                    $componentsResults[] = [
+                        'product_id' => $component->id,
+                        'stock_after' => $componentFresh->stock,
+                        'unit' => $composition->unit,
+                    ];
+                    Log::info("Material deducted for product composition", [
+                        'product' => $product->name,
+                        'component' => $component->name,
+                        'quantity_deducted' => $requiredQuantity,
+                        'remaining_stock' => $componentFresh->stock
+                    ]);
+                }
+            }
+            
+            if (!empty($insufficientMaterials)) {
+                return [
+                    'success' => false,
+                    'message' => 'Insufficient materials to fulfill order',
+                    'insufficient_materials' => $insufficientMaterials
+                ];
+            }
+            
+            return [
+                'success' => true,
+                'message' => 'All materials deducted successfully',
+                'components' => $componentsResults
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error("Failed to deduct materials for product {$product->name}", [
+                'error' => $e->getMessage(),
+                'product_id' => $product->id,
+                'quantity' => $quantity
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Error deducting materials: ' . $e->getMessage()
+            ];
+        }
     }
     
     /**

@@ -16,6 +16,11 @@
         .navbar-admin .shop-title span { font-size: 0.8rem; font-weight: 400; }
         .navbar-admin .admin-user { font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
         .navbar-admin .admin-user i { font-size: 1.5rem; }
+        
+        /* Header icon active states */
+        .navbar-admin a.active i { color: #fff !important; opacity: 1; }
+        .navbar-admin a:not(.active) i { color: rgba(255, 255, 255, 0.7); transition: color 0.3s ease; }
+        .navbar-admin a:not(.active):hover i { color: #fff; }
         .navbar-admin-logo { height: 50px; width: 50px; background: transparent; }
         .navbar-admin-hr { border: none; border-top: 2px solid #fff; opacity: 0.7; margin: 0; width: 88%; margin-left: 6%; margin-top: 5px;}
         .navbar-admin-links-row { width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); background: #5E8458; position: fixed; top: 50px; z-index: 1001; }
@@ -26,14 +31,15 @@
         /* --- Updated Sidebar Styles --- */
         #wrapper { min-height: calc(100vh - 56px); display: flex; }
         #page-content-wrapper { 
-            margin-left: 260px; 
-            width: calc(100% - 260px);
+            margin-left: 280px; 
+            width: calc(100% - 280px);
             transition: margin-left 0.3s ease;
             margin-top: 0;
+            padding-left: 30px;
         }
         .sidebar-container {
-            min-width: 240px;
-            max-width: 260px;
+            min-width: 260px;
+            max-width: 280px;
             background: #f8f9f4;
             display: flex;
             flex-direction: column;
@@ -45,6 +51,7 @@
             left: 0;
             z-index: 999;
             overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
         }
         .sidebar-profile {
             display: flex;
@@ -121,6 +128,18 @@
             #page-content-wrapper {
                 margin-left: 0;
                 width: 100%;
+                padding-left: 0;
+            }
+        }
+        
+        /* Medium screens */
+        @media (max-width: 1200px) {
+            #page-content-wrapper {
+                margin-left: 280px;
+                width: calc(100% - 280px);
+            }
+            .sidebar-container {
+                max-width: 280px;
             }
         }
         .sidebar-container .nav-item {
@@ -184,62 +203,59 @@
                 J ' J FLOWERSHOP <span class="fs-6">Est. 2023</span>
             </div>
         </div>
-        <div class="admin-user dropdown">
-            <a href="#" class="d-flex align-items-center gap-2 text-white text-decoration-none" id="adminProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="cursor:pointer;">
-                @if(auth()->user()->profile_picture)
-                    @php
-                        $pp = auth()->user()->profile_picture;
-                        $profileSrc = filter_var($pp, FILTER_VALIDATE_URL) ? $pp : asset('storage/' . $pp);
-                    @endphp
-                    <img src="{{ $profileSrc }}" alt="Profile Picture" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid white;" onerror="this.onerror=null;this.src='{{ asset('images/default-avatar.png') }}';">
-                @else
-                    <i class="bi bi-person-circle text-white"></i>
-                @endif
-                <span class="fw-semibold">{{ auth()->user()->name }}</span>
+        <div class="d-flex align-items-center gap-3">
+            <!-- Notifications Icon -->
+            <a href="{{ route('admin.notifications.index') }}" class="text-white text-decoration-none @if(request()->routeIs('admin.notifications.*')) active @endif" title="Notifications">
+                <i class="bi bi-bell fs-5"></i>
             </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminProfileDropdown">
-                <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="dropdown-item">Log out</button>
-                    </form>
-                </li>
-            </ul>
+            
+            <!-- Chat Icon -->
+            <a href="{{ route('admin.chatbox') }}" class="text-white text-decoration-none @if(request()->routeIs('admin.chatbox')) active @endif" title="Chat">
+                <i class="bi bi-chat fs-5"></i>
+            </a>
+            
+            <!-- Admin Profile Dropdown -->
+            <div class="admin-user dropdown">
+                <a href="#" class="d-flex align-items-center gap-2 text-white text-decoration-none" id="adminProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="cursor:pointer;">
+                    @if(auth()->user()->profile_picture)
+                        @php
+                            $pp = auth()->user()->profile_picture;
+                            $profileSrc = filter_var($pp, FILTER_VALIDATE_URL) ? $pp : asset('storage/' . $pp);
+                        @endphp
+                        <img src="{{ $profileSrc }}" alt="Profile Picture" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid white;" onerror="this.onerror=null;this.src='{{ asset('images/default-avatar.png') }}';">
+                    @else
+                        <i class="bi bi-person-circle text-white"></i>
+                    @endif
+                    <span class="fw-semibold">{{ auth()->user()->name }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminProfileDropdown">
+                    <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                    <li><a class="dropdown-item" href="{{ route('admin.users.index') }}">Manage Accounts</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="dropdown-item">Log out</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
     <hr class="navbar-admin-hr">
 </div>
 <div class="navbar-admin-links-row">
     <div class="navbar-admin-links">
-        <a href="{{ route('admin.products.index') }}" class="nav-link @if(request()->routeIs('admin.products.*')) active @endif"><i class="bi bi-grid"></i> Product catalog</a>
+        <a href="{{ route('admin.products.index') }}" class="nav-link @if(request()->routeIs('admin.products.*')) active @endif"><i class="bi bi-grid"></i> Product Catalog</a>
         <a href="{{ route('admin.inventory.index') }}" class="nav-link @if(request()->routeIs('admin.inventory.index')) active @endif"><i class="bi bi-box"></i> Inventory</a>
-        <div class="nav-link dropdown d-inline-block @if(request()->routeIs('admin.orders.*') || request()->routeIs('admin.walkInOrders.*')) active @endif" style="padding: 0;">
-            <a href="#" class="dropdown-toggle text-decoration-none text-white" id="salesOrdersDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.5rem 1rem; display: inline-block;">
-                <i class="bi bi-cart"></i> Sales Orders
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="salesOrdersDropdown" style="background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                <li><a class="dropdown-item" href="{{ route('admin.orders.index', ['type' => 'online']) }}" style="padding: 0.75rem 1rem; color: #333; transition: background-color 0.2s;">
-                    <i class="bi bi-globe me-2"></i> Online Orders
-                </a></li>
-                <li><a class="dropdown-item" href="{{ route('admin.orders.index', ['type' => 'walkin']) }}" style="padding: 0.75rem 1rem; color: #333; transition: background-color 0.2s;">
-                    <i class="bi bi-shop me-2"></i> Walk-in Orders
-                </a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ route('admin.returns.index') }}" style="padding: 0.75rem 1rem; color: #333; transition: background-color 0.2s;">
-                    <i class="bi bi-arrow-return-left me-2"></i> Return Management
-                </a></li>
-                <li><a class="dropdown-item" href="{{ route('admin.returns.analytics') }}" style="padding: 0.75rem 1rem; color: #333; transition: background-color 0.2s;">
-                    <i class="bi bi-graph-up me-2"></i> Return Analytics
-                </a></li>
-            </ul>
-        </div>
+        <a href="{{ route('invoices.index') }}" class="nav-link @if(request()->routeIs('invoices.*')) active @endif"><i class="bi bi-receipt"></i> Invoices</a>
+        <a href="{{ route('admin.sales-orders.index') }}" class="nav-link @if(request()->routeIs('admin.sales-orders.*') || request()->routeIs('admin.orders.index')) active @endif"><i class="bi bi-cart"></i> Sales Orders</a>
+        <a href="{{ route('admin.reports.sales') }}" class="nav-link @if(request()->routeIs('admin.reports.sales')) active @endif"><i class="bi bi-graph-up"></i> Sales Report</a>
+        <a href="{{ route('admin.loyalty.index') }}" class="nav-link @if(request()->routeIs('admin.loyalty.*')) active @endif"><i class="bi bi-gift"></i> Loyalty Cards</a>
         <a href="{{ route('admin.customize.index') }}" class="nav-link @if(request()->routeIs('admin.customize.*')) active @endif"><i class="bi bi-palette"></i> Customize</a>
-        <a href="{{ route('admin.chatbox') }}" class="nav-link @if(request()->routeIs('admin.chatbox')) active @endif"><i class="bi bi-chat"></i> Chat</a>
     </div>
 </div>
-@if(!(request()->routeIs('admin.orders.*') || request()->routeIs('admin.walkInOrders.*') || request()->routeIs('admin.products.*') || request()->routeIs('admin.inventory.*') || request()->routeIs('admin.chatbox') || request()->routeIs('admin.customize.*')))
+@if(false)
 <div class="d-flex" id="wrapper">
     <!-- Sidebar -->
     <div class="sidebar-container sidebar-clean d-flex flex-column align-items-center" style="background: #F6FBF4; min-width: 220px; max-width: 260px; height: 100vh; padding-top: 48px; ">
@@ -263,26 +279,17 @@
                     <a href="{{ route('admin.dashboard') }}" class="sidebar-link @if(request()->routeIs('admin.dashboard')) active @endif">Dashboard</a>
                 </li>
                 
-                <li class="nav-item w-100 mb-1">
-                    <a href="{{ route('admin.users.index') }}" class="sidebar-link @if(request()->routeIs('admin.users.*')) active @endif">Manage Accounts</a>
-                </li>
-                <li class="nav-item w-100 mb-1">
-                    <a href="{{ route('admin.reports.sales') }}" class="sidebar-link @if(request()->routeIs('admin.reports.sales')) active @endif">Sales Report</a>
-                </li>
-                <li class="nav-item w-100 mb-1">
-                    <a href="{{ route('admin.notifications.index') }}" class="sidebar-link @if(request()->routeIs('admin.notifications.index')) active @endif">Notifications</a>
-                </li>
+                
+                
                 <li class="nav-item w-100 mb-1">
                     <!-- Inventory Logs temporarily hidden -->
                 </li>
-                <li class="nav-item w-100 mb-1">
-                    <a href="{{ route('admin.loyalty.index') }}" class="sidebar-link @if(request()->routeIs('admin.loyalty.*')) active @endif">Loyalty Cards</a>
-                </li>
+                
             </ul>
         </nav>
     </div>
-    <div id="page-content-wrapper" class="flex-grow-1">
-        <div class="container-fluid py-4" style="padding-left: 4.0vw; padding-right: 4.0vw;">
+    <div id="page-content-wrapper" class="flex-grow-1" @if(request()->routeIs('admin.orders.*') || request()->routeIs('admin.walkInOrders.*') || request()->routeIs('admin.products.*') || request()->routeIs('admin.inventory.*') || request()->routeIs('admin.chatbox') || request()->routeIs('admin.customize.*') || request()->routeIs('invoices.*') || request()->routeIs('admin.notifications.*') || request()->routeIs('admin.sales-orders.*') || request()->routeIs('admin.returns.*')) style="margin-left: 0; width: 100%;" @endif>
+        <div class="container-fluid py-4" style="padding-left: 2.0vw; padding-right: 4.0vw;">
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{ session('success') }}
@@ -304,7 +311,7 @@
     @yield('admin_content')
 </div>
 @endif
-<div class="container-fluid py-4" style="padding-left: 4.0vw; padding-right: 4.0vw;">
+<div class="container-fluid @if(!request()->routeIs('admin.sales-orders.*')) @if(request()->routeIs('invoices.*')) pt-1 pb-4 @else py-4 @endif @endif" style="padding-left: 4.0vw; padding-right: 4.0vw;">
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle me-2"></i>
@@ -367,5 +374,24 @@
 <!-- Auto Capitalization Script -->
 <script src="{{ asset('js/auto-capitalization.js') }}"></script>
 @stack('scripts')
+@yield('scripts')
+
+<!-- Suppress browser extension errors -->
+<script>
+// Suppress console errors from browser extensions
+const originalError = console.error;
+console.error = function(...args) {
+    // Filter out MetaMask and extension errors
+    const message = args[0];
+    if (typeof message === 'string' && (
+        message.includes('chain is not set up') ||
+        message.includes('injected.bundle') ||
+        message.includes('Error initializing provider')
+    )) {
+        return;
+    }
+    originalError.apply(console, args);
+};
+</script>
 </body>
 </html> 

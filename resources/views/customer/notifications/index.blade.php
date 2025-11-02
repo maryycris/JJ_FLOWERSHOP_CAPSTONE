@@ -1,11 +1,11 @@
 @extends('layouts.customer_app')
 
 @section('content')
-<div class="container-fluid py-4" style="min-height: 60vh;">
+<div class="container-fluid py-4 notifications-page" style="min-height: 60vh;">
     <div class="row justify-content-center">
         <div class="col-12 col-lg-10 col-xl-8">
             <div class="card shadow mb-4" style="background: white; border-radius: 8px;">
-        <div class="card-body" style="padding: 2rem;">
+        <div class="card-body notification-card-body" style="padding: 1.5rem;">
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -15,24 +15,24 @@
             
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <h4 class="mb-1"><i class="fas fa-bell me-2"></i>Notifications</h4>
+                    <h4 class="mb-1 notification-title"><i class="fas fa-bell me-2"></i>Notifications</h4>
                 </div>
             </div>
 
             <!-- Tabs for All and Hidden Notifications -->
-            <ul class="nav nav-tabs mb-4" id="notificationTabs" role="tablist">
+            <ul class="nav nav-tabs mb-4 notification-tabs" id="notificationTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-notifications" type="button" role="tab" aria-controls="all-notifications" aria-selected="true" style="color: #000 !important; font-weight: 600 !important;">
+                    <button class="nav-link active notification-tab-btn" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-notifications" type="button" role="tab" aria-controls="all-notifications" aria-selected="true" style="color: #000 !important; font-weight: 600 !important;">
                         <i class="fas fa-list me-1" style="color: #000 !important;"></i>
-                        <span style="color: #000 !important; font-weight: 600 !important;">All Notifications</span>
-                        <span class="badge bg-primary ms-2" id="all-count">{{ $notifications->count() }}</span>
+                        <span class="notification-tab-text" style="color: #000 !important; font-weight: 600 !important;">All Notifications</span>
+                        <span class="badge bg-primary ms-2 notification-badge" id="all-count">{{ $notifications->count() }}</span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="hidden-tab" data-bs-toggle="tab" data-bs-target="#hidden-notifications" type="button" role="tab" aria-controls="hidden-notifications" aria-selected="false" style="color: #000 !important; font-weight: 600 !important;">
+                    <button class="nav-link notification-tab-btn" id="hidden-tab" data-bs-toggle="tab" data-bs-target="#hidden-notifications" type="button" role="tab" aria-controls="hidden-notifications" aria-selected="false" style="color: #000 !important; font-weight: 600 !important;">
                         <i class="fas fa-eye-slash me-1" style="color: #000 !important;"></i>
-                        <span style="color: #000 !important; font-weight: 600 !important;">Hidden Notifications</span>
-                        <span class="badge bg-secondary ms-2" id="hidden-count">0</span>
+                        <span class="notification-tab-text" style="color: #000 !important; font-weight: 600 !important;">Hidden</span>
+                        <span class="badge bg-secondary ms-2 notification-badge" id="hidden-count">0</span>
                     </button>
                 </li>
             </ul>
@@ -81,31 +81,34 @@
                              onclick="handleNotificationClick('{{ $notification->id }}', '{{ $isClickable ? $data['action_url'] : '' }}')"
                              onmouseover="this.style.backgroundColor='#e3f2fd'; this.style.transform='translateX(5px)';"
                              onmouseout="this.style.backgroundColor='{{ $notification->read_at ? '' : '#f8f9fa' }}'; this.style.transform='translateX(0px)';">
-                            <div class="d-flex align-items-start">
-                                <div class="me-3">
-                                    <i class="{{ $icon }} text-{{ $color }}"></i>
+                            <div class="d-flex align-items-start notification-content-wrapper">
+                                <div class="me-2 me-md-3 notification-icon-wrapper">
+                                    <i class="{{ $icon }} text-{{ $color }} notification-icon"></i>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1 {{ $notification->read_at ? 'text-muted' : 'fw-bold' }}" style="font-size: 1.1rem; color: #2c3e50;">
+                                <div class="flex-grow-1 notification-text-wrapper">
+                                    <h6 class="mb-1 notification-title-text {{ $notification->read_at ? 'text-muted' : 'fw-bold' }}" style="font-size: 1.1rem; color: #2c3e50;">
                                         {{ $title }}
                                     </h6>
-                                    <p class="mb-1" style="color: #555; font-size: 0.95rem; line-height: 1.4;">{{ $message }}</p>
-                                    <small class="text-muted" style="font-size: 0.8rem;">{{ $notification->created_at->diffForHumans() }}</small>
+                                    <p class="mb-1 notification-message" style="color: #555; font-size: 0.95rem; line-height: 1.4;">{{ $message }}</p>
+                                    <small class="text-muted notification-time" style="font-size: 0.8rem;">{{ $notification->created_at->diffForHumans() }}</small>
                                 </div>
-                                <div class="d-flex align-items-center">
+                                <div class="d-flex align-items-center flex-column notification-actions-wrapper">
+                                    <div class="d-flex align-items-center mb-1">
                                     @if(!$notification->read_at)
-                                        <div class="badge bg-{{ $color }} rounded-pill me-2" style="font-size: 0.7rem;">New</div>
+                                            <div class="badge bg-{{ $color }} rounded-pill me-2 notification-new-badge" style="font-size: 0.7rem;">New</div>
                                     @endif
                                     @if($isClickable)
-                                        <div class="d-flex align-items-center text-primary me-2" style="font-size: 0.8rem;">
+                                            <div class="d-flex align-items-center text-primary me-2 notification-click-link" style="font-size: 0.8rem;">
                                             <i class="fas fa-external-link-alt me-1"></i>
-                                            <span>Click to view</span>
+                                                <span class="d-none d-sm-inline">Click to view</span>
+                                                <span class="d-inline d-sm-none">View</span>
                                         </div>
                                     @endif
+                                    </div>
                                     
                                     <!-- Three dots menu -->
-                                    <div class="dropdown" style="position: relative;">
-                                        <button class="btn btn-link text-muted p-1" type="button" id="notificationMenu{{ $notification->id }}" data-bs-toggle="dropdown" aria-expanded="false" onclick="event.stopPropagation();">
+                                    <div class="dropdown notification-menu" style="position: relative;">
+                                        <button class="btn btn-link text-muted p-1 notification-menu-btn" type="button" id="notificationMenu{{ $notification->id }}" data-bs-toggle="dropdown" aria-expanded="false" onclick="event.stopPropagation();">
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <ul class="dropdown-menu notification-dropdown-right" aria-labelledby="notificationMenu{{ $notification->id }}">
@@ -200,7 +203,134 @@
     min-width: 180px !important;
 }
 
-/* Ensure the dropdown appears to the right on smaller screens too */
+/* Mobile Responsive Styles for Notifications */
+@media (max-width: 650px) {
+    .notifications-page {
+        padding: 0.5rem 0.25rem 5rem 0.25rem !important; /* extra bottom space for sticky nav */
+    }
+    
+    .notification-card-body {
+        padding: 1rem !important;
+    }
+    /* Constrain card width on small screens */
+    .notifications-page .card { width: 95%; margin-left: auto; margin-right: auto; }
+    
+    .notification-title {
+        font-size: 1.3rem !important;
+    }
+    
+    .notification-tabs {
+        font-size: 0.85rem !important;
+    }
+    
+    .notification-tab-btn {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .notification-tab-text {
+        font-size: 0.85rem !important;
+    }
+    
+    .notification-badge {
+        font-size: 0.65rem !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+    
+    .notification-item {
+        padding: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .notification-content-wrapper {
+        flex-wrap: nowrap !important;
+    }
+    
+    .notification-icon-wrapper {
+        margin-right: 0.5rem !important;
+        flex-shrink: 0;
+    }
+    
+    .notification-icon {
+        font-size: 1rem !important;
+    }
+    
+    .notification-text-wrapper {
+        min-width: 0;
+        flex: 1;
+    }
+    
+    .notification-title-text {
+        font-size: 0.95rem !important;
+        line-height: 1.3 !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .notification-message {
+        font-size: 0.85rem !important;
+        line-height: 1.4 !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .notification-time {
+        font-size: 0.7rem !important;
+    }
+    
+    .notification-actions-wrapper {
+        flex-shrink: 0;
+        align-items: flex-end !important;
+    }
+    
+    .notification-new-badge {
+        font-size: 0.6rem !important;
+        padding: 0.15rem 0.35rem !important;
+    }
+    
+    .notification-click-link {
+        font-size: 0.7rem !important;
+    }
+    
+    .notification-click-link span {
+        font-size: 0.7rem !important;
+    }
+    
+    .notification-menu-btn {
+        padding: 0.25rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    /* Ensure the dropdown appears correctly on mobile */
+    .notification-dropdown-right {
+        transform: translateX(0) !important;
+        right: auto !important;
+        left: 0 !important;
+        margin-left: 0 !important;
+        min-width: 160px !important;
+    }
+    
+    /* Remove hover transform on mobile */
+    .notification-item:hover {
+        transform: none !important;
+    }
+    
+    /* Empty state adjustments */
+    .notification-item + div.text-center {
+        padding: 2rem 1rem !important;
+    }
+    
+    .notification-item + div.text-center i {
+        font-size: 2rem !important;
+    }
+    
+    .notification-item + div.text-center h5 {
+        font-size: 1rem !important;
+    }
+    
+    .notification-item + div.text-center p {
+        font-size: 0.85rem !important;
+    }
+}
+
 @media (max-width: 768px) {
     .notification-dropdown-right {
         transform: translateX(0) !important;

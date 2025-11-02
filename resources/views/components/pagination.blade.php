@@ -66,9 +66,9 @@
 
 <style>
 .pagination-custom .page-link {
-    color: #385E42;
+    color: #7bb47b;
     background-color: #fff;
-    border: 1px solid #dee2e6;
+    border: 1px solid #e6f4ea;
     padding: 0.5rem 0.75rem;
     margin: 0 2px;
     border-radius: 6px;
@@ -78,17 +78,17 @@
 
 .pagination-custom .page-link:hover {
     color: #fff;
-    background-color: #385E42;
-    border-color: #385E42;
+    background-color: #7bb47b;
+    border-color: #7bb47b;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(56, 94, 66, 0.3);
+    box-shadow: 0 2px 4px rgba(123, 180, 123, 0.3);
 }
 
 .pagination-custom .page-item.active .page-link {
     color: #fff;
-    background-color: #385E42;
-    border-color: #385E42;
-    box-shadow: 0 2px 8px rgba(56, 94, 66, 0.4);
+    background-color: #7bb47b;
+    border-color: #7bb47b;
+    box-shadow: 0 2px 8px rgba(123, 180, 123, 0.4);
 }
 
 .pagination-custom .page-item.disabled .page-link {

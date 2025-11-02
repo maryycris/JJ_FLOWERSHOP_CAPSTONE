@@ -42,14 +42,14 @@ class InventoryChangeNotification extends Notification
     {
         return [
             'type' => 'inventory_change',
-            'title' => 'Inventory Changes Pending Review',
+            'title' => 'Inventory Changes Request',
             'message' => "A clerk has submitted {$this->changesCount} inventory changes for your review.",
-            'data' => [
-                'changes_count' => $this->changesCount,
-                'submitted_by' => $this->submittedBy,
-                'submitted_at' => now()->toISOString(),
-                'action_url' => '/admin/inventory/pending'
-            ]
+            'changes_count' => $this->changesCount,
+            'submitted_by' => $this->submittedBy,
+            'submitted_at' => now()->toISOString(),
+            'action_url' => route('admin.inventory.index') . '#inventory-logs',
+            'icon' => 'fas fa-boxes',
+            'color' => 'warning'
         ];
     }
 }

@@ -140,23 +140,19 @@ class DeliveryController extends Controller
     public function markDelivered($deliveryId)
     {
         $delivery = Delivery::findOrFail($deliveryId);
-        $delivery->status = 'delivered';
-        $delivery->save();
-
         $order = $delivery->order;
-        $order->status = 'completed';
-        $order->order_status = 'completed'; // Update both status fields
-        $order->completed_at = now();
-        $order->save();
 
-        // Trigger sales report update
+        // Use OrderStatusService to complete the order (this will send notifications)
         try {
             $orderStatusService = new \App\Services\OrderStatusService();
-            $orderStatusService->updateSalesReport($order);
+            if ($orderStatusService->completeOrder($order, auth()->id())) {
+                return redirect()->route('deliveries.index')->with('success', 'Order marked as completed!');
+            } else {
+                return redirect()->route('deliveries.index')->with('error', 'Failed to complete order.');
+            }
         } catch (\Exception $e) {
-            \Log::error("Sales report update failed for delivery {$deliveryId}: " . $e->getMessage());
+            \Log::error("Failed to complete order for delivery {$deliveryId}: " . $e->getMessage());
+            return redirect()->route('deliveries.index')->with('error', 'Error completing order: ' . $e->getMessage());
         }
-
-        return redirect()->route('deliveries.index')->with('success', 'Order marked as completed!');
     }
 } 

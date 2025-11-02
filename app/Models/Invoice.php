@@ -17,7 +17,8 @@ class Invoice extends Model
         'total_amount',
         'status',
         'payment_type',
-        'notes'
+        'notes',
+        'paymongo_checkout_session_id'
     ];
 
     protected $casts = [
@@ -59,5 +60,61 @@ class Invoice extends Model
     public function markAsReady(): void
     {
         $this->update(['status' => 'ready']);
+    }
+
+    /**
+     * Get formatted subtotal
+     */
+    public function getFormattedSubtotalAttribute(): string
+    {
+        return '₱' . number_format($this->subtotal, 2);
+    }
+
+    /**
+     * Get formatted shipping fee
+     */
+    public function getFormattedShippingFeeAttribute(): string
+    {
+        return '₱' . number_format($this->shipping_fee, 2);
+    }
+
+    /**
+     * Get formatted total amount
+     */
+    public function getFormattedTotalAmountAttribute(): string
+    {
+        return '₱' . number_format($this->total_amount, 2);
+    }
+
+    /**
+     * Get total paid amount from payments
+     */
+    public function getTotalPaidAttribute(): float
+    {
+        return $this->payments()->where('status', 'completed')->sum('amount');
+    }
+
+    /**
+     * Check if invoice is fully paid
+     */
+    public function isFullyPaid(): bool
+    {
+        return $this->getTotalPaidAttribute() >= $this->total_amount;
+    }
+
+    /**
+     * Scope: Get paid invoices
+     */
+    public function scopePaid($query)
+    {
+        return $query->where('status', 'paid');
+    }
+
+    /**
+     * Scope: Get pending invoices
+     */
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
     }
 }

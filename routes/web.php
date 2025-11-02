@@ -134,22 +134,32 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\AdminMiddleware::class])-
     // Admin Walk-in Order Flow
     Route::get('orders/{order}/walkin/quotation', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinQuotation'])->name('orders.walkin.quotation');
     Route::get('orders/{order}/walkin/invoice', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinCreateInvoice'])->name('orders.walkin.invoice');
+    // Alias route so URL can read 'sales-order' instead of 'invoice'
+    Route::get('orders/{order}/walkin/sales-order', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinCreateInvoice'])->name('orders.walkin.sales_order');
+    Route::post('orders/{order}/walkin/update-invoice', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'updateWalkinInvoice'])->name('orders.walkin.update_invoice');
     Route::get('orders/{order}/walkin/validate', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinValidate'])->name('orders.walkin.validate');
     Route::post('orders/{order}/walkin/validate/confirm', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinValidateConfirm'])->name('orders.walkin.validate.confirm');
     Route::get('orders/{order}/walkin/done', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinDone'])->name('orders.walkin.done');
+    
+    // Admin Sales Orders (unified tabbed interface)
+    Route::get('sales-orders', [\App\Http\Controllers\Admin\SalesOrdersController::class, 'index'])->name('sales-orders.index');
+    Route::get('sales-orders/{order}', [\App\Http\Controllers\Admin\SalesOrdersController::class, 'show'])->name('sales-orders.show');
+    Route::post('sales-orders/{order}/confirm', [\App\Http\Controllers\Admin\SalesOrdersController::class, 'confirm'])->name('sales-orders.confirm');
     
     // Admin Orders Resource (must be after specific routes)
     Route::resource('orders', OrderController::class)->except(['create', 'store']);
     Route::post('orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve');
     Route::post('orders/{order}/validate', [OrderController::class, 'validateOrder'])->name('orders.validate');
     Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+    // Create detailed invoice from Sales Order and redirect to invoice detail
+    Route::post('orders/{order}/invoice/create', [\App\Http\Controllers\Admin\InvoiceController::class, 'createFromOrder'])->name('orders.invoice.create');
     Route::get('orders/{order}/invoice/view', [OrderController::class, 'viewInvoice'])->name('orders.invoice.view');
     Route::get('orders/{order}/invoice/download', [OrderController::class, 'downloadInvoice'])->name('orders.invoice.download');
     Route::get('/walk-in-orders', [OrderController::class, 'walkInIndex'])->name('walkInOrders.index');
     Route::resource('deliveries', DeliveryController::class);
     Route::resource('users', UserController::class);
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead')->where('notification', '[0-9]+');
     
     // Inventory Logs
     // Inventory Logs routes removed
@@ -275,12 +285,14 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\AdminMiddleware::class])-
     // Admin Customize (bouquet components)
     Route::get('/customize', [\App\Http\Controllers\Admin\CustomizeController::class, 'index'])->name('customize.index');
     Route::post('/customize', [\App\Http\Controllers\Admin\CustomizeController::class, 'store'])->name('customize.store');
+    Route::post('/customize/update-assembling-fee', [\App\Http\Controllers\Admin\CustomizeController::class, 'updateAssemblingFee'])->name('customize.update-assembling-fee');
     Route::delete('/customize/bulk-delete', [\App\Http\Controllers\Admin\CustomizeController::class, 'bulkDelete'])->name('customize.bulk-delete');
     Route::put('/customize/{id}', [\App\Http\Controllers\Admin\CustomizeController::class, 'update'])->name('customize.update');
     Route::delete('/customize/{id}', [\App\Http\Controllers\Admin\CustomizeController::class, 'destroy'])->name('customize.destroy');
     Route::get('/inventory/pending-count', [\App\Http\Controllers\Admin\AdminInventoryController::class, 'getPendingCount'])->name('inventory.pending-count');
     
     Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+    Route::post('/reports/generate-detailed-sales', [ReportController::class, 'generateDetailedSales'])->name('reports.generateDetailedSales');
     Route::get('/chatbox', [AdminController::class, 'chatbox'])->name('chatbox');
     Route::post('/chatbox/send', [AdminController::class, 'sendMessage'])->name('chatbox.send');
     Route::get('orders/{order}/status-history', [OrderController::class, 'statusHistory'])->name('orders.statusHistory');
@@ -325,6 +337,15 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\AdminMiddleware::class])-
     Route::get('returns/analytics/export', [\App\Http\Controllers\Admin\ReturnManagementController::class, 'exportAnalytics'])->name('returns.analytics.export');
 });
 
+// Invoice and Payment routes (accessible to authenticated users)
+Route::middleware(['auth'])->group(function () {
+    Route::get('invoices', [\App\Http\Controllers\Admin\InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('invoices/{invoice}', [\App\Http\Controllers\Admin\InvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('invoices/{invoice}/payment', [\App\Http\Controllers\Admin\InvoiceController::class, 'paymentWizard'])->name('invoices.payment');
+    Route::post('invoices/{invoice}/payment', [\App\Http\Controllers\Admin\InvoiceController::class, 'processPayment'])->name('invoices.payment.process');
+    Route::get('invoices/{invoice}/payment/callback', [\App\Http\Controllers\Admin\InvoiceController::class, 'paymentCallback'])->name('invoices.payment.callback');
+});
+
 // Clerk Routes
 Route::middleware(['web', 'auth', \App\Http\Middleware\ClerkMiddleware::class])->prefix('clerk')->name('clerk.')->group(function () {
     Route::get('/dashboard', [ClerkController::class, 'dashboard'])->name('dashboard');
@@ -350,20 +371,46 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\ClerkMiddleware::class])-
     Route::delete('/inventory/{product}', [\App\Http\Controllers\ProductController::class, 'destroyInventory'])->name('inventory.destroy');
     Route::post('/inventory/submit-changes', [ClerkController::class, 'submitInventoryChanges'])->name('inventory.submit-changes');
     Route::get('/orders', [ClerkController::class, 'orders'])->name('orders.index');
-    // Clerk Walk-in Delivery page
+    // Clerk Walk-in Order Creation (same as admin)
+    Route::get('orders/create', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'createWalkinOrder'])->name('orders.create');
+    // Delivery-only walk-in order (mirrors customer checkout)
     Route::get('orders/walkin/delivery', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'createWalkinDelivery'])->name('orders.walkin.delivery');
-    // Explicit store endpoint for walk-in order flow (mirrors admin route)
     Route::post('orders/store', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'storeWalkinOrder'])->name('orders.store');
     
-    Route::resource('orders', OrderController::class)->except(['index']);
+    // Clerk Walk-in Order Flow (same as admin)
+    Route::get('orders/{order}/walkin/quotation', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinQuotation'])->name('orders.walkin.quotation');
+    Route::get('orders/{order}/walkin/invoice', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinCreateInvoice'])->name('orders.walkin.invoice');
+    Route::get('orders/{order}/walkin/sales-order', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinCreateInvoice'])->name('orders.walkin.sales_order');
+    Route::post('orders/{order}/walkin/update-invoice', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'updateWalkinInvoice'])->name('orders.walkin.update_invoice');
+    Route::get('orders/{order}/walkin/validate', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinValidate'])->name('orders.walkin.validate');
+    Route::post('orders/{order}/walkin/validate/confirm', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinValidateConfirm'])->name('orders.walkin.validate.confirm');
+    Route::get('orders/{order}/walkin/done', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinDone'])->name('orders.walkin.done');
+    
+    // Clerk Sales Orders (mirror admin routes to show same screen after confirm)
+    Route::get('sales-orders', [\App\Http\Controllers\Admin\SalesOrdersController::class, 'index'])->name('sales-orders.index');
+    Route::get('sales-orders/{order}', [\App\Http\Controllers\Admin\SalesOrdersController::class, 'show'])->name('sales-orders.show');
+    Route::post('sales-orders/{order}/confirm', [\App\Http\Controllers\Admin\SalesOrdersController::class, 'confirm'])->name('sales-orders.confirm');
+
+    Route::resource('orders', OrderController::class)->except(['index','create']);
     Route::post('orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve');
     Route::post('orders/{order}/validate', [OrderController::class, 'validateOrder'])->name('orders.validate');
     Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
     Route::get('orders/{order}/invoice/view', [OrderController::class, 'viewInvoice'])->name('orders.invoice.view');
     Route::get('orders/{order}/invoice/download', [OrderController::class, 'downloadInvoice'])->name('orders.invoice.download');
+    
+    // Clerk Invoice Management (same as admin)
+    Route::post('orders/{order}/invoice/create', [\App\Http\Controllers\Clerk\InvoiceController::class, 'createFromOrder'])->name('orders.invoice.create');
+    
+    // Clerk Invoice Routes
+    Route::get('invoices', [\App\Http\Controllers\Clerk\InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('invoices/{invoice}', [\App\Http\Controllers\Clerk\InvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('invoices/{invoice}/payment', [\App\Http\Controllers\Clerk\InvoiceController::class, 'paymentWizard'])->name('invoices.payment');
+    Route::post('invoices/{invoice}/payment', [\App\Http\Controllers\Clerk\InvoiceController::class, 'processPayment'])->name('invoices.payment.process');
+    Route::get('invoices/{invoice}/payment/callback', [\App\Http\Controllers\Clerk\InvoiceController::class, 'paymentCallback'])->name('invoices.payment.callback');
     Route::post('/orders/{order}/validate-recipient', [OrderController::class, 'validateRecipient'])->name('orders.validate-recipient');
     Route::resource('users', UserController::class);
     Route::get('/notifications', [ClerkController::class, 'notifications'])->name('notifications.index');
+    Route::post('/notifications/{notification}/mark-as-read', [ClerkController::class, 'markNotificationAsRead'])->name('notifications.markAsRead');
     Route::delete('/notifications/delete-all', [ClerkController::class, 'deleteAllNotifications'])->name('notifications.deleteAll');
     Route::get('/profile', [ClerkController::class, 'editProfile'])->name('profile.edit');
     Route::get('/sales', [ClerkController::class, 'sales'])->name('sales.index');
@@ -397,8 +444,8 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\ClerkMiddleware::class])-
 
     // Invoice Management
     Route::get('invoices', [\App\Http\Controllers\Clerk\InvoiceController::class, 'index'])->name('invoices.index');
-    Route::get('invoices/{order}', [\App\Http\Controllers\Clerk\InvoiceController::class, 'show'])->name('invoices.show');
-    Route::get('invoices/{order}/download', [\App\Http\Controllers\Clerk\InvoiceController::class, 'download'])->name('invoices.download');
+    Route::get('invoices/{invoice}', [\App\Http\Controllers\Clerk\InvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('invoices/{invoice}/download', [\App\Http\Controllers\Clerk\InvoiceController::class, 'download'])->name('invoices.download');
 
     // Clerk Orders Flow routes
     Route::prefix('orders')->name('orders.')->group(function() {
@@ -466,6 +513,11 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\CustomerMiddleware::class
     Route::get('/products/bouquet-customize', [\App\Http\Controllers\Customer\CustomizeController::class, 'index'])->name('products.bouquet-customize');
     Route::post('/products/bouquet-customize', [\App\Http\Controllers\Customer\CustomizeController::class, 'store'])->name('products.bouquet-customize.store');
     Route::post('/products/bouquet-customize/add-to-cart', [\App\Http\Controllers\Customer\CustomizeController::class, 'addToCart'])->name('products.bouquet-customize.add-to-cart');
+    Route::post('/products/bouquet-customize/buy-now', [\App\Http\Controllers\Customer\CustomizeController::class, 'buyNow'])->name('products.bouquet-customize.buy-now');
+    Route::get('/loyalty', [\App\Http\Controllers\Customer\LoyaltyCardController::class, 'index'])->name('loyalty.index');
+    Route::get('/loyalty/mechanics', [\App\Http\Controllers\Customer\LoyaltyCardController::class, 'mechanics'])->name('loyalty.mechanics');
+    Route::get('/loyalty/status', [\App\Http\Controllers\Customer\LoyaltyCardController::class, 'status'])->name('loyalty.status');
+    Route::get('/loyalty/can-redeem', [\App\Http\Controllers\Customer\LoyaltyCardController::class, 'canRedeem'])->name('loyalty.can-redeem');
     Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/products/{product}/reviews', [ProductController::class, 'reviews'])->name('products.reviews');
     Route::get('/cart', [CartController::class, 'index'])->name('customer.cart.index');
@@ -500,8 +552,7 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\CustomerMiddleware::class
     Route::post('/notifications/{id}/unhide', [CustomerNotificationController::class, 'unhide'])->name('notifications.unhide');
     Route::get('/notifications/hidden', [CustomerNotificationController::class, 'getHidden'])->name('notifications.hidden');
 
-    // Store Credit
-    Route::get('/store-credit/history', [CustomerController::class, 'storeCreditHistory'])->name('store-credit.history');
+    // Store Credit (removed)
 
     // Order Reviews
     Route::post('/orders/submit-review', [OrderController::class, 'submitReview'])->name('orders.submitReview');

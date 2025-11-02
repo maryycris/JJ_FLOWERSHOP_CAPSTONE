@@ -1,9 +1,30 @@
 @extends('layouts.admin_app')
 @section('content')
-<div class="container-fluid py-0">
+<div class="container-fluid py-0" style="margin-top: -2rem; padding-top: 0.1rem;">
     <div class="row justify-content-center">
         <div class="col-12 col-xl-10">
             <div class="bg-white rounded-3 p-3" style="box-shadow:none;">
+                <!-- Assembling Fee Section -->
+                <div class="card mb-3 assembling-fee-card" style="border: 2px solid #e6f4ea; background: #f8f9fa; cursor: pointer; transition: all 0.3s ease;" data-bs-toggle="modal" data-bs-target="#assemblingFeeModal">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1" style="color: #385E42; font-weight: 600;">
+                                    <i class="bi bi-currency-exchange me-2"></i>₱ Assembling Fee Setting
+                                </h6>
+                                <small class="text-muted">Set the assembling fee for custom bouquets</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="text-end">
+                                    <label class="form-label mb-0" style="font-size: 0.85rem; font-weight: 600;">Current Fee:</label>
+                                    <div class="fw-bold" style="color: #28a745; font-size: 1.1rem;">₱{{ number_format($assemblingFee ?? 150, 2) }}</div>
+                                </div>
+                                <i class="bi bi-pencil-square" style="color: #28a745; font-size: 1.2rem;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <ul class="nav nav-tabs" id="customizeTabs" role="tablist">
                     @foreach($categories as $i => $cat)
                     <li class="nav-item" role="presentation">
@@ -40,7 +61,7 @@
                                     </div>
                                     <div class="card-body p-2">
                                         <div class="fw-semibold">{{ $item->name }}</div>
-                                        <div class="text-muted small">₱{{ number_format($item->price ?? 0,2) }}</div>
+                                        <div class="text-muted small">₱{{ number_format($item->computed_price ?? ($item->inventoryItem->price ?? ($item->price ?? 0)), 2) }}</div>
                                     </div>
                                     <div class="card-footer d-flex justify-content-center gap-2 p-2">
                                         <button class="btn btn-sm action-btn edit-btn" data-bs-toggle="modal" data-bs-target="#editModal{{ $item->id }}" title="Edit"><i class="bi bi-pencil-square"></i></button>
@@ -80,7 +101,7 @@
                                     </div>
                                     <div class="mb-2">
                                         <label class="form-label">Price</label>
-                                        <input type="number" step="0.01" name="price" id="itemPriceEdit{{ $item->id }}" class="form-control" readonly value="{{ $item->price }}">
+                                        <input type="number" step="0.01" name="price" id="itemPriceEdit{{ $item->id }}" class="form-control" readonly value="{{ $item->inventoryItem ? $item->inventoryItem->price : ($item->price ?? 0) }}">
                                         <small class="text-muted">Price will be auto-filled from inventory</small>
                                     </div>
                                     <div class="mb-2"><label class="form-label">Image</label><input type="file" name="image" class="form-control"></div>
@@ -97,6 +118,32 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Assembling Fee Modal -->
+<div class="modal fade" id="assemblingFeeModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="POST" action="{{ route('admin.customize.update-assembling-fee') }}" onsubmit="handleAssemblingFeeForm(event)">
+      @csrf
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-currency-exchange me-2"></i>₱ Update Assembling Fee
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Assembling Fee (₱)</label>
+          <input type="number" step="0.01" name="assembling_fee" id="assemblingFeeInput" class="form-control" value="{{ $assemblingFee ?? 150 }}" min="0" required>
+          <small class="text-muted">Enter the amount to charge for assembling custom bouquets</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        
+        <button type="submit" class="btn btn-success">Save Changes</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- Add Modal (shared) -->
@@ -142,6 +189,14 @@
 
 @push('styles')
 <style>
+/* Assembling Fee Card Hover Effect */
+.assembling-fee-card:hover {
+    background-color: #e6f4ea !important;
+    border-color: #28a745 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
 /* Add Item Modal scrollbar styling */
 #addModal .modal-body::-webkit-scrollbar {
     width: 6px;
@@ -460,12 +515,60 @@ document.getElementById('addModal')?.addEventListener('show.bs.modal', function 
     }
 });
 
+// AJAX function to handle assembling fee form submission
+async function handleAssemblingFeeForm(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('assemblingFeeModal'));
+            modal.hide();
+            
+            // Show success message
+            showAlert('success', result.message);
+            
+            // Reload the page to show updated fee
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showAlert('error', result.message || 'An error occurred');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'An error occurred while updating the assembling fee');
+    }
+}
+
 // AJAX function to handle add form submission
 async function handleAddForm(event) {
     event.preventDefault();
     
     const form = event.target;
     const formData = new FormData(form);
+    
+    // Ensure the hidden name field has the value from visible input
+    const itemSearchInput = document.getElementById('itemSearchInput');
+    const selectedItemName = document.getElementById('selectedItemName');
+    if (itemSearchInput && selectedItemName && itemSearchInput.value.trim() && !selectedItemName.value) {
+        selectedItemName.value = itemSearchInput.value.trim();
+        formData.set('name', itemSearchInput.value.trim());
+    }
     
     try {
         const response = await fetch(form.action, {
@@ -639,15 +742,26 @@ async function loadInventoryItems() {
         const response = await fetch(`/admin/api/inventory/${category}`);
         const items = await response.json();
         
-        // Set up search functionality
-        searchInput.addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            const filteredItems = items.filter(item => 
-                item.name.toLowerCase().includes(query)
-            );
-            
-            displayItems(filteredItems);
+        // Set up search functionality - only search on Enter key press
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value.toLowerCase();
+                const filteredItems = items.filter(item => 
+                    item.name.toLowerCase().includes(query)
+                );
+                
+                displayItems(filteredItems);
+            }
         });
+        // Remove live typing search - only search on Enter key press
+        // searchInput.addEventListener('input', function() {
+        //     const query = this.value.toLowerCase();
+        //     const filteredItems = items.filter(item => 
+        //         item.name.toLowerCase().includes(query)
+        //     );
+        //     
+        //     displayItems(filteredItems);
+        // });
         
         // Show all items initially
         displayItems(items);
@@ -702,6 +816,30 @@ function selectItem(item) {
     dropdownOptions.style.display = 'none';
 }
 
+// Sync visible input with hidden field when user types manually
+document.addEventListener('DOMContentLoaded', function() {
+    const itemSearchInput = document.getElementById('itemSearchInput');
+    const selectedItemName = document.getElementById('selectedItemName');
+    
+    if (itemSearchInput && selectedItemName) {
+        // When user types in the search input, sync it to the hidden field
+        itemSearchInput.addEventListener('input', function() {
+            // Only sync if no item was selected from dropdown (no inventory_item_id)
+            const selectedItemId = document.getElementById('selectedItemId');
+            if (!selectedItemId || !selectedItemId.value) {
+                selectedItemName.value = itemSearchInput.value.trim();
+            }
+        });
+        
+        // On blur, ensure the hidden field has the value
+        itemSearchInput.addEventListener('blur', function() {
+            if (itemSearchInput.value.trim()) {
+                selectedItemName.value = itemSearchInput.value.trim();
+            }
+        });
+    }
+});
+
 // Close dropdown when clicking outside
 document.addEventListener('click', function(e) {
     const searchableDropdown = document.querySelector('.searchable-dropdown');
@@ -737,15 +875,26 @@ async function loadInventoryItemsEdit(itemId) {
         const response = await fetch(`/admin/api/inventory/${category}`);
         const items = await response.json();
         
-        // Set up search functionality
-        searchInput.addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            const filteredItems = items.filter(item => 
-                item.name.toLowerCase().includes(query)
-            );
-            
-            displayItemsEdit(filteredItems, itemId);
+        // Set up search functionality - only search on Enter key press
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value.toLowerCase();
+                const filteredItems = items.filter(item => 
+                    item.name.toLowerCase().includes(query)
+                );
+                
+                displayItemsEdit(filteredItems, itemId);
+            }
         });
+        // Remove live typing search - only search on Enter key press
+        // searchInput.addEventListener('input', function() {
+        //     const query = this.value.toLowerCase();
+        //     const filteredItems = items.filter(item => 
+        //         item.name.toLowerCase().includes(query)
+        //     );
+        //     
+        //     displayItemsEdit(filteredItems, itemId);
+        // });
         
         // Show all items initially
         displayItemsEdit(items, itemId);

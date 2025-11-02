@@ -22,9 +22,7 @@
             <a href="{{ route('customer.orders.index') }}" class="sidebar-link d-flex align-items-center @if(request()->routeIs('customer.orders.index')) active-link @endif" style="color: #222; font-weight: @if(request()->routeIs('customer.orders.index')) 600 @else 400 @endif;">
                 <i class="fas fa-shopping-bag me-2" style="color: #222;"></i> My Purchase
             </a>
-            <a href="{{ route('customer.store-credit.history') }}" class="sidebar-link d-flex align-items-center @if(request()->routeIs('customer.store-credit.history')) active-link @endif" style="color: #222; font-weight: @if(request()->routeIs('customer.store-credit.history')) 600 @else 400 @endif;">
-                <i class="fas fa-wallet me-2" style="color: #222;"></i> Store Credit
-            </a>
+            {{-- Store Credit link removed --}}
             <a href="{{ route('customer.trackOrders.page') }}" class="sidebar-link d-flex align-items-center @if(request()->routeIs('customer.trackOrders.page')) active-link @endif" style="color: #222; font-weight: @if(request()->routeIs('customer.trackOrders.page')) 600 @else 400 @endif;">
                 <i class="fas fa-map-marked-alt me-2" style="color: #222;"></i> Track Order
             </a>

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use App\Notifications\OrderApprovedNotification;
 use App\Notifications\OrderDeliveredNotification;
 use App\Notifications\OrderCompletedNotification;
+use App\Notifications\OrderCompletedAdminNotification;
 
 class OrderStatusService
 {
@@ -88,6 +89,87 @@ class OrderStatusService
     }
 
     /**
+     * Called when a driver marks the delivery as completed (online orders).
+     * Ensures order and delivery statuses are updated and inventory is deducted.
+     */
+    public static function handleDeliveryCompleted(Order $order): void
+    {
+        try {
+            DB::beginTransaction();
+
+            // Update order and delivery statuses if not already completed/delivered
+            $order->update([
+                'order_status' => 'completed',
+                'status' => 'completed',
+                'completed_at' => $order->completed_at ?: now(),
+            ]);
+
+            if ($order->delivery) {
+                $order->delivery->update(['status' => 'delivered']);
+            }
+
+            // Create status history entry (idempotent within 1 minute)
+            $recentHistory = $order->statusHistories()
+                ->where('status', 'completed')
+                ->where('created_at', '>=', now()->subMinute())
+                ->first();
+            if (!$recentHistory) {
+                $order->statusHistories()->create([
+                    'status' => 'completed',
+                    'message' => 'Order completed by driver',
+                ]);
+            }
+
+            // Notify customer about order completion
+            try {
+                $order->user->notify(new OrderCompletedNotification($order->fresh()));
+            } catch (\Throwable $e) {
+                Log::error("Failed to send order completion notification for order {$order->id}: {$e->getMessage()}");
+            }
+
+            // Notify admin about order completion
+            try {
+                $adminUsers = \App\Models\User::where('role', 'admin')->get();
+                foreach ($adminUsers as $admin) {
+                    $admin->notify(new \App\Notifications\OrderCompletedAdminNotification($order->fresh()));
+                }
+            } catch (\Throwable $e) {
+                Log::error("Failed to send order completion admin notification for order {$order->id}: {$e->getMessage()}");
+            }
+
+            // Notify clerk about order completion
+            try {
+                $clerkUsers = \App\Models\User::where('role', 'clerk')->get();
+                foreach ($clerkUsers as $clerk) {
+                    $clerk->notify(new \App\Notifications\OrderCompletedClerkNotification($order->fresh()));
+                }
+            } catch (\Throwable $e) {
+                Log::error("Failed to send order completion clerk notification for order {$order->id}: {$e->getMessage()}");
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("Failed to finalize order on driver completion {$order->id}: {$e->getMessage()}");
+        }
+
+        // Deduct inventory based on product compositions (actual consumption)
+        try {
+            $inventory = new \App\Services\InventoryService();
+            $inventory->updateInventoryOnReceived($order->fresh('products'));
+        } catch (\Throwable $e) {
+            Log::error("Inventory deduction on driver completion failed for order {$order->id}: {$e->getMessage()}");
+        }
+
+        // Update sales report in the background
+        try {
+            (new self())->updateSalesReport($order);
+        } catch (\Throwable $e) {
+            Log::error("Sales report update on driver completion failed for order {$order->id}: {$e->getMessage()}");
+        }
+    }
+
+    /**
      * Assign driver and update order to assigned status (pending acceptance)
      */
     public function assignDriver(Order $order, $driverId, $assignedBy)
@@ -125,6 +207,16 @@ class OrderStatusService
             DB::commit();
             
             Log::info("Order {$order->id} assigned to driver {$driverId} by user {$assignedBy} - pending acceptance");
+            
+            // Notify driver about the assignment (applies to online and walk-in)
+            try {
+                $driverUser = \App\Models\User::find($driverId);
+                if ($driverUser) {
+                    $driverUser->notify(new \App\Notifications\DriverAssignedOrderNotification($order));
+                }
+            } catch (\Throwable $e) {
+                Log::error("Failed to notify driver {$driverId} for order {$order->id}: {$e->getMessage()}");
+            }
             
             return true;
         } catch (\Exception $e) {
@@ -275,6 +367,26 @@ class OrderStatusService
                 Log::error("Failed to send order completion notification for order {$order->id}: {$e->getMessage()}");
             }
 
+            // Notify admin about order completion
+            try {
+                $adminUsers = \App\Models\User::where('role', 'admin')->get();
+                foreach ($adminUsers as $admin) {
+                    $admin->notify(new \App\Notifications\OrderCompletedAdminNotification($order));
+                }
+            } catch (\Throwable $e) {
+                Log::error("Failed to send order completion admin notification for order {$order->id}: {$e->getMessage()}");
+            }
+
+            // Notify clerk about order completion
+            try {
+                $clerkUsers = \App\Models\User::where('role', 'clerk')->get();
+                foreach ($clerkUsers as $clerk) {
+                    $clerk->notify(new \App\Notifications\OrderCompletedClerkNotification($order));
+                }
+            } catch (\Throwable $e) {
+                Log::error("Failed to send order completion clerk notification for order {$order->id}: {$e->getMessage()}");
+            }
+
             DB::commit();
 
             // Trigger inventory decrease when order is completed/received
@@ -364,8 +476,20 @@ class OrderStatusService
      */
     public function getOrderCounts()
     {
+        // Count pending orders, excluding walk-in orders that are still in quotation stage
+        // (walk-in orders in quotation are being created, not waiting for approval)
+        $pendingCount = Order::where('order_status', 'pending')
+            ->where(function($query) {
+                $query->where('type', '!=', 'walk-in')
+                    ->orWhere(function($q) {
+                        $q->where('type', 'walk-in')
+                          ->whereNotIn('status', ['quotation', 'draft']);
+                    });
+            })
+            ->count();
+        
         return [
-            'pending' => Order::where('order_status', 'pending')->count(),
+            'pending' => $pendingCount,
             'approved' => Order::where('order_status', 'approved')->count(),
             'on_delivery' => Order::where('order_status', 'on_delivery')->count(),
             'completed_today' => Order::where('order_status', 'completed')

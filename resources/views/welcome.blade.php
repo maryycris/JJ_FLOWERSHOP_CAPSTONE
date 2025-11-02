@@ -114,6 +114,56 @@
             color: #fff;
             opacity: 1;
         }
+        /* Navbar Responsive */
+        @media (max-width: 991px) {
+            .navbar-nav {
+                gap: 24px !important;
+            }
+            .navbar-nav .nav-link {
+                font-size: 1rem !important;
+            }
+            .navbar-icons i {
+                font-size: 1.2rem;
+                margin-left: 15px;
+            }
+        }
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.3rem;
+            }
+            .navbar-brand .logo {
+                width: 40px;
+                height: 40px;
+                margin-right: 8px;
+            }
+            .navbar-brand span {
+                font-size: 0.8rem;
+            }
+            .navbar-nav {
+                gap: 16px !important;
+            }
+            .navbar-nav .nav-link {
+                font-size: 0.9rem !important;
+            }
+            .navbar-icons i {
+                font-size: 1.1rem;
+                margin-left: 12px;
+            }
+        }
+        @media (max-width: 576px) {
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+            .navbar-brand .logo {
+                width: 35px;
+                height: 35px;
+                margin-right: 6px;
+            }
+            .navbar-brand span {
+                font-size: 0.7rem;
+                margin-left: 4px;
+            }
+        }
         .main-section {
             min-height: 80vh;
             display: flex;
@@ -141,6 +191,28 @@
         .hero-carousel { position: absolute; inset: 0; z-index: 0; }
         .hero-carousel .carousel-item img { width: 100%; height: 100%; object-fit: cover; }
         .hero-content { position: relative; z-index: 1; }
+        /* Hero Responsive */
+        @media (max-width: 991px) {
+            .hero-row {
+                min-height: 500px;
+                height: 70vh;
+            }
+            .hero-carousel .carousel-item img {
+                object-position: center;
+            }
+        }
+        @media (max-width: 768px) {
+            .hero-row {
+                min-height: 450px;
+                height: 60vh;
+            }
+        }
+        @media (max-width: 576px) {
+            .hero-row {
+                min-height: 400px;
+                height: 55vh;
+            }
+        }
         /* Section background images */
         #about, #products, #reviews {
             background-repeat: no-repeat;
@@ -150,18 +222,85 @@
             padding-bottom: 24px;
         }
         #about { background-image: none; position: relative; overflow: hidden; }
-        #about .about-bg { position: absolute; top: -120px; bottom: -120px; left: 0; right: 0; background-image: url('/images/aboutusbg.jpg'); background-size: cover; background-position: center; filter: blur(5px) opacity(0.75); transform: scale(1.06); pointer-events: none; }
+        #about .about-bg { display: none; }
         #about.scroll-offset { scroll-margin-top: 76px; }
         #products.scroll-offset { scroll-margin-top: 76px; }
         #about .about-content { position: relative; z-index: 1; }
         #products { background-image: none; position: relative; overflow: hidden; }
-        #products .products-bg { position: absolute; top: -60px; left: 0; right: 0; bottom: -60px; background-image: url('/images/productsbg.jpg'); background-size: cover; background-position: center top; z-index: 0; pointer-events: none; filter: blur(2.5px) opacity(0.5); transform: scale(1.06); }
+        #products .products-bg { display: none; }
         #products .products-content { position: relative; z-index: 1; margin-top: 10px; }
         #products { padding-top: 5px; padding-bottom: 60px; }
         #reviews { background-image: none; position: relative; overflow: hidden; }
         #reviews .reviews-bg { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-image: url('/images/reviewbg.jpg'); background-size: cover; background-position: center center; background-repeat: no-repeat; z-index: 0; filter: blur(2px) opacity(0.9); }
         #reviews.scroll-offset { scroll-margin-top: 76px; }
         #reviews .reviews-content { position: relative; z-index: 2; }
+        /* Section Headers Responsive */
+        @media (max-width: 768px) {
+            #about .rounded-1 span,
+            #products .rounded-1 span,
+            #reviews .rounded-1 span {
+                font-size: 1.6rem !important;
+            }
+        }
+        @media (max-width: 576px) {
+            #about .rounded-1 span,
+            #products .rounded-1 span,
+            #reviews .rounded-1 span {
+                font-size: 1.4rem !important;
+                letter-spacing: 1px !important;
+            }
+            #about .rounded-1,
+            #products .rounded-1,
+            #reviews .rounded-1 {
+                padding: 6px 0 !important;
+            }
+        }
+        /* About Section Responsive */
+        @media (max-width: 768px) {
+            #about .about-content .row > div {
+                margin-bottom: 20px;
+            }
+            #about .mb-3 {
+                padding: 18px 16px !important;
+            }
+            #about .mb-3 h5 {
+                font-size: 1rem !important;
+            }
+            #about .mb-3 ul {
+                font-size: 0.95rem !important;
+                padding-left: 16px !important;
+            }
+            #about .mb-3 ul li {
+                margin-bottom: 4px;
+            }
+            #bestSellerCarousel {
+                max-width: 100% !important;
+            }
+            #bestSellerCarousel .carousel-item img {
+                height: 280px !important;
+            }
+            #bestSellerCarousel .text-center {
+                font-size: 1.05rem !important;
+            }
+        }
+        @media (max-width: 576px) {
+            #about .mb-3 {
+                padding: 16px 14px !important;
+            }
+            #about .mb-3 h5 {
+                font-size: 0.95rem !important;
+            }
+            #about .mb-3 ul {
+                font-size: 0.9rem !important;
+                padding-left: 14px !important;
+            }
+            #bestSellerCarousel .carousel-item img {
+                height: 250px !important;
+            }
+            #bestSellerCarousel .text-center {
+                font-size: 0.95rem !important;
+            }
+        }
         /* Only on this page: bring footer to the front */
         #reviews + footer { position: relative; z-index: 1; margin-top: 0; }
         footer { position: static; z-index: 1; margin-top: 0; }
@@ -248,22 +387,98 @@
             background: #e0e0e0;
             color: #3a5c39;
         }
+        /* Hero Section Responsive */
         @media (max-width: 991px) {
             .main-section {
                 flex-direction: column;
                 padding: 20px 0;
             }
+            .hero-row {
+                flex-direction: column;
+            }
+            .hero-content {
+                position: relative;
+                z-index: 2;
+                padding: 20px;
+            }
             .content-box {
                 margin-top: 30px;
-                min-width: unset;
+                margin-left: 0;
+                min-width: 90%;
+                max-width: 90%;
+                padding: 36px 24px 30px 24px;
+            }
+            .content-box h1 {
+                font-size: 2.3rem;
+            }
+            .content-box h2 {
+                font-size: 1.9rem;
+            }
+            .content-box .subtitle {
+                font-size: 1.05rem;
+            }
+            .content-box p {
+                font-size: 0.95rem;
             }
             .flower-img {
                 margin-left: 0;
             }
         }
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .content-box {
-                padding: 28px 10px 24px 10px;
+                margin-top: 20px;
+                padding: 32px 20px 28px 20px;
+                min-width: 95%;
+                max-width: 95%;
+            }
+            .content-box h1 {
+                font-size: 2rem;
+            }
+            .content-box h2 {
+                font-size: 1.7rem;
+            }
+            .content-box .subtitle {
+                font-size: 1rem;
+            }
+            .content-box p {
+                font-size: 0.9rem;
+                margin-bottom: 1.2rem;
+            }
+            .btn-shop {
+                padding: 8px 22px;
+                font-size: 1rem;
+            }
+        }
+        @media (max-width: 576px) {
+            .content-box {
+                padding: 28px 15px 24px 15px;
+                min-width: 100%;
+                max-width: 100%;
+                margin-top: 15px;
+            }
+            .content-box h1 {
+                font-size: 1.8rem;
+                margin-bottom: 0.1rem;
+            }
+            .content-box h2 {
+                font-size: 1.5rem;
+                margin-bottom: 0.8rem;
+            }
+            .content-box .subtitle {
+                font-size: 0.9rem;
+                margin-bottom: 1rem;
+            }
+            .content-box hr {
+                margin: 1rem 0;
+            }
+            .content-box p {
+                font-size: 0.85rem;
+                margin-bottom: 1rem;
+                line-height: 1.5;
+            }
+            .btn-shop {
+                padding: 7px 20px;
+                font-size: 0.95rem;
             }
             .flower-img {
                 max-width: 100%;
@@ -415,7 +630,7 @@
                     <div class="text-center mb-2">
                         <span style="color:#1a8c5a; font-size:1.2rem; font-weight:500;">Best Seller Flowers</span>
                     </div>
-                    <div id="bestSellerCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3500" style="max-width: 420px; margin: 0 auto;">
+                    <div id="bestSellerCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3500" style="max-width: 100%; margin: 0 auto;">
                         <div class="carousel-inner" style="border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
                             <?php if(count($bestSellerSlides) === 0): ?>
                                 <div class="carousel-item active">
@@ -486,7 +701,35 @@
         .prod-card:hover{transform:translateY(-4px); box-shadow:0 12px 28px rgba(0,0,0,0.12)}
         .prod-card img{width:100%; height:120px; object-fit:cover}
         .prod-card .cap{padding:6px 8px; color:#1a8c5a; font-size:.85rem; text-align:center}
-        @media (max-width: 992px){ .prod-card{width:128px} .prod-card img{height:110px} }
+        /* Products Section Responsive */
+        @media (max-width: 992px){ 
+            .prod-card{width:128px} 
+            .prod-card img{height:110px} 
+        }
+        @media (max-width: 768px) {
+            .prod-card {
+                width: 115px;
+            }
+            .prod-card img {
+                height: 100px;
+            }
+            .prod-card .cap {
+                font-size: 0.8rem;
+                padding: 5px 6px;
+            }
+        }
+        @media (max-width: 576px) {
+            .prod-card {
+                width: 100px;
+            }
+            .prod-card img {
+                height: 90px;
+            }
+            .prod-card .cap {
+                font-size: 0.75rem;
+                padding: 4px 5px;
+            }
+        }
     </style>
     <div class="row mt-4 justify-content-center">
         <div class="col-11 col-xl-10 mx-auto">
@@ -547,6 +790,105 @@
         #reviewsCarousel .carousel-control-prev{left:18%; right:auto}
         #reviewsCarousel .carousel-control-next{right:18%; left:auto}
         #reviewsCarousel .ctrl{background:#fff; border:1px solid #dfe8df; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#1a8c5a; box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+        /* Reviews Section Responsive */
+        @media (max-width: 991px) {
+            .review-set {
+                gap: 20px;
+                padding: 30px 0;
+            }
+            .review-card {
+                width: 280px;
+                padding: 20px 22px;
+                min-height: 220px;
+            }
+            .review-text {
+                font-size: 0.95rem;
+            }
+            .review-name {
+                font-size: 0.95rem;
+            }
+            #reviewsCarousel .carousel-control-prev {
+                left: 10%;
+            }
+            #reviewsCarousel .carousel-control-next {
+                right: 10%;
+            }
+        }
+        @media (max-width: 768px) {
+            .review-set {
+                flex-direction: column;
+                gap: 20px;
+                min-height: auto;
+                padding: 30px 20px;
+            }
+            .review-card {
+                width: 100%;
+                max-width: 400px;
+                min-height: auto;
+                padding: 20px;
+                margin: 0 auto;
+            }
+            .review-card.role-left,
+            .review-card.role-center,
+            .review-card.role-right {
+                filter: none;
+                opacity: 1;
+                order: 0;
+                transform: none;
+            }
+            .review-text {
+                font-size: 0.9rem;
+            }
+            .review-name {
+                font-size: 0.9rem;
+                margin-top: 10px;
+            }
+            .review-stars {
+                font-size: 1.2rem;
+                margin-bottom: 10px;
+            }
+            #reviewsCarousel .carousel-control-prev,
+            #reviewsCarousel .carousel-control-next {
+                left: 10px;
+                right: 10px;
+            }
+            #reviewsCarousel .carousel-control-prev {
+                left: 10px;
+                right: auto;
+            }
+            #reviewsCarousel .carousel-control-next {
+                right: 10px;
+                left: auto;
+            }
+            #reviewsCarousel .ctrl {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+        }
+        @media (max-width: 576px) {
+            .review-card {
+                padding: 18px 16px;
+                max-width: 100%;
+            }
+            .review-text {
+                font-size: 0.85rem;
+                line-height: 1.5;
+            }
+            .review-name {
+                font-size: 0.85rem;
+                margin-top: 8px;
+            }
+            .review-stars {
+                font-size: 1.1rem;
+                margin-bottom: 8px;
+            }
+            #reviewsCarousel .ctrl {
+                width: 28px;
+                height: 28px;
+                font-size: 0.8rem;
+            }
+        }
     </style>
     <div class="row mt-4 justify-content-center" style="min-height: 60vh; display: flex; align-items: center;">
         <div class="col-12 d-flex justify-content-center">
@@ -594,11 +936,24 @@
     if(!wrap) return; // critical as requested
     var cards = wrap.querySelectorAll('.review-card');
     if(cards.length !== 3) return;
-    cards.forEach(function(el){ el.classList.remove('role-left','role-center','role-right'); });
-    var left = (idx + 3 - 1) % 3, right = (idx + 1) % 3;
-    cards[left].classList.add('role-left');
-    cards[idx].classList.add('role-center');
-    cards[right].classList.add('role-right');
+    
+    // Check if mobile layout (cards stacked vertically)
+    var isMobile = window.innerWidth <= 768;
+    
+    if(isMobile) {
+      // On mobile, show all cards without blur/opacity effects
+      cards.forEach(function(el){ 
+        el.classList.remove('role-left','role-center','role-right'); 
+        el.style.display = '';
+      });
+    } else {
+      // Desktop: apply role-based effects
+      cards.forEach(function(el){ el.classList.remove('role-left','role-center','role-right'); });
+      var left = (idx + 3 - 1) % 3, right = (idx + 1) % 3;
+      cards[left].classList.add('role-left');
+      cards[idx].classList.add('role-center');
+      cards[right].classList.add('role-right');
+    }
     c.dataset.centerIdx = String(idx);
   }
   function jjCycleCenter(dir, ev){
@@ -614,6 +969,11 @@
     var c = document.getElementById('reviewsCarousel');
     if(c && !c.dataset.centerIdx) c.dataset.centerIdx = '1';
     jjApplyCenterIndex();
+    
+    // Re-apply on window resize
+    window.addEventListener('resize', function() {
+      jjApplyCenterIndex();
+    });
   });
 </script>
 <!-- Footer -->
@@ -632,6 +992,28 @@
                 <style>
                 .footer-icons > a { margin-right: 18px; }
                 .footer-icons > a:last-child { margin-right: 0; }
+                /* Footer Responsive */
+                @media (max-width: 768px) {
+                    .footer-icons {
+                        font-size: 1.2rem !important;
+                        padding: 0px 0 10px 0 !important;
+                    }
+                    .footer-icons > a {
+                        margin-right: 15px;
+                    }
+                }
+                @media (max-width: 576px) {
+                    .footer-icons {
+                        font-size: 1.1rem !important;
+                        padding: 0px 0 8px 0 !important;
+                    }
+                    .footer-icons > a {
+                        margin-right: 12px;
+                    }
+                    footer {
+                        padding: 8px 0 !important;
+                    }
+                }
                 </style>
             </div>
         </div>

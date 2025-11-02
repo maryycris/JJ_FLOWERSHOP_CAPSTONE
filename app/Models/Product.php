@@ -83,4 +83,68 @@ class Product extends Model
         }
         return null;
     }
+
+    /**
+     * Get formatted price
+     */
+    public function getFormattedPriceAttribute(): string
+    {
+        return '₱' . number_format($this->price, 2);
+    }
+
+    /**
+     * Get formatted cost price
+     */
+    public function getFormattedCostPriceAttribute(): string
+    {
+        return '₱' . number_format($this->cost_price ?? 0, 2);
+    }
+
+    /**
+     * Check if product is out of stock
+     */
+    public function isOutOfStock(): bool
+    {
+        return $this->stock <= 0;
+    }
+
+    /**
+     * Check if product needs reorder
+     */
+    public function needsReorder(): bool
+    {
+        return $this->reorder_min && $this->stock <= $this->reorder_min;
+    }
+
+    /**
+     * Check if product is low stock
+     */
+    public function isLowStock(): bool
+    {
+        return $this->stock <= ($this->reorder_min ?? 5);
+    }
+
+    /**
+     * Scope: Get products by category
+     */
+    public function scopeByCategory($query, $category)
+    {
+        return $query->where('category', $category);
+    }
+
+    /**
+     * Scope: Get approved products
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('is_approved', true);
+    }
+
+    /**
+     * Scope: Get low stock products
+     */
+    public function scopeLowStock($query)
+    {
+        return $query->whereRaw('stock <= COALESCE(reorder_min, 5)');
+    }
 }

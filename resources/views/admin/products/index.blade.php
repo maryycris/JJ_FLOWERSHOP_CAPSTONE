@@ -297,7 +297,7 @@
         <div class="bg-white rounded-4 shadow-sm p-4 mb-4">
             <div class="mb-3 fw-bold fs-5">
                 Products to approve
-                <span class="badge bg-warning text-dark ms-2" id="pendingCount">0</span>
+                <span class="badge bg-success text-dark ms-2" id="pendingCount">0</span>
             </div>
             <div class="row g-3" id="pendingProductsGrid">
                 <div class="col-12 text-center py-4">
@@ -570,25 +570,25 @@
 
     <!-- Product Change Details Modal -->
     <div class="modal fade" id="productChangeDetailsModal" tabindex="-1" aria-labelledby="productChangeDetailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-md modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title" id="productChangeDetailsModalLabel">Product Change Request Details</h5>
+                <div class="modal-header bg-info text-white" style="padding: 0.75rem 1rem;">
+                    <h5 class="modal-title mb-0" id="productChangeDetailsModalLabel" style="font-size: 1rem;">Product Change Request Details</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" id="productChangeDetailsContent">
+                <div class="modal-body" id="productChangeDetailsContent" style="padding: 1rem;">
                     <div class="text-center py-4">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success" id="approveFromModal">
+                <div class="modal-footer" style="padding: 0.75rem 1rem;">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" style="font-size: 0.85rem;">Close</button>
+                    <button type="button" class="btn btn-sm btn-success" id="approveFromModal" style="font-size: 0.85rem;">
                         <i class="bi bi-check-circle"></i> Approve
                     </button>
-                    <button type="button" class="btn btn-danger" id="rejectFromModal">
+                    <button type="button" class="btn btn-sm btn-danger" id="rejectFromModal" style="font-size: 0.85rem;">
                         <i class="bi bi-x-circle"></i> Reject
                     </button>
                 </div>
@@ -694,12 +694,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 performSearch();
             }
         });
-        // Optional: live typing debounce search
-        clearTimeout(searchInput.__t);
-        searchInput.addEventListener('input', function(){
-            clearTimeout(searchInput.__t);
-            searchInput.__t = setTimeout(performSearch, 400);
-        });
+        // Remove the live typing search - only search on Enter key press
+        // searchInput.addEventListener('input', function(){
+        //     clearTimeout(searchInput.__t);
+        //     searchInput.__t = setTimeout(performSearch, 400);
+        // });
     }
 
     if (filterApply) {
@@ -1009,18 +1008,18 @@ async function viewProductChangeDetails(changeId) {
             
             if (change.action === 'edit' && change.changes) {
                 html += `
-                    <div class="mb-3">
-                        <strong>Proposed Changes:</strong>
-                        <div class="table-responsive mt-2">
-                            <table class="table table-sm table-bordered">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Field</th>
-                                        <th>Current Value</th>
-                                        <th>New Value</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                    <hr class="my-2">
+                    <h6 class="mb-2" style="font-size: 0.9rem; font-weight: 600;">Proposed Changes:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-2" style="font-size: 0.75rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="padding: 0.25rem 0.5rem;">Field</th>
+                                    <th style="padding: 0.25rem 0.5rem;">Current</th>
+                                    <th style="padding: 0.25rem 0.5rem;">New</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                 `;
                 
                 Object.entries(change.changes).forEach(([key, value]) => {
@@ -1029,9 +1028,9 @@ async function viewProductChangeDetails(changeId) {
                         const fieldName = key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' ');
                         html += `
                             <tr>
-                                <td><strong>${fieldName}</strong></td>
-                                <td>${currentValue}</td>
-                                <td class="text-primary"><strong>${value}</strong></td>
+                                <td style="padding: 0.25rem 0.5rem;"><strong>${fieldName}</strong></td>
+                                <td style="padding: 0.25rem 0.5rem;">${currentValue}</td>
+                                <td style="padding: 0.25rem 0.5rem;" class="text-primary"><strong>${value}</strong></td>
                             </tr>
                         `;
                     }
@@ -1047,10 +1046,10 @@ async function viewProductChangeDetails(changeId) {
                 // Handle image changes
                 if (change.changes.image) {
                     html += `
-                        <div class="mb-3">
+                        <div class="mb-2" style="font-size: 0.85rem;">
                             <strong>New Image:</strong>
-                            <div class="mt-2">
-                                <img src="/storage/${change.changes.image}" class="img-fluid rounded" alt="New Image" style="max-height: 150px;">
+                            <div class="mt-1 text-center">
+                                <img src="/storage/${change.changes.image}" class="img-fluid rounded" alt="New Image" style="max-height: 100px; max-width: 120px;">
                             </div>
                         </div>
                     `;
@@ -1059,28 +1058,28 @@ async function viewProductChangeDetails(changeId) {
                 // Handle composition changes
                 if (change.changes.compositions) {
                     html += `
-                        <div class="mb-3">
-                            <strong>New Compositions:</strong>
-                            <div class="table-responsive mt-2">
-                                <table class="table table-sm table-bordered">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Component</th>
-                                            <th>Category</th>
-                                            <th>Quantity</th>
-                                            <th>Unit</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                        <hr class="my-2">
+                        <h6 class="mb-2" style="font-size: 0.9rem; font-weight: 600;">New Compositions:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered mb-2" style="font-size: 0.75rem;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="padding: 0.25rem 0.5rem;">Component</th>
+                                        <th style="padding: 0.25rem 0.5rem;">Category</th>
+                                        <th style="padding: 0.25rem 0.5rem;">Qty</th>
+                                        <th style="padding: 0.25rem 0.5rem;">Unit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                     `;
                     
                     change.changes.compositions.forEach(comp => {
                         html += `
                             <tr>
-                                <td>${comp.component_name}</td>
-                                <td>${comp.category}</td>
-                                <td>${comp.quantity}</td>
-                                <td>${comp.unit}</td>
+                                <td style="padding: 0.25rem 0.5rem;">${comp.component_name}</td>
+                                <td style="padding: 0.25rem 0.5rem;">${comp.category || 'N/A'}</td>
+                                <td style="padding: 0.25rem 0.5rem;">${comp.quantity}</td>
+                                <td style="padding: 0.25rem 0.5rem;">${comp.unit}</td>
                             </tr>
                         `;
                     });
@@ -1095,7 +1094,6 @@ async function viewProductChangeDetails(changeId) {
             }
             
             html += `
-                    </div>
                 </div>
             `;
             
@@ -2276,6 +2274,7 @@ async function viewProductChangeDetails(changeId) {
                                 <table class="table table-sm">
                                     <thead>
                                         <tr>
+                                            <th>Category</th>
                                             <th>Material</th>
                                             <th>Quantity</th>
                                             <th>Unit</th>
@@ -2284,6 +2283,7 @@ async function viewProductChangeDetails(changeId) {
                                     <tbody>
                                         ${product.compositions.map(comp => `
                                             <tr>
+                                                <td>${comp.category || 'N/A'}</td>
                                                 <td>${comp.component_name}</td>
                                                 <td>${comp.quantity}</td>
                                                 <td>${comp.unit}</td>
@@ -2333,6 +2333,7 @@ async function viewProductChangeDetails(changeId) {
                                 <table class="table table-sm">
                                     <thead>
                                         <tr>
+                                            <th>Category</th>
                                             <th>Material</th>
                                             <th>Quantity</th>
                                             <th>Unit</th>
@@ -2341,6 +2342,7 @@ async function viewProductChangeDetails(changeId) {
                                     <tbody>
                                         ${product.compositions.map(comp => `
                                             <tr>
+                                                <td>${comp.category || 'N/A'}</td>
                                                 <td>${comp.component_name}</td>
                                                 <td>${comp.quantity}</td>
                                                 <td>${comp.unit}</td>
@@ -2467,11 +2469,18 @@ async function viewProductChangeDetails(changeId) {
         
         // If we have composition data, populate the fields
         if (composition) {
-            // Set category
+            // Wait a moment for DOM to be ready
+            await new Promise(resolve => setTimeout(resolve, 10));
+            
+            // Set category first - this must be done before loading materials
             const categorySelect = document.getElementById(`edit-composition-category-${index}`);
-            if (categorySelect) {
-                categorySelect.value = composition.category || '';
-                // Load materials and then set the component values
+            if (categorySelect && composition.category) {
+                categorySelect.value = composition.category;
+                
+                // Trigger change event to ensure proper initialization
+                categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                // Load materials after category is set
                 await updateCompositionMaterials(index);
                 
                 // Set component name and ID after materials are loaded
@@ -2485,6 +2494,23 @@ async function viewProductChangeDetails(changeId) {
                 }
                 
                 // Set the search input value to show the selected material
+                const searchInput = document.getElementById(`edit-composition-search-${index}`);
+                if (searchInput) {
+                    searchInput.value = composition.component_name || '';
+                }
+            } else if (categorySelect) {
+                // If no category, still load materials (for backward compatibility)
+                await updateCompositionMaterials(index);
+                
+                const componentNameInput = document.querySelector(`#edit-composition-select-${index}`).parentElement.querySelector('.composition-component-name');
+                if (componentNameInput) {
+                    componentNameInput.value = composition.component_name || '';
+                }
+                const componentSelect = document.getElementById(`edit-composition-select-${index}`);
+                if (componentSelect) {
+                    componentSelect.value = composition.component_id || '';
+                }
+                
                 const searchInput = document.getElementById(`edit-composition-search-${index}`);
                 if (searchInput) {
                     searchInput.value = composition.component_name || '';

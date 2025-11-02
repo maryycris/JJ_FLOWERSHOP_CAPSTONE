@@ -1,6 +1,7 @@
 @extends('layouts.customer_app')
 
 @section('content')
+@include('components.customer.alt_nav', ['active' => 'profile'])
 <style>
     .sidebar {
         background: #f4f9f4;
@@ -170,6 +171,13 @@
         .container-fluid {
             padding: 10px;
         }
+        /* Mobile page label */
+        .page-label-mobile { position: absolute; top: 6px; left: 30px; font-weight: 700; font-size: 1.2rem; color: #4a9448; }
+        /* Make navbars sticky (alt_nav) */
+        .alt-topbar { position: fixed !important; }
+        .mobile-bottom-nav { position: fixed !important; }
+        /* Give content space below the label */
+        #ordersContent { margin-top: 4px; }
         
         .main-content-with-sidebar {
             margin-left: 0 !important;
@@ -402,9 +410,6 @@
     .star-rating.readonly label {
         color: #f5b301;
     }
-    .star-rating.readonly label.filled {
-        color: #f5b301;
-    }
     .star-rating.readonly label:not(.filled) {
         color: #ddd;
     }
@@ -450,16 +455,17 @@
     }
 </style>
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 position-relative">
     <div class="row justify-content-center">
+        <div class="d-md-none page-label-mobile">My Purchase</div>
         <!-- Sidebar -->
-        <div class="col-12 col-md-3 col-lg-3">
+        <div class="col-12 col-md-3 col-lg-3 d-none d-md-block">
             @include('customer.sidebar')
         </div>
         
         <!-- Main Content -->
         <div class="col-12 col-md-9 col-lg-8 main-content-with-sidebar" style="margin-left: 25%; max-width: calc(75% - 30px);">
-            <div class="py-4 px-3">
+            <div class="py-4 px-3" id="ordersContent">
                 <div class="mb-3 d-flex align-items-center">
                     <ul class="nav nav-tabs order-tabs" id="orderTabs" role="tablist">
                         <li class="nav-item" role="presentation">
@@ -654,23 +660,110 @@
                                                 @else
                                                     <span class="btn btn-sm btn-secondary order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
                                                 @endif
-                                                
-                                                <!-- Refund Information for Mobile -->
-                                                @if($order->refund_amount && $order->refund_processed_at)
-                                                <div class="mt-2">
-                                                    <div class="d-flex align-items-center">
-                                                        <i class="fas fa-money-bill-wave me-1 text-success" style="font-size: 0.7rem;"></i>
-                                                        <small class="text-success fw-bold">Refunded ₱{{ number_format($order->refund_amount, 2) }}</small>
+                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <small class="text-muted">
-                                                        @if($order->refund_processed_at)
-                                                            {{ $order->refund_processed_at instanceof \Carbon\Carbon ? $order->refund_processed_at->format('M d, Y') : \Carbon\Carbon::parse($order->refund_processed_at)->format('M d, Y') }}
-                                                        @else
-                                                            N/A
-                                                        @endif
-                                                    </small>
                                                 </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                                
+                                @foreach ($order->customBouquets as $customBouquet)
+                                    <div class="row order-list-row order-row clickable" 
+                                        data-status="{{ \App\Services\OrderStatusService::getCustomerDisplayStatus($order->order_status ?? $order->status) }}"
+                                        data-product="custom bouquet"
+                                        style="cursor: pointer; transition: all 0.3s ease;"
+                                        onclick="window.location.href='{{ route('customer.orders.show', $order->id) }}'">
+                                        
+                                        <!-- Desktop View -->
+                                        <div class="col-md-1 d-none d-md-flex align-items-center justify-content-center">
+                                            <div class="order-product-img d-flex align-items-center justify-content-center" style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; font-weight: bold; font-size: 12px;">
+                                                CUSTOM
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 d-none d-md-flex flex-column justify-content-center">
+                                            <div class="fw-bold">Custom Bouquet</div>
+                                            <div class="text-muted small">Order #{{ $order->id }}</div>
+                                        </div>
+                                        <div class="col-md-2 d-none d-md-flex align-items-center">₱{{ number_format($customBouquet->total_price, 2) }}</div>
+                                        <div class="col-md-2 d-none d-md-flex align-items-center">x{{ $customBouquet->pivot->quantity }}</div>
+                                        <div class="col-md-2 d-none d-md-flex align-items-center">{{ $order->created_at->format('M d, Y') }}</div>
+                                        <div class="col-md-2 d-none d-md-flex align-items-center justify-content-end">
+                                            @php
+                                                $orderStatus = $order->order_status ?? $order->status;
+                                                $statusLabel = \App\Services\OrderStatusService::getStatusLabel($orderStatus);
+                                            @endphp
+                                            
+                                            <!-- Desktop Status -->
+                                            <div class="d-flex flex-column align-items-end">
+                                                @if($orderStatus === 'pending')
+                                                    <span class="btn btn-sm btn-warning order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @elseif($orderStatus === 'approved')
+                                                    <span class="btn btn-sm btn-info order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @elseif($orderStatus === 'on_delivery')
+                                                    <span class="btn btn-sm btn-primary order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @elseif($orderStatus === 'delivered')
+                                                    <span class="btn btn-sm btn-success order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @elseif($orderStatus === 'completed')
+                                                    <span class="btn btn-sm btn-success order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @elseif($orderStatus === 'cancelled')
+                                                    <span class="btn btn-sm btn-danger order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @elseif($orderStatus === 'returned')
+                                                    <span class="btn btn-sm btn-warning order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @else
+                                                    <span class="btn btn-sm btn-secondary order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
                                                 @endif
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Mobile View -->
+                                        <div class="col-12 d-md-none">
+                                            <div class="d-flex align-items-start">
+                                                <div class="me-3">
+                                                    <div class="order-product-img d-flex align-items-center justify-content-center" style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; font-weight: bold; font-size: 12px;">
+                                                        CUSTOM
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold mb-1">Custom Bouquet</div>
+                                                    <div class="text-muted small mb-2">Order #{{ $order->id }}</div>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <span class="text-success fw-bold">₱{{ number_format($customBouquet->total_price, 2) }}</span>
+                                                            <span class="text-muted ms-2">x{{ $customBouquet->pivot->quantity }}</span>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <div class="text-muted small mb-1">{{ $order->created_at->format('M d, Y') }}</div>
+                                            
+                                            <!-- Mobile Status -->
+                                            <div class="d-md-none">
+                                                @php
+                                                    $orderStatus = $order->order_status ?? $order->status;
+                                                    $statusLabel = \App\Services\OrderStatusService::getStatusLabel($orderStatus);
+                                                @endphp
+                                                
+                                                @if($orderStatus === 'pending')
+                                                    <span class="btn btn-sm btn-warning order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @elseif($orderStatus === 'approved')
+                                                    <span class="btn btn-sm btn-info order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @elseif($orderStatus === 'on_delivery')
+                                                    <span class="btn btn-sm btn-primary order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @elseif($orderStatus === 'delivered')
+                                                    <span class="btn btn-sm btn-success order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @elseif($orderStatus === 'completed')
+                                                    <span class="btn btn-sm btn-success order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @elseif($orderStatus === 'cancelled')
+                                                    <span class="btn btn-sm btn-danger order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @elseif($orderStatus === 'returned')
+                                                    <span class="btn btn-sm btn-warning order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @else
+                                                    <span class="btn btn-sm btn-secondary order-status-btn" style="font-weight:bold;">{{ $statusLabel }}</span>
+                                                @endif
+                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -808,21 +901,21 @@
                             
                             <!-- Shop Review Section -->
                             <div id="shopReviewSection" style="display:none;">
-                                <div class="text-center py-5">
-                                    <div class="mb-4">
-                                        <i class="fas fa-store text-success" style="font-size: 3rem;"></i>
+                                <div class="text-center py-4">
+                                    <div class="mb-2">
+                                        <i class="fas fa-store text-success" style="font-size: 2rem;"></i>
                                     </div>
-                                    <h4 class="text-success mb-3">Review Our Shop</h4>
-                                    <p class="text-muted mb-4">Share your overall experience with J'J Flower Shop</p>
+                                    <h5 class="text-success mb-1" style="font-weight: 700;">Review Our Shop</h5>
+                                    <p class="text-muted mb-3" style="font-size: .95rem;">Share your overall experience with J'J Flower Shop</p>
                                     
                                     <!-- Shop Review Form -->
                                     <div class="row justify-content-center">
                                         <div class="col-md-8">
                                             <div class="card border-0 shadow-sm">
-                                                <div class="card-body p-4">
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold">Overall Rating</label>
-                                                        <div class="star-rating" id="shopRating">
+                                                <div class="card-body p-3">
+                                                    <div class="mb-2">
+                                                        <label class="form-label fw-semibold small mb-1">Overall Rating</label>
+                                                        <div class="star-rating" id="shopRating" style="font-size: 1.4rem;">
                                                             <label for="star5">★</label>
                                                             <input type="radio" id="star5" name="shop_rating" value="5">
                                                             <label for="star4">★</label>
@@ -836,14 +929,14 @@
                                                         </div>
                                                     </div>
                                                     
-                                                    <div class="mb-3">
-                                                        <label for="shopReviewComment" class="form-label fw-bold">Your Review</label>
-                                                        <textarea class="form-control" id="shopReviewComment" rows="4" 
+                                                    <div class="mb-2">
+                                                        <label for="shopReviewComment" class="form-label fw-semibold small mb-1">Your Review</label>
+                                                        <textarea class="form-control" id="shopReviewComment" rows="3" 
                                                                 placeholder="Tell us about your experience with our shop..."></textarea>
                                                     </div>
                                                     
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-bold">What did you like most?</label>
+                                                    <div class="mb-2">
+                                                        <label class="form-label fw-semibold small mb-2">What did you like most?</label>
                                                         <div class="row">
                                                             <div class="col-md-6">
                                                                 <div class="form-check">
@@ -876,8 +969,8 @@
                                                         </div>
                                                     </div>
                                                     
-                                                    <div class="text-center">
-                                                        <button type="button" class="btn btn-success btn-lg px-5" id="submitShopReview">
+                                                    <div class="text-center mt-3">
+                                                        <button type="button" class="btn btn-success btn-sm px-4" id="submitShopReview">
                                                             <i class="fas fa-paper-plane me-2"></i>Submit Shop Review
                                                         </button>
                                                     </div>
@@ -895,9 +988,10 @@
     </div>
     
     <!-- Pagination -->
-    <div class="d-flex justify-content-center mt-4">
-        <nav aria-label="Page navigation">
-            <ul class="pagination">
+    <div class="mt-0 mb-4 col-12 col-md-9 col-lg-8 main-content-with-sidebar" style="margin-left: 31.25%; width: 830px;">
+        <div class="bg-white rounded shadow-sm p-3" style="width: 100%;">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
                 @if ($orders->onFirstPage())
                     <li class="page-item disabled">
                         <span class="page-link">&laquo;</span>
@@ -929,8 +1023,9 @@
                         <span class="page-link">&raquo;</span>
                     </li>
                 @endif
-            </ul>
-        </nav>
+                </ul>
+            </nav>
+        </div>
     </div>
     @endif
 </div>
@@ -1212,12 +1307,18 @@
     let searchTimeout;
     const searchInput = document.getElementById('orderSearchInput');
     if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(function() {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
                 document.getElementById('orderFilterForm').submit();
-            }, 500); // Wait 500ms after user stops typing
+            }
         });
+        // Remove live typing search - only search on Enter key press
+        // searchInput.addEventListener('input', function() {
+        //     clearTimeout(searchTimeout);
+        //     searchTimeout = setTimeout(function() {
+        //         document.getElementById('orderFilterForm').submit();
+        //     }, 500); // Wait 500ms after user stops typing
+        // });
     }
 
     // Debug: Log current status on page load

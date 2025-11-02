@@ -119,6 +119,20 @@ class ProductController extends Controller
                 'admin_notes' => $request->input('admin_notes', ''),
             ]);
             
+            // Notify the clerk who requested the change
+            if ($change->requested_by) {
+                try {
+                    $clerk = \App\Models\User::find($change->requested_by);
+                    if ($clerk && $clerk->role === 'clerk') {
+                        $product = $change->product;
+                        $productName = $product ? $product->name : 'Product';
+                        $clerk->notify(new \App\Notifications\ProductChangesApprovedNotification($product ?? $change->product_id, $productName));
+                    }
+                } catch (\Throwable $e) {
+                    \Log::error("Failed to send product approval notification to clerk: {$e->getMessage()}");
+                }
+            }
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Product change approved successfully!'

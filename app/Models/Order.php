@@ -93,6 +93,24 @@ class Order extends Model
     }
 
     /**
+     * Get the custom bouquets for the order.
+     */
+    public function customBouquets(): BelongsToMany
+    {
+        return $this->belongsToMany(CustomBouquet::class, 'order_custom_bouquet')
+            ->withPivot('quantity', 'rating', 'review_comment', 'reviewed', 'reviewed_at')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the sales order for this order.
+     */
+    public function salesOrder(): HasOne
+    {
+        return $this->hasOne(\App\Models\SalesOrder::class);
+    }
+
+    /**
      * Get the calculated total price of the order (from products).
      */
     public function getCalculatedTotalPriceAttribute()
@@ -137,11 +155,107 @@ class Order extends Model
     }
 
     /**
-     * Get the invoice for the order.
+     * Get the invoice for this order
      */
     public function invoice(): HasOne
     {
         return $this->hasOne(Invoice::class);
+    }
+
+    /**
+     * Get formatted total price
+     */
+    public function getFormattedTotalPriceAttribute(): string
+    {
+        return '₱' . number_format($this->total_price ?? 0, 2);
+    }
+
+    /**
+     * Get formatted order number
+     */
+    public function getFormattedOrderNumberAttribute(): string
+    {
+        return str_pad($this->id, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Get SO number from sales order
+     */
+    public function getSoNumberAttribute(): ?string
+    {
+        return $this->salesOrder?->so_number;
+    }
+
+    /**
+     * Check if order is pending
+     */
+    public function isPending(): bool
+    {
+        return in_array($this->order_status ?? $this->status, ['pending', 'quotation']);
+    }
+
+    /**
+     * Check if order is approved
+     */
+    public function isApproved(): bool
+    {
+        return in_array($this->order_status ?? $this->status, ['approved', 'sales_order']);
+    }
+
+    /**
+     * Check if order is completed
+     */
+    public function isCompleted(): bool
+    {
+        return in_array($this->order_status ?? $this->status, ['completed', 'delivered']);
+    }
+
+    /**
+     * Check if order is paid
+     */
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    /**
+     * Scope: Get orders by status
+     */
+    public function scopeByStatus($query, $status)
+    {
+        return $query->where('order_status', $status);
+    }
+
+    /**
+     * Scope: Get pending orders
+     */
+    public function scopePending($query)
+    {
+        return $query->whereIn('order_status', ['pending', 'quotation']);
+    }
+
+    /**
+     * Scope: Get approved orders
+     */
+    public function scopeApproved($query)
+    {
+        return $query->whereIn('order_status', ['approved', 'sales_order']);
+    }
+
+    /**
+     * Scope: Get completed orders
+     */
+    public function scopeCompleted($query)
+    {
+        return $query->whereIn('order_status', ['completed', 'delivered']);
+    }
+
+    /**
+     * Scope: Get orders by type
+     */
+    public function scopeByType($query, $type)
+    {
+        return $query->where('type', $type);
     }
 
     /**
@@ -159,5 +273,4 @@ class Order extends Model
     {
         return $this->hasMany(PaymentTracking::class);
     }
-
 }

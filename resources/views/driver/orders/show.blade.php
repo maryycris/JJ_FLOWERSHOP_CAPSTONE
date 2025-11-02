@@ -53,70 +53,74 @@
                 </div>
             </div>
 
-            <!-- Customer Information -->
+            <!-- Order Information (Consolidated) -->
             <div class="card mb-3">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="bi bi-person me-2"></i>Customer Information</h6>
+                <div class="card-header" style="background: #e6f4ea; border-bottom: 1px solid #bbf7d0;">
+                    <h6 class="mb-0" style="font-size: 0.95rem; font-weight: 600; color: #385E42;">
+                        <i class="bi bi-info-circle me-2"></i>Order Information
+                    </h6>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-6">
-                            <small class="text-muted">Name:</small><br>
-                            <strong>{{ $order->user->name }}</strong>
-                        </div>
-                        <div class="col-6">
-                            <small class="text-muted">Contact:</small><br>
-                            <strong>{{ $order->user->contact_number ?? 'N/A' }}</strong>
+                    <!-- Customer Information Section -->
+                    <div class="mb-3 pb-3 border-bottom">
+                        <h6 class="mb-2" style="font-size: 0.9rem; font-weight: 600; color: #385E42;">
+                            <i class="bi bi-person me-2"></i>Customer Information
+                        </h6>
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <small class="text-muted" style="font-size: 0.8rem;">Name:</small><br>
+                                <strong style="font-size: 0.85rem;">{{ $order->user->name }}</strong>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-muted" style="font-size: 0.8rem;">Contact:</small><br>
+                                <strong style="font-size: 0.85rem;">{{ $order->user->contact_number ?? 'N/A' }}</strong>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Delivery Information -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Delivery Information</h6>
-                </div>
-                <div class="card-body">
-                    <div class="mb-2">
-                        <small class="text-muted">Address:</small><br>
-                        <strong>{{ $order->delivery->delivery_address ?? 'N/A' }}</strong>
-                    </div>
-                    <div class="row">
-                        <div class="col-6">
-                            <small class="text-muted">Delivery Date:</small><br>
-                            <strong>{{ $order->delivery->delivery_date ? \Carbon\Carbon::parse($order->delivery->delivery_date)->format('M d, Y') : 'N/A' }}</strong>
+                    <!-- Delivery Information Section -->
+                    <div class="mb-3 pb-3 border-bottom">
+                        <h6 class="mb-2" style="font-size: 0.9rem; font-weight: 600; color: #385E42;">
+                            <i class="bi bi-geo-alt me-2"></i>Delivery Information
+                        </h6>
+                        <div class="mb-2">
+                            <small class="text-muted" style="font-size: 0.8rem;">Address:</small><br>
+                            <strong style="font-size: 0.85rem;">{{ $order->delivery->delivery_address ?? 'N/A' }}</strong>
                         </div>
-                        <div class="col-6">
-                            <small class="text-muted">Delivery Time:</small><br>
-                            <strong>{{ $order->delivery->delivery_time ?? 'N/A' }}</strong>
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <small class="text-muted" style="font-size: 0.8rem;">Delivery Date:</small><br>
+                                <strong style="font-size: 0.85rem;">{{ $order->delivery->delivery_date ? \Carbon\Carbon::parse($order->delivery->delivery_date)->format('M d, Y') : 'N/A' }}</strong>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <small class="text-muted" style="font-size: 0.8rem;">Delivery Time:</small><br>
+                                <strong style="font-size: 0.85rem;">{{ $order->delivery->delivery_time ?? 'N/A' }}</strong>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Order Items -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="bi bi-box me-2"></i>Order Items</h6>
-                </div>
-                <div class="card-body">
-                    @foreach($order->products as $product)
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div>
-                            <strong>{{ $product->name }}</strong>
-                            <br><small class="text-muted">Qty: {{ $product->pivot->quantity }}</small>
+                    <!-- Order Items Section -->
+                    <div>
+                        <h6 class="mb-2" style="font-size: 0.9rem; font-weight: 600; color: #385E42;">
+                            <i class="bi bi-box me-2"></i>Order Items
+                        </h6>
+                        @foreach($order->products as $product)
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <strong style="font-size: 0.85rem;">{{ $product->name }}</strong>
+                                <br><small class="text-muted" style="font-size: 0.75rem;">Qty: {{ $product->pivot->quantity }}</small>
+                            </div>
+                            <div class="text-end">
+                                <strong style="font-size: 0.85rem;">₱{{ number_format($product->price * $product->pivot->quantity, 2) }}</strong>
+                            </div>
                         </div>
-                        <div class="text-end">
-                            <strong>₱{{ number_format($product->price * $product->pivot->quantity, 2) }}</strong>
+                        @endforeach
+                        
+                        <hr style="margin: 1rem 0; border-color: #e6f4ea;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong style="font-size: 0.9rem;">Total Amount:</strong>
+                            <strong class="text-success" style="font-size: 0.9rem;">₱{{ number_format($order->total_price, 2) }}</strong>
                         </div>
-                    </div>
-                    @endforeach
-                    
-                    <hr>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <strong>Total Amount:</strong>
-                        <strong class="text-success">₱{{ number_format($order->total_price, 2) }}</strong>
                     </div>
                 </div>
             </div>
@@ -152,19 +156,10 @@
                 <button class="btn btn-success flex-fill" onclick="showCompleteModal({{ $order->id }})">
                     <i class="bi bi-check-circle me-1"></i>Mark Complete
                 </button>
-                <button class="btn btn-warning flex-fill" onclick="returnOrder({{ $order->id }})">
-                    <i class="bi bi-arrow-return-left me-1"></i>Return Order
-                </button>
             </div>
             @endif
 
-            @if($order->order_status === 'returned')
-            <div class="alert alert-warning">
-                <i class="bi bi-info-circle me-2"></i>
-                <strong>Order Returned</strong><br>
-                This order has been returned and is awaiting admin review.
-            </div>
-            @endif
+            {{-- Return status messages removed --}}
 
             @if($order->order_status === 'completed')
             <div class="alert alert-success">

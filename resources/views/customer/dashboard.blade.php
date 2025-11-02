@@ -164,8 +164,8 @@
 <style>
     body { background: #f4faf4; }
     
-    /* Mobile Responsive Design (480px and below) */
-    @media (max-width: 480px) {
+    /* Mobile/Compact Responsive Design (≤650px) */
+    @media (max-width: 650px) {
         .container-fluid {
             padding-bottom: 80px; /* Space for bottom nav */
         }
@@ -499,6 +499,74 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+    }
+    
+    // Search functionality - only search on Enter key press
+    const searchInput = document.getElementById('productSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    }
+    
+    // Filter functionality
+    const filterBtn = document.getElementById('productFilterBtn');
+    const filterPanel = document.getElementById('productFilterPanel');
+    const filterApply = document.getElementById('productFilterApply');
+    const filterClear = document.getElementById('productFilterClear');
+    
+    if (filterBtn && filterPanel) {
+        filterBtn.addEventListener('click', function() {
+            filterPanel.style.display = filterPanel.style.display === 'none' ? 'block' : 'none';
+        });
+    }
+    
+    if (filterApply) {
+        filterApply.addEventListener('click', function() {
+            performSearch();
+            if (filterPanel) filterPanel.style.display = 'none';
+        });
+    }
+    
+    if (filterClear) {
+        filterClear.addEventListener('click', function() {
+            clearFilters();
+        });
+    }
+    
+    function performSearch() {
+        const searchTerm = searchInput ? searchInput.value : '';
+        const currentUrl = new URL(window.location.href);
+        const category = currentUrl.searchParams.get('category') || 'all';
+        const minPrice = document.getElementById('productFilterMin')?.value || '';
+        const maxPrice = document.getElementById('productFilterMax')?.value || '';
+        
+        // Build URL with search parameters
+        const url = new URL(window.location.href);
+        url.searchParams.set('search', searchTerm);
+        url.searchParams.set('category', category);
+        if (minPrice) url.searchParams.set('min_price', minPrice);
+        if (maxPrice) url.searchParams.set('max_price', maxPrice);
+        
+        // Redirect to the same page with search parameters
+        window.location.href = url.toString();
+    }
+    
+    function clearFilters() {
+        if (searchInput) searchInput.value = '';
+        const filterMin = document.getElementById('productFilterMin');
+        const filterMax = document.getElementById('productFilterMax');
+        if (filterMin) filterMin.value = '';
+        if (filterMax) filterMax.value = '';
+        
+        // Redirect to clean URL
+        const url = new URL(window.location.href);
+        url.searchParams.delete('search');
+        url.searchParams.delete('min_price');
+        url.searchParams.delete('max_price');
+        window.location.href = url.toString();
     }
 });
 </script>

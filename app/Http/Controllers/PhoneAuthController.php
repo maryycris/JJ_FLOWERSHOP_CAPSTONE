@@ -5,26 +5,29 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Twilio\Rest\Client;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 
 class PhoneAuthController extends Controller
 {
-    // Send SMS code to phone number
+    // Phone OTP via SMS is disabled (no Twilio). Optionally email the code instead.
     public function sendCode(Request $request) {
         $request->validate(['phone' => 'required']);
         $code = rand(100000, 999999);
         Cache::put('phone_verification_' . $request->phone, $code, now()->addMinutes(10));
 
-        $sid = env('TWILIO_SID');
-        $token = env('TWILIO_AUTH_TOKEN');
-        $from = env('TWILIO_FROM');
-        $client = new Client($sid, $token);
-        $client->messages->create($request->phone, [
-            'from' => $from,
-            'body' => "Your verification code is: $code"
-        ]);
-        return response()->json(['message' => 'Code sent!']);
+        // If the request includes an email, send the code to email as a fallback
+        if ($request->filled('email')) {
+            try {
+                Mail::raw("Your JJ Flowershop verification code is: $code", function ($message) use ($request) {
+                    $message->to($request->email)->subject('Verification Code');
+                });
+                return response()->json(['message' => 'Code sent to email (SMS disabled).']);
+            } catch (\Exception $e) {
+                return response()->json(['message' => 'Failed to send code via email.'], 500);
+            }
+        }
+        return response()->json(['message' => 'SMS sending is disabled. Provide email to receive the code.'], 400);
     }
 
     // Verify the code and log in or register the user

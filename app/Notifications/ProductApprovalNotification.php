@@ -58,7 +58,7 @@ class ProductApprovalNotification extends Notification
             'clerk_name' => $this->clerk->name,
             'action' => $this->action,
             'product_name' => $this->product->name,
-            'action_url' => route('admin.products.show', $this->product->id),
+            'action_url' => route('admin.products.index'),
             'icon' => 'fas fa-box',
             'color' => 'primary',
             'created_at' => now()->toISOString()

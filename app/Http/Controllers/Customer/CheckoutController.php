@@ -18,9 +18,10 @@ class CheckoutController extends Controller
     {
         $user = Auth::user();
 
-        // Check if this is a "Buy now" flow (product_id and quantity provided)
+        // Check if this is a "Buy now" flow (product_id, catalog_product_id, or custom_bouquet_id provided)
         $productId = $request->input('product_id');
         $catalogProductId = $request->input('catalog_product_id');
+        $customBouquetId = $request->input('custom_bouquet_id');
         $quantity = $request->input('quantity', 1);
 
         if ($productId) {
@@ -59,6 +60,12 @@ class CheckoutController extends Controller
                 $product->save();
             }
             $productId = $product->id;
+        } elseif ($customBouquetId) {
+            // "Buy now" flow with custom bouquet ID
+            $customBouquet = \App\Models\CustomBouquet::find($customBouquetId);
+            if (!$customBouquet) {
+                return redirect()->route('customer.products.bouquet-customize')->with('error', 'Custom bouquet not found.');
+            }
         }
 
         if ($productId) {
@@ -67,8 +74,21 @@ class CheckoutController extends Controller
             $tempCartItem = new \stdClass();
             $tempCartItem->id = 'temp_' . $productId;
             $tempCartItem->product_id = $productId;
+            $tempCartItem->item_type = 'product';
             $tempCartItem->quantity = $quantity;
             $tempCartItem->product = $product;
+            $tempCartItem->customBouquet = null;
+
+            $cartItems = collect([$tempCartItem]);
+        } elseif ($customBouquetId) {
+            // Create a temporary cart item object for custom bouquet checkout
+            $tempCartItem = new \stdClass();
+            $tempCartItem->id = 'temp_custom_' . $customBouquetId;
+            $tempCartItem->custom_bouquet_id = $customBouquetId;
+            $tempCartItem->item_type = 'custom_bouquet';
+            $tempCartItem->quantity = $quantity;
+            $tempCartItem->customBouquet = $customBouquet;
+            $tempCartItem->product = null;
 
             $cartItems = collect([$tempCartItem]);
         } else {
@@ -88,7 +108,13 @@ class CheckoutController extends Controller
 
         $subtotal = 0;
         foreach ($cartItems as $item) {
-            $subtotal += $item->quantity * $item->product->price;
+            $unitPrice = 0;
+            if (($item->item_type ?? null) === 'custom_bouquet' && isset($item->customBouquet)) {
+                $unitPrice = $item->customBouquet->unit_price ?? ($item->customBouquet->total_price ?? $item->customBouquet->price ?? 0);
+            } else if (isset($item->product) && isset($item->product->price)) {
+                $unitPrice = $item->product->price;
+            }
+            $subtotal += ($item->quantity ?? 1) * $unitPrice;
         }
 
         // Get user's addresses
@@ -208,6 +234,7 @@ class CheckoutController extends Controller
         // Check if this is a "Buy now" flow (product_id and quantity provided)
         $productId = $request->input('product_id');
         $catalogProductId = $request->input('catalog_product_id');
+        $customBouquetId = $request->input('custom_bouquet_id');
         $quantity = $request->input('quantity', 1);
 
         if ($productId) {
@@ -246,6 +273,12 @@ class CheckoutController extends Controller
                 $product->save();
             }
             $productId = $product->id;
+        } elseif ($customBouquetId) {
+            // "Buy now" flow with custom bouquet ID
+            $customBouquet = \App\Models\CustomBouquet::find($customBouquetId);
+            if (!$customBouquet) {
+                return redirect()->route('customer.products.bouquet-customize')->with('error', 'Custom bouquet not found.');
+            }
         }
 
         if ($productId) {
@@ -254,8 +287,21 @@ class CheckoutController extends Controller
             $tempCartItem = new \stdClass();
             $tempCartItem->id = 'temp_' . $productId;
             $tempCartItem->product_id = $productId;
+            $tempCartItem->item_type = 'product';
             $tempCartItem->quantity = $quantity;
             $tempCartItem->product = $product;
+            $tempCartItem->customBouquet = null;
+
+            $cartItems = collect([$tempCartItem]);
+        } elseif ($customBouquetId) {
+            // Create a temporary cart item object for custom bouquet checkout
+            $tempCartItem = new \stdClass();
+            $tempCartItem->id = 'temp_custom_' . $customBouquetId;
+            $tempCartItem->custom_bouquet_id = $customBouquetId;
+            $tempCartItem->item_type = 'custom_bouquet';
+            $tempCartItem->quantity = $quantity;
+            $tempCartItem->customBouquet = $customBouquet;
+            $tempCartItem->product = null;
 
             $cartItems = collect([$tempCartItem]);
         } else {
@@ -275,7 +321,13 @@ class CheckoutController extends Controller
 
         $subtotal = 0;
         foreach ($cartItems as $item) {
-            $subtotal += $item->quantity * $item->product->price;
+            $unitPrice = 0;
+            if (($item->item_type ?? null) === 'custom_bouquet' && isset($item->customBouquet)) {
+                $unitPrice = $item->customBouquet->unit_price ?? ($item->customBouquet->total_price ?? $item->customBouquet->price ?? 0);
+            } else if (isset($item->product) && isset($item->product->price)) {
+                $unitPrice = $item->product->price;
+            }
+            $subtotal += ($item->quantity ?? 1) * $unitPrice;
         }
 
         // Get user's default address or first address
@@ -318,12 +370,24 @@ class CheckoutController extends Controller
         if ($loyaltyCard && $loyaltyCard->stamps_count >= 4) {
             // Find the most expensive item in the cart
             $mostExpensiveItem = $cartItems->sortByDesc(function($item) {
-                return $item->product->price * $item->quantity;
+                $unitPrice = 0;
+                if (($item->item_type ?? null) === 'custom_bouquet' && isset($item->customBouquet)) {
+                    $unitPrice = $item->customBouquet->unit_price ?? ($item->customBouquet->total_price ?? $item->customBouquet->price ?? 0);
+                } else if (isset($item->product) && isset($item->product->price)) {
+                    $unitPrice = $item->product->price;
+                }
+                return $unitPrice * ($item->quantity ?? 1);
             })->first();
 
             if ($mostExpensiveItem) {
                 // Calculate 50% discount on the most expensive item
-                $loyaltyDiscount = ($mostExpensiveItem->product->price * $mostExpensiveItem->quantity) * 0.5;
+                $unitPrice = 0;
+                if (($mostExpensiveItem->item_type ?? null) === 'custom_bouquet' && isset($mostExpensiveItem->customBouquet)) {
+                    $unitPrice = $mostExpensiveItem->customBouquet->unit_price ?? ($mostExpensiveItem->customBouquet->total_price ?? $mostExpensiveItem->customBouquet->price ?? 0);
+                } else if (isset($mostExpensiveItem->product) && isset($mostExpensiveItem->product->price)) {
+                    $unitPrice = $mostExpensiveItem->product->price;
+                }
+                $loyaltyDiscount = ($unitPrice * ($mostExpensiveItem->quantity ?? 1)) * 0.5;
                 $discountedItem = $mostExpensiveItem;
             }
         }
@@ -397,6 +461,7 @@ class CheckoutController extends Controller
         // Check if this is a "Buy now" flow (product_id and quantity provided)
         $productId = $request->input('product_id');
         $catalogProductId = $request->input('catalog_product_id');
+        $customBouquetId = $request->input('custom_bouquet_id');
         $quantity = $request->input('quantity', 1);
 
         \Log::info('ProcessOrder - Buy now flow check', [
@@ -443,6 +508,12 @@ class CheckoutController extends Controller
                 $product->save();
             }
             $productId = $product->id;
+        } elseif ($customBouquetId) {
+            // "Buy now" flow with custom bouquet ID
+            $customBouquet = \App\Models\CustomBouquet::find($customBouquetId);
+            if (!$customBouquet) {
+                return redirect()->route('customer.products.bouquet-customize')->with('error', 'Custom bouquet not found.');
+            }
         }
 
         if ($productId) {
@@ -451,18 +522,38 @@ class CheckoutController extends Controller
             $tempCartItem = new \stdClass();
             $tempCartItem->id = 'temp_' . $productId;
             $tempCartItem->product_id = $productId;
+            $tempCartItem->item_type = 'product';
             $tempCartItem->quantity = $quantity;
             $tempCartItem->product = $product;
+            $tempCartItem->customBouquet = null;
 
             $cartItems = collect([$tempCartItem]);
             \Log::info('ProcessOrder - Created temp cart item for Buy Now', ['product_id' => $productId, 'quantity' => $quantity]);
+        } elseif ($customBouquetId) {
+            // "Buy now" flow with custom bouquet ID
+            $customBouquet = \App\Models\CustomBouquet::find($customBouquetId);
+            if (!$customBouquet) {
+                return redirect()->route('customer.products.bouquet-customize')->with('error', 'Custom bouquet not found.');
+            }
+            
+            // Create a temporary cart item object for custom bouquet checkout
+            $tempCartItem = new \stdClass();
+            $tempCartItem->id = 'temp_custom_' . $customBouquetId;
+            $tempCartItem->custom_bouquet_id = $customBouquetId;
+            $tempCartItem->item_type = 'custom_bouquet';
+            $tempCartItem->quantity = $quantity;
+            $tempCartItem->customBouquet = $customBouquet;
+            $tempCartItem->product = null;
+
+            $cartItems = collect([$tempCartItem]);
+            \Log::info('ProcessOrder - Created temp cart item for Custom Bouquet Buy Now', ['custom_bouquet_id' => $customBouquetId, 'quantity' => $quantity]);
         } else {
-            // Regular cart flow
+            // Regular cart flow - load both product and customBouquet relationships
             $selectedItemIds = $request->input('selected_items', []);
             if (!empty($selectedItemIds)) {
-                $cartItems = $user->cartItems()->with('product')->whereIn('id', $selectedItemIds)->get();
+                $cartItems = $user->cartItems()->with(['product', 'customBouquet'])->whereIn('id', $selectedItemIds)->get();
             } else {
-                $cartItems = $user->cartItems()->with('product')->get();
+                $cartItems = $user->cartItems()->with(['product', 'customBouquet'])->get();
             }
 
         if ($cartItems->isEmpty()) {
@@ -481,7 +572,13 @@ class CheckoutController extends Controller
 
         // Calculate total
         $subtotal = $cartItems->sum(function($item) {
-            return $item->quantity * $item->product->price;
+            $unitPrice = 0;
+            if (($item->item_type ?? null) === 'custom_bouquet' && isset($item->customBouquet)) {
+                $unitPrice = $item->customBouquet->unit_price ?? ($item->customBouquet->total_price ?? $item->customBouquet->price ?? 0);
+            } else if (isset($item->product) && isset($item->product->price)) {
+                $unitPrice = $item->product->price;
+            }
+            return ($item->quantity ?? 1) * $unitPrice;
         });
         // Use shipping_fee from form if present
         $shippingFee = $request->input('shipping_fee');
@@ -497,12 +594,24 @@ class CheckoutController extends Controller
         if ($loyaltyCard && $loyaltyCard->stamps_count >= 4) {
             // Find the most expensive item in the cart
             $mostExpensiveItem = $cartItems->sortByDesc(function($item) {
-                return $item->product->price * $item->quantity;
+                $unitPrice = 0;
+                if (($item->item_type ?? null) === 'custom_bouquet' && isset($item->customBouquet)) {
+                    $unitPrice = $item->customBouquet->unit_price ?? ($item->customBouquet->total_price ?? $item->customBouquet->price ?? 0);
+                } else if (isset($item->product) && isset($item->product->price)) {
+                    $unitPrice = $item->product->price;
+                }
+                return $unitPrice * ($item->quantity ?? 1);
             })->first();
 
             if ($mostExpensiveItem) {
                 // Calculate 50% discount on the most expensive item
-                $loyaltyDiscount = ($mostExpensiveItem->product->price * $mostExpensiveItem->quantity) * 0.5;
+                $unitPrice = 0;
+                if (($mostExpensiveItem->item_type ?? null) === 'custom_bouquet' && isset($mostExpensiveItem->customBouquet)) {
+                    $unitPrice = $mostExpensiveItem->customBouquet->unit_price ?? ($mostExpensiveItem->customBouquet->total_price ?? $mostExpensiveItem->customBouquet->price ?? 0);
+                } else if (isset($mostExpensiveItem->product) && isset($mostExpensiveItem->product->price)) {
+                    $unitPrice = $mostExpensiveItem->product->price;
+                }
+                $loyaltyDiscount = ($unitPrice * ($mostExpensiveItem->quantity ?? 1)) * 0.5;
                 \Log::info('Loyalty discount applied', [
                     'discount_amount' => $loyaltyDiscount,
                     'discounted_item' => $mostExpensiveItem->product->name,
@@ -661,9 +770,23 @@ class CheckoutController extends Controller
             // Create notifications
             $this->createNotifications($order);
 
-            // Attach products to the order
+            // Attach products and custom bouquets to the order
             foreach ($cartItems as $item) {
-                $order->products()->attach($item->product_id, ['quantity' => $item->quantity]);
+                if (($item->item_type ?? null) === 'custom_bouquet') {
+                    // Attach custom bouquet
+                    $customBouquetId = $item->custom_bouquet_id ?? ($item->customBouquet->id ?? null);
+                    if ($customBouquetId) {
+                        $order->customBouquets()->attach($customBouquetId, ['quantity' => $item->quantity]);
+                        \Log::info('Attached custom bouquet to order', [
+                            'order_id' => $order->id,
+                            'custom_bouquet_id' => $customBouquetId,
+                            'quantity' => $item->quantity
+                        ]);
+                    }
+                } elseif (isset($item->product_id)) {
+                    // Attach regular product
+                    $order->products()->attach($item->product_id, ['quantity' => $item->quantity]);
+                }
             }
 
             // Log order for inventory tracking (no stock decrease yet)
@@ -687,8 +810,8 @@ class CheckoutController extends Controller
             $delivery->save();
 
             // Clear only the purchased items from cart after order is placed
-            // Only clear cart if this is not a "Buy now" flow
-            if (!$request->has('product_id')) {
+            // Only clear cart if this is not a "Buy now" flow (product_id, catalog_product_id, or custom_bouquet_id)
+            if (!$request->has('product_id') && !$request->has('catalog_product_id') && !$request->has('custom_bouquet_id')) {
                 // Get the selected item IDs that were purchased
                 $selectedItemIds = $request->input('selected_items', []);
                 if (!empty($selectedItemIds)) {
@@ -782,8 +905,23 @@ class CheckoutController extends Controller
                 ]);
             }
 
+            // Attach products and custom bouquets to the order
             foreach ($cartItems as $item) {
-                $order->products()->attach($item->product_id, ['quantity' => $item->quantity]);
+                if (($item->item_type ?? null) === 'custom_bouquet') {
+                    // Attach custom bouquet
+                    $customBouquetId = $item->custom_bouquet_id ?? ($item->customBouquet->id ?? null);
+                    if ($customBouquetId) {
+                        $order->customBouquets()->attach($customBouquetId, ['quantity' => $item->quantity]);
+                        \Log::info('Attached custom bouquet to order (payment gateway)', [
+                            'order_id' => $order->id,
+                            'custom_bouquet_id' => $customBouquetId,
+                            'quantity' => $item->quantity
+                        ]);
+                    }
+                } elseif (isset($item->product_id)) {
+                    // Attach regular product
+                    $order->products()->attach($item->product_id, ['quantity' => $item->quantity]);
+                }
             }
             // Get checkout data from session for additional recipient information
             $checkoutData = session('checkout_data', []);

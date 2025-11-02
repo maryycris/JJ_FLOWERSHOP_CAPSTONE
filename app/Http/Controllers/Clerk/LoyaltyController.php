@@ -10,7 +10,7 @@ class LoyaltyController extends Controller
 {
     public function index()
     {
-        $cards = LoyaltyCard::with('user')->orderByDesc('updated_at')->get();
+        $cards = LoyaltyCard::with('user')->orderByDesc('updated_at')->paginate(8);
         return view('clerk.loyalty.index', compact('cards'));
     }
 

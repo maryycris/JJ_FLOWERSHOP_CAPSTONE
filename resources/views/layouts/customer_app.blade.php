@@ -295,14 +295,14 @@
             <div class="container-fluid px-4" style="padding-top: 4px; padding-bottom: 6px;">
                 <div class="d-flex justify-content-between" style="align-items: flex-start;">
                     <!-- Brand - full navbar height -->
-                    <div class="d-flex align-items-center customer-brand" style="gap: .6rem; padding-top: 1px;">
+                    <a href="{{ route('customer.dashboard') }}" class="d-flex align-items-center customer-brand" style="gap: .6rem; padding-top: 1px; text-decoration:none; color:inherit;">
                         <img src="/images/logo.png" alt="JJ Flower Shop" style="height: 64px; background: transparent;" class="me-1">
                         <div class="brand-inclusive" style="font-size: 1.8rem; line-height: 1; letter-spacing: .5px;">
                             J ' J FLOWER
                             <br>
                             <span style="font-size: 1.8rem; font-weight: 400;">SHOP <span class="fs-6">Est. 2023</span></span>
                         </div>
-                    </div>
+                    </a>
 
                     <!-- Center block: links (top) + icons (bottom) -->
                     <div class="d-flex flex-column flex-grow-1" style="max-width: 1000px; margin: 0 20px;">
@@ -378,10 +378,32 @@
                 <i class="bi @if(request()->routeIs('customer.notifications.index')) bi-bell-fill @else bi-bell @endif"></i>
                 <span>Notifications</span>
             </a>
-            <a href="{{ route('customer.account.index') }}" class="nav-item @if(request()->routeIs('customer.account.index')) active @endif">
-                <i class="bi bi-person"></i>
-                <span>My Profile</span>
-            </a>
+            <div class="nav-item profile-dropdown-wrapper @if(request()->routeIs('customer.account.index') || request()->routeIs('customer.address_book.*') || request()->routeIs('customer.orders.*') || request()->routeIs('customer.trackOrders.*')) active @endif" style="position: relative;">
+                <a href="#" class="profile-trigger" onclick="event.preventDefault(); toggleProfileMenu(event);" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: inherit;">
+                    <i class="bi bi-person"></i>
+                    <span>My Profile</span>
+                </a>
+                <div class="profile-dropdown-menu" id="profileDropdown" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 10px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 180px; z-index: 1200; display: none; padding: 8px 0;">
+                    <a href="{{ route('customer.account.index') }}" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
+                        <i class="bi bi-person me-2"></i>Profile
+                    </a>
+                    <a href="{{ route('customer.address_book.index') }}" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
+                        <i class="bi bi-book me-2"></i>Address Book
+                    </a>
+                    <a href="{{ route('customer.orders.index') }}" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
+                        <i class="bi bi-bag me-2"></i>My Purchase
+                    </a>
+                    <a href="{{ route('customer.trackOrders.page') }}" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
+                        <i class="bi bi-truck me-2"></i>Track Order
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                        @csrf
+                        <button type="submit" class="dropdown-item" style="width: 100%; padding: 10px 16px; display: block; color: #dc3545; text-decoration: none; font-size: 0.9rem; border: none; background: none; text-align: left; cursor: pointer;">
+                            <i class="bi bi-box-arrow-right me-2"></i>Log Out
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
         
         <!-- Alert Component -->
@@ -452,8 +474,8 @@
             height: 29px;
         }
         
-        /* Mobile Responsive Navbar */
-        @media (max-width: 480px) {
+        /* Mobile/Compact Navbar (≤650px) */
+        @media (max-width: 650px) {
             /* Reserve space for bottom nav */
             body { padding-bottom: 76px; }
 
@@ -461,7 +483,7 @@
             .mobile-bottom-nav {
                 position: fixed;
                 bottom: 0; left: 0; right: 0;
-                background: #A0C49D;
+                background: rgb(138, 203, 136, 1); /* match top navbar */
                 display: flex;
                 flex-direction: row;
                 justify-content: space-around;
@@ -485,9 +507,87 @@
             .mobile-bottom-nav .nav-item i,
             .mobile-bottom-nav .nav-item .bi { font-size: 20px; }
             .mobile-bottom-nav .nav-item span { font-size: 11px; }
-            .customer-top-navbar {
-                padding: 0 15px !important;
+            
+            /* Profile Dropdown Menu Styles */
+            .mobile-bottom-nav .profile-dropdown-wrapper {
+                flex: 1 1 0;
+                position: relative;
             }
+            .mobile-bottom-nav .profile-trigger {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                color: #fff !important;
+                text-decoration: none !important;
+                cursor: pointer;
+                gap: 2px;
+            }
+            .mobile-bottom-nav .profile-dropdown-menu {
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                margin-bottom: 10px;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                min-width: 180px;
+                z-index: 1200;
+                display: none;
+                padding: 8px 0;
+                overflow: hidden;
+            }
+            .mobile-bottom-nav .profile-dropdown-menu.show {
+                display: block !important;
+            }
+            .mobile-bottom-nav .profile-dropdown-menu .dropdown-item {
+                padding: 10px 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                justify-content: flex-start;
+                color: #333;
+                text-decoration: none;
+                font-size: 0.9rem;
+                border-bottom: 1px solid #eee;
+                transition: background 0.2s;
+            }
+            .mobile-bottom-nav .profile-dropdown-menu .dropdown-item i { color: #6c757d; }
+            .mobile-bottom-nav .profile-dropdown-menu .dropdown-item:hover {
+                background: #f8f9fa;
+            }
+            .mobile-bottom-nav .profile-dropdown-menu .dropdown-item:last-child {
+                border-bottom: none;
+            }
+            .mobile-bottom-nav .profile-dropdown-menu button.dropdown-item {
+                width: 100%;
+                border: none;
+                background: none;
+                text-align: left;
+                cursor: pointer;
+                color: #dc3545;
+            }
+            .mobile-bottom-nav .profile-dropdown-menu button.dropdown-item i { color: #dc3545; }
+            .mobile-bottom-nav .profile-dropdown-menu button.dropdown-item:hover {
+                background: #f8f9fa;
+            }
+            
+            .customer-top-navbar {
+                padding: 0 15px !important; /* compact side padding on mobile */
+            }
+
+            /* Make the top navbar compact and consistent across all customer pages */
+            .customer-top-navbar > .container-fluid {
+                padding-top: 4px !important;
+                padding-bottom: 6px !important;
+            }
+            .customer-brand { gap: .4rem !important; padding-top: 0 !important; }
+            .customer-brand img { height: 40px !important; }
+            .customer-brand .brand-inclusive { font-size: 1.2rem !important; line-height: 1.1 !important; }
+            .customer-right-icons { padding-top: 10px !important; gap: 15px !important; }
+            .customer-right-icons a,
+            .customer-right-icons button { width: 28px !important; height: 28px !important; font-size: 1.1rem !important; }
             
             .customer-brand {
                 gap: 0.4rem !important;
@@ -534,6 +634,40 @@
 
     @stack('scripts')
 
+    <script>
+        // Toggle Profile Dropdown Menu
+        function toggleProfileMenu(event) {
+            event.stopPropagation();
+            const trigger = event.currentTarget;
+            const wrapper = trigger.closest('.profile-dropdown-wrapper');
+            if (!wrapper) return;
+            
+            const menu = wrapper.querySelector('.profile-dropdown-menu');
+            if (!menu) return;
+            
+            const isVisible = menu.classList.contains('show');
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.profile-dropdown-menu').forEach(m => {
+                m.classList.remove('show');
+            });
+            
+            // Toggle this menu
+            if (!isVisible) {
+                menu.classList.add('show');
+            }
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.profile-dropdown-wrapper')) {
+                document.querySelectorAll('.profile-dropdown-menu').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+    </script>
+    
     <script>
         // Check authentication status on page load and back button
         function checkAuthStatus() {
@@ -639,12 +773,12 @@
                         performSearch();
                     }
                 });
-                // Optional: live typing debounce search
-                clearTimeout(searchInput.__t);
-                searchInput.addEventListener('input', function(){
-                    clearTimeout(searchInput.__t);
-                    searchInput.__t = setTimeout(performSearch, 400);
-                });
+                // Remove live typing search - only search on Enter key press
+                // clearTimeout(searchInput.__t);
+                // searchInput.addEventListener('input', function(){
+                //     clearTimeout(searchInput.__t);
+                //     searchInput.__t = setTimeout(performSearch, 400);
+                // });
             }
 
             if (filterApply) {

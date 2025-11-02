@@ -72,21 +72,20 @@ class DriverController extends Controller
     {
         $driver = Auth::user();
         
-        // Get completed deliveries
+        // Get completed deliveries for list (with customer and address details)
         $completedDeliveries = $driver->deliveries()
             ->where('status', 'completed')
-            ->with('order.user')
+            ->with(['order.user', 'order.delivery'])
             ->latest()
             ->paginate(10);
-            
-        // Get returned orders
-        $returnedOrders = \App\Models\Order::where('assigned_driver_id', $driver->id)
-            ->where('order_status', 'returned')
-            ->with(['user', 'products'])
-            ->latest()
-            ->paginate(10);
-        
-        return view('driver.history.index', compact('completedDeliveries', 'returnedOrders'));
+
+        // Get total count of completed deliveries (not just current page)
+        $completedTotal = $driver->deliveries()
+            ->where('status', 'completed')
+            ->count();
+
+        // Return view without any return section (feature removed)
+        return view('driver.history.index', compact('completedDeliveries', 'completedTotal'));
     }
 
     public function showHistory(Delivery $delivery)
@@ -242,7 +241,33 @@ class DriverController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized access'], 403);
         }
 
-        // Ensure the order is in 'on_delivery' status
+        // If still assigned, transition to on_delivery automatically
+        if ($order->order_status === 'assigned') {
+            try {
+                $statusService = new \App\Services\OrderStatusService();
+                if (!$statusService->acceptOrder($order, Auth::id())) {
+                    // Force transition as a fallback
+                    if ($order->assigned_driver_id === Auth::id()) {
+                        $order->update([
+                            'order_status' => 'on_delivery',
+                            'on_delivery_at' => now(),
+                        ]);
+                        if ($order->delivery) {
+                            $order->delivery->update(['status' => 'on_delivery']);
+                        }
+                        $order->statusHistories()->create([
+                            'status' => 'on_delivery',
+                            'message' => 'Driver started delivery (auto-transition)'
+                        ]);
+                    }
+                }
+                $order->refresh();
+            } catch (\Throwable $e) {
+                \Log::error('Auto transition to on_delivery failed', ['order_id' => $orderId, 'error' => $e->getMessage()]);
+            }
+        }
+
+        // Ensure the order is now in 'on_delivery' status
         if ($order->order_status !== 'on_delivery') {
             \Log::warning('Order not in delivery status', ['order_id' => $orderId, 'status' => $order->order_status]);
             return response()->json(['success' => false, 'message' => 'Order is not in delivery status'], 400);
@@ -304,8 +329,36 @@ class DriverController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized access'], 403);
         }
 
-        // Ensure the order is in 'on_delivery' status
-        if ($order->order_status !== 'on_delivery') {
+        // Allow completing from 'assigned' by transitioning to 'on_delivery' first
+        if ($order->order_status === 'assigned') {
+            try {
+                $statusService = new \App\Services\OrderStatusService();
+                // Try normal transition first
+                if (!$statusService->acceptOrder($order, Auth::id())) {
+                    // Fallback: force transition to on_delivery if still assigned to this driver
+                    if ($order->assigned_driver_id === Auth::id()) {
+                        $order->update([
+                            'order_status' => 'on_delivery',
+                            'on_delivery_at' => now(),
+                        ]);
+                        if ($order->delivery) {
+                            $order->delivery->update(['status' => 'on_delivery']);
+                        }
+                        // Write minimal status history to avoid duplicates
+                        $order->statusHistories()->create([
+                            'status' => 'on_delivery',
+                            'message' => 'Driver started delivery (auto-transition)'
+                        ]);
+                    } else {
+                        return response()->json(['success' => false, 'message' => 'Failed to start delivery'], 500);
+                    }
+                }
+                // Refresh the model to see the latest status
+                $order->refresh();
+            } catch (\Throwable $e) {
+                return response()->json(['success' => false, 'message' => 'Failed to start delivery: ' . $e->getMessage()], 500);
+            }
+        } elseif ($order->order_status !== 'on_delivery') {
             return response()->json(['success' => false, 'message' => 'Order is not in delivery status'], 400);
         }
 

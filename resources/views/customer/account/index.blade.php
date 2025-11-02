@@ -1,6 +1,7 @@
 @extends('layouts.customer_app')
 
 @section('content')
+@include('components.customer.alt_nav', ['active' => 'profile'])
 <style>
     .profile-card {
         background: #fff;
@@ -132,16 +133,47 @@
         background: rgba(0, 0, 0, 0.1);
         color: #333;
     }
+    @media (max-width: 767.98px) {
+        .main-content-with-sidebar { margin-left: 0 !important; max-width: 100% !important; }
+        .container-fluid { padding: 0.5rem 0.25rem !important; }
+        /* Make the inner column a bit wider and reduce outer gutters */
+        .row.justify-content-center > .col-12,
+        .row.justify-content-center > .col-md-9,
+        .row.justify-content-center > .col-lg-8 { width: 96% !important; }
+        .container-fluid { padding-top: 4px !important; }
+        .profile-card { padding: 16px 14px; margin: 10px auto 0 auto; border-radius: 12px; }
+        .profile-title { font-size: 1rem; padding: 6px 10px; }
+        .profile-image { width: 72px; height: 72px; }
+        .profile-section { margin-bottom: 12px; }
+        .profile-label { min-width: auto; display: block; font-size: 0.92rem; margin-bottom: 2px; }
+        .profile-value { font-size: 0.98rem; }
+        .edit-details-btn { width: 100%; border-radius: 8px; padding: 10px 14px; }
+        .profile-divider { margin: 8px 0 16px; }
+        .row > .col-md-6 { margin-bottom: 12px; }
+        .btn-green { width: 100% !important; }
+        /* Responsive modal sizing/positioning */
+        #editDetailsModal .modal-dialog,
+        #editImageModal .modal-dialog {
+            width: 95vw !important;
+            max-width: 95vw !important;
+            margin: 10vh auto !important;
+        }
+        #editDetailsModal .modal-body { max-height: 60vh; overflow-y: auto; }
+        #editImageModal .modal-body { min-height: 220px; }
+        /* Ensure modals overlay the sticky mobile navbar */
+        .modal { z-index: 6000 !important; }
+        .modal-backdrop { z-index: 5990 !important; }
+    }
 </style>
-<div class="container-fluid">
+<div class="container-fluid" style="padding-top: 8px;">
     <div class="row justify-content-center">
         <!-- Sidebar -->
-        <div class="col-md-3 col-lg-3">
+        <div class="col-md-3 col-lg-3 d-none d-md-block">
             @include('customer.sidebar')
         </div>
         <!-- Main Content -->
-        <div class="col-md-9 col-lg-8 main-content-with-sidebar" style="margin-left: 25%; max-width: calc(75% - 30px);">
-            <div class="py-4 px-3 d-flex flex-column align-items-center justify-content-start">
+        <div class="col-12 col-md-9 col-lg-8 main-content-with-sidebar" style="margin-left: 25%; max-width: calc(75% - 30px);">
+            <div class="py-3 px-3 d-flex flex-column align-items-center justify-content-start">
                 @if(session('reminder'))
                     <div class="alert alert-warning" style="max-width:700px;margin:20px auto 0 auto;">
                         {{ session('reminder') }}
@@ -151,7 +183,17 @@
                     <!-- Left Column - My Personal Info -->
                     <div class="col-md-6">
                         <div class="profile-card">
-                            <div class="profile-title mb-2">My Personal Info</div>
+                            <div class="profile-title mb-2 text-center">My Personal Info</div>
+                            <div class="mb-3 text-center">
+                                <img src="{{
+                                    $user->profile_picture
+                                        ? (\Illuminate\Support\Str::startsWith($user->profile_picture, 'http')
+                                            ? $user->profile_picture
+                                            : asset('storage/' . $user->profile_picture))
+                                        : 'https://via.placeholder.com/100'
+                                }}" alt="Profile" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover; cursor:pointer;" data-bs-toggle="modal" data-bs-target="#editImageModal">
+                                <div class="small text-muted">Click image to change</div>
+                            </div>
                             <hr class="profile-divider">
                             <div class="profile-section" style="margin-bottom: 16px;"><span class="profile-label">First Name:</span> <span class="profile-value">{{ Auth::user()->first_name ?? 'N/A' }}</span></div>
                             <div class="profile-section" style="margin-bottom: 16px;"><span class="profile-label">Last Name:</span> <span class="profile-value">{{ Auth::user()->last_name ?? 'N/A' }}</span></div>
@@ -218,7 +260,7 @@
 
 <!-- Edit Details Modal -->
 <div class="modal fade" id="editDetailsModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="background: #ffffff;">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Personal Info</h5>
@@ -242,24 +284,7 @@
                         <label class="form-label">Email *</label>
                         <input type="email" class="form-control" name="email" value="{{ Auth::user()->email ?? '' }}" readonly required>
                     </div>
-                <div class="mb-3">
-                        <label class="form-label">Street Address *</label>
-                        <input type="text" class="form-control" name="street_address" value="{{ Auth::user()->street_address ?? '' }}" required style="text-transform: capitalize;">
-                </div>
-                <div class="mb-3">
-                        <label class="form-label">Barangay *</label>
-                        <input type="text" class="form-control" name="barangay" value="{{ Auth::user()->barangay ?? '' }}" required style="text-transform: capitalize;">
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label class="form-label">Municipality *</label>
-                            <input type="text" class="form-control" name="municipality" value="{{ Auth::user()->municipality ?? '' }}" required style="text-transform: capitalize;">
-                        </div>
-                        <div class="col">
-                            <label class="form-label">City *</label>
-                            <input type="text" class="form-control" name="city" value="{{ Auth::user()->city ?? '' }}" required style="text-transform: capitalize;">
-                        </div>
-                </div>
+                {{-- Address fields removed; address is managed via Address Book --}}
                 <div class="mb-3">
                         <label class="form-label">Cellphone Number *</label>
                         <input type="text" class="form-control" name="contact_number" value="{{ Auth::user()->contact_number ?? '' }}" required placeholder="Enter your cellphone number">

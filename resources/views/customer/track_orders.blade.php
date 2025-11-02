@@ -1,14 +1,16 @@
 @extends('layouts.customer_app')
 
 @section('content')
-<div class="container-fluid py-4" style="background: #f4faf4; min-height: 100vh;">
+@include('components.customer.alt_nav', ['active' => 'profile'])
+<div class="container-fluid py-4 position-relative" style="background: #f4faf4; min-height: 100vh;">
     <div class="row justify-content-center">
-        <div class="col-md-3 col-lg-3">
+        <div class="d-md-none page-label-mobile">Track Order</div>
+        <div class="col-md-3 col-lg-3 d-none d-md-block">
             @include('customer.sidebar')
         </div>
-        <div class="col-md-9 col-lg-8 main-content-with-sidebar" style="margin-left: 25%; max-width: calc(75% - 30px);">
-            <div class="row">
-                <div class="col-md-5">
+        <div class="col-12 col-md-9 col-lg-8 main-content-with-sidebar" style="margin-left: 25%; max-width: calc(75% - 30px);">
+            <div class="row" id="trackOrdersContent">
+        <div class="col-12 col-md-5 order-2 order-md-1" style="max-width: 670px; margin: 0 auto;">
             @if ($orders->isEmpty())
                 <div class="alert" role="alert" style="background-color: #e8f5e8; border-color: #7bb47b; color: #2d5a2d;">
                     You have no orders to track.
@@ -43,8 +45,8 @@
                 </div>
             @endif
                 </div>
-                <div class="col-md-7">
-            <div class="card" style="border-radius: 8px;">
+                <div class="col-12 col-md-7 order-1 order-md-2" style="max-width: 680px; margin: 0 auto;">
+            <div class="card timeline-card" style="border-radius: 8px;">
                 <div class="card-header d-flex align-items-center" style="background: #eafbe7; border-radius: 8px 8px 0 0;">
                     <span class="fw-bold" id="timeline-order-id" style="color: #4a9448;">Order #</span>
                     <span class="ms-3" style="color: #888;">Customer</span>
@@ -145,6 +147,22 @@
 
 .timeline-scroll-container::-webkit-scrollbar-thumb:hover {
     background: #4a9448;
+}
+
+/* Mobile enhancements */
+@media (max-width: 767.98px) {
+    /* Mobile page label */
+    .page-label-mobile { position: absolute; top: 6px; left: 30px; font-weight: 700; font-size: 1.2rem; color: #4a9448; }
+    /* Sticky alt navbars */
+    .alt-topbar { position: fixed !important; }
+    .mobile-bottom-nav { position: fixed !important; }
+    /* Bring content closer to label */
+    #trackOrdersContent { margin-top: 18px; }
+    #trackOrdersContent .card { margin-left: auto; margin-right: auto; width: 93%; }
+    /* Add clear separation between sticky timeline and orders list */
+    .timeline-card { margin-bottom: 12px; }
+    /* Make timeline sticky at top under the label */
+    .timeline-card { position: sticky; top: 52px; z-index: 2; background: #fff; }
 }
 </style>
 @endpush

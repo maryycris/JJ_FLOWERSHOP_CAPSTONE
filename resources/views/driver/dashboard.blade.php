@@ -19,8 +19,6 @@
 }
 </style>
 <div class="text-center mb-4">
-    <!-- Banner/UI Reference -->
-    <img src="/images/rider_UI.png" alt="Driver UI Reference" style="max-width: 100%; border-radius: 15px; margin-bottom: 24px; box-shadow: 0 4px 16px #dbe7db;">
     <h4 class="fw-bold mt-3" style="color: #356e35; letter-spacing: 1px;">Welcome, {{ Auth::user()->name ?? 'Driver' }}!</h4>
     <p class="text-muted">Your delivery dashboard is ready.</p>
 </div>
@@ -28,21 +26,21 @@
     <div class="card-body text-center">
         <div style="font-size: 2.3rem; color: #2a7e2a;"><i class="bi bi-truck"></i></div>
         <h5 class="card-title mt-2 mb-2" style="color: #3a5d37; font-weight: 600;">Today's Deliveries</h5>
-        <p class="display-5 fw-bold mb-1" style="color: #216f21;" id="deliveryCount">{{ isset($toDeliver) ? $toDeliver->count() : 0 }}</p>
+        <p class="display-5 fw-bold mb-1" style="color: #216f21;" id="deliveryCount">{{ (isset($toDeliver) ? $toDeliver->count() : 0) + (isset($pendingAcceptance) ? $pendingAcceptance->count() : 0) }}</p>
         <div class="small text-muted mb-0">Deliveries assigned to you today</div>
     </div>
 </div>
 
 @if(isset($pendingAcceptance) && $pendingAcceptance->count() > 0)
-<div class="card shadow-lg mb-4" style="border: none; border-radius: 16px; border-left: 4px solid #ffc107;">
-    <div class="card-header" style="background: #fff3cd; border-bottom: 1px solid #dee2e6;">
-        <h6 class="mb-0" style="color: #856404; font-weight: 600;">
-            <i class="bi bi-clock me-2"></i>Pending Acceptance
+<div class="card shadow-lg mb-4" style="border: none; border-radius: 16px; border-left: 4px solid #17a2b8;">
+    <div class="card-header" style="background: #d1ecf1; border-bottom: 1px solid #dee2e6;">
+        <h6 class="mb-0" style="color: #0c5460; font-weight: 600;">
+            <i class="bi bi-truck me-2"></i>Assigned Orders
         </h6>
     </div>
     <div class="card-body p-0">
         @foreach($pendingAcceptance as $order)
-        <div class="border-bottom p-3 order-card-clickable" id="pendingOrder{{ $order->id }}" style="border-color: #e9ecef !important; cursor: pointer; transition: background-color 0.2s;" onclick="viewOrderDetails({{ $order->id }})" onmouseover="this.style.backgroundColor='#fff3cd'" onmouseout="this.style.backgroundColor='transparent'">
+        <div class="border-bottom p-3 order-card-clickable" id="pendingOrder{{ $order->id }}" style="border-color: #e9ecef !important; cursor: pointer; transition: background-color 0.2s;" onclick="viewOrderDetails({{ $order->id }})" onmouseover="this.style.backgroundColor='#d1ecf1'" onmouseout="this.style.backgroundColor='transparent'">
             <div class="d-flex justify-content-between align-items-start">
                 <div class="flex-grow-1">
                     <h6 class="mb-1" style="color: #2c3e50; font-weight: 600;">
@@ -60,25 +58,14 @@
                     </p>
                 </div>
                 <div class="text-end">
-                    <span class="badge bg-warning text-dark mb-2">Pending</span>
+                    <span class="badge bg-info mb-2">Assigned</span>
                     <br>
                     <small class="text-muted">{{ $order->created_at->format('M d, Y') }}</small>
                     <br>
                     <small class="text-primary" style="font-size: 0.75rem;">Click to view details</small>
                     <br>
                     <div class="mt-2">
-                        @if($order->delivery && $order->delivery->driver_decision === 'accepted')
-                            <span class="badge bg-success">Accepted</span>
-                        @elseif($order->delivery && $order->delivery->driver_decision === 'declined')
-                            <span class="badge bg-danger">Declined</span>
-                        @else
-                            <button class="btn btn-success btn-sm me-1" onclick="event.stopPropagation(); acceptOrder({{ $order->id }})">
-                                <i class="bi bi-check-circle"></i> Accept
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); declineOrder({{ $order->id }})">
-                                <i class="bi bi-x-circle"></i> Decline
-                            </button>
-                        @endif
+                        <span class="badge bg-info">Assigned</span>
                     </div>
                 </div>
             </div>

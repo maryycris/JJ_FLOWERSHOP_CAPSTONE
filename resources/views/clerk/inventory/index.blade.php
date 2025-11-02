@@ -197,6 +197,7 @@ thead th {
 /* Inventory Table Styling */
 .table {
     font-size: 0.75rem;
+    background-color: white;
 }
 
 .table thead th {
@@ -204,12 +205,22 @@ thead th {
     font-weight: 600;
     padding: 0.5rem 0.3rem;
     vertical-align: middle;
+    background-color: white;
+}
+
+.table tbody {
+    background-color: white;
 }
 
 .table tbody td {
     font-size: 0.7rem;
     padding: 0.4rem 0.3rem;
     vertical-align: middle;
+    background-color: white;
+}
+
+.table tbody tr {
+    background-color: white;
 }
 
 /* Action Buttons */
@@ -600,20 +611,20 @@ thead th {
 <style>
 /* Override Bootstrap table-striped styling */
 .table tbody tr:nth-of-type(odd) {
-    background-color: transparent !important;
+    background-color: white !important;
 }
 
 .table tbody tr:nth-of-type(even) {
-    background-color: transparent !important;
+    background-color: white !important;
 }
 
 /* Ensure full row background coverage */
 .table tbody tr {
-    background-color: transparent !important;
+    background-color: white !important;
 }
 
 .table tbody tr td {
-    background-color: transparent !important;
+    background-color: white !important;
     border-color: #dee2e6 !important;
 }
 
@@ -1074,7 +1085,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     if (searchInput) {
-        searchInput.addEventListener('input', function(e){ filterRows(e.target.value); });
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                filterRows(e.target.value);
+            }
+        });
+        // Remove live typing search - only search on Enter key press
+        // searchInput.addEventListener('input', function(e){ filterRows(e.target.value); });
     }
     if (clearBtn) {
         clearBtn.addEventListener('click', function(){ searchInput.value = ''; filterRows(''); searchInput.focus(); });

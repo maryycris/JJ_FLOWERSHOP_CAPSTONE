@@ -35,6 +35,54 @@ class LoyaltyCard extends Model
     {
         return $this->hasMany(LoyaltyAdjustment::class);
     }
+
+    /**
+     * Get formatted stamps count
+     */
+    public function getFormattedStampsCountAttribute(): string
+    {
+        return $this->stamps_count . ' / 5';
+    }
+
+    /**
+     * Check if card is eligible for redemption
+     */
+    public function isEligibleForRedemption(): bool
+    {
+        return $this->stamps_count >= 5;
+    }
+
+    /**
+     * Get stamps needed for next redemption
+     */
+    public function getStampsNeededAttribute(): int
+    {
+        return max(0, 5 - $this->stamps_count);
+    }
+
+    /**
+     * Get progress percentage
+     */
+    public function getProgressPercentageAttribute(): int
+    {
+        return min(100, ($this->stamps_count / 5) * 100);
+    }
+
+    /**
+     * Check if card is active
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * Scope: Get active loyalty cards
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
 }
 
 

@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('content'); ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="fw-bold">Orders to Deliver</h4>
@@ -20,8 +18,8 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <h6 class="card-title mb-0">Order #<?php echo e($order->id); ?></h6>
-                    <span class="badge bg-<?php echo e($order->order_status === 'completed' ? 'success' : ($order->order_status === 'on_delivery' ? 'info' : ($order->order_status === 'assigned' ? 'warning' : 'secondary'))); ?>">
-                        <?php echo e($order->order_status === 'assigned' ? 'For Delivery' : ucwords(str_replace('_', ' ', $order->order_status))); ?>
+                    <span class="badge bg-info">
+                        <?php echo e($order->order_status === 'assigned' ? 'Assigned' : ucwords(str_replace('_', ' ', $order->order_status))); ?>
 
                     </span>
                 </div>
@@ -64,29 +62,18 @@
                     <a href="<?php echo e(route('driver.orders.show', $order->id)); ?>" class="btn btn-primary btn-sm flex-fill">
                         <i class="bi bi-eye me-1"></i>View Details
                     </a>
-                    <?php if($order->order_status === 'assigned'): ?>
-                        <?php if($order->delivery && $order->delivery->driver_decision === 'accepted'): ?>
-                            <span class="badge bg-success">Accepted</span>
-                        <?php elseif($order->delivery && $order->delivery->driver_decision === 'declined'): ?>
-                            <span class="badge bg-danger">Declined</span>
-                        <?php else: ?>
-                            <button class="btn btn-success btn-sm me-1" onclick="acceptOrder(<?php echo e($order->id); ?>)">
-                                <i class="bi bi-check-circle me-1"></i>Accept
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="declineOrder(<?php echo e($order->id); ?>)">
-                                <i class="bi bi-x-circle me-1"></i>Decline
-                            </button>
-                        <?php endif; ?>
-                    <?php elseif($order->order_status === 'on_delivery'): ?>
                     <div class="d-flex gap-2">
+                        <?php if(in_array($order->order_status, ['assigned','on_delivery'])): ?>
                         <button class="btn btn-success btn-sm" onclick="showCompleteModal(<?php echo e($order->id); ?>)">
                             <i class="bi bi-camera me-1"></i>Mark Complete
                         </button>
+                        <?php endif; ?>
+                        <?php if($order->order_status === 'on_delivery'): ?>
                         <button class="btn btn-warning btn-sm" onclick="returnOrder(<?php echo e($order->id); ?>)">
                             <i class="bi bi-arrow-return-left me-1"></i>Return
                         </button>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -467,88 +454,15 @@ document.addEventListener('DOMContentLoaded', function() {
 function returnOrder(orderId) {
     console.log('Return order called for:', orderId);
     
-    if (confirm('Are you sure you want to return this order?')) {
-        // Show loading state
-        const returnBtn = document.querySelector(`button[onclick="returnOrder(${orderId})"]`);
-        const originalText = returnBtn.innerHTML;
-        returnBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Returning...';
-        returnBtn.disabled = true;
-        
-        fetch(`/driver/orders/${orderId}/return`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                reason: 'Order returned by driver - customer not available'
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Remove the order from the page
-                const orderCard = returnBtn.closest('.col-12');
-                if (orderCard) {
-                    orderCard.style.transition = 'opacity 0.5s ease-out';
-                    orderCard.style.opacity = '0';
-                    setTimeout(() => {
-                        orderCard.remove();
-                        
-                        // Check if no more orders
-                        const ordersContainer = document.querySelector('.row');
-                        if (ordersContainer && ordersContainer.children.length === 0) {
-                            // Show no orders message
-                            ordersContainer.innerHTML = `
-                                <div class="col-12">
-                                    <div class="text-center py-5">
-                                        <i class="bi bi-inbox display-1 text-muted"></i>
-                                        <h5 class="mt-3 text-muted">No orders assigned yet</h5>
-                                        <p class="text-muted">You'll see your delivery orders here when they're assigned to you.</p>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    }, 500);
-                }
-                
-                // Show success message
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Order Returned!',
-                    text: 'Order has been marked as returned and moved to delivery history.',
-                    timer: 2000,
-                    showConfirmButton: false
-                }).then(() => {
-                    // Navigate to delivery history
-                    window.location.href = '<?php echo e(route("driver.history.index")); ?>';
-                });
-            } else {
-                // Reset button on error
-                returnBtn.innerHTML = originalText;
-                returnBtn.disabled = false;
-                
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'Failed to return order'
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            
-            // Reset button on error
-            returnBtn.innerHTML = originalText;
-            returnBtn.disabled = false;
-            
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An error occurred while returning the order'
-            });
-        });
-    }
+    // Get order details from the DOM
+    const orderCard = document.querySelector(`button[onclick="returnOrder(${orderId})"]`).closest('.card');
+    const customerName = orderCard.querySelector('strong').textContent;
+    const deliveryAddress = orderCard.querySelectorAll('strong')[1].textContent;
+    const totalAmount = orderCard.querySelectorAll('strong')[2].textContent;
+    const orderDate = orderCard.querySelectorAll('strong')[3].textContent;
+    
+    // Show the return modal with order details
+    showReturnModal(orderId, customerName, deliveryAddress, totalAmount, orderDate);
 }
 
 // Simple function to handle complete delivery

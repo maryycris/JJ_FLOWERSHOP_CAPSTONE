@@ -1,7 +1,8 @@
 @extends('layouts.customer_app')
 
 @section('content')
-<div class="pt-1" style="background: #f4faf4; height: 85vh; overflow: hidden;">
+@include('components.customer.alt_nav', ['active' => 'home'])
+<div class="pt-0 checkout-container" style="background: #f4faf4; min-height: 100vh;">
     <div class="container" style="max-width: 1400px;">
     <form action="{{ route('customer.checkout.payment_method') }}" method="GET" id="checkoutForm">
         @csrf
@@ -17,18 +18,20 @@
             <input type="hidden" name="catalog_product_id" value="{{ request('catalog_product_id') }}">
             <input type="hidden" name="quantity" value="{{ request('quantity', 1) }}">
         @endif
+        @if(request('custom_bouquet_id'))
+            <input type="hidden" name="custom_bouquet_id" value="{{ request('custom_bouquet_id') }}">
+            <input type="hidden" name="quantity" value="{{ request('quantity', 1) }}">
+        @endif
         @if(request('selected_items'))
             @foreach(request('selected_items') as $itemId)
                 <input type="hidden" name="selected_items[]" value="{{ $itemId }}">
             @endforeach
         @endif
-        <div class="row justify-content-center mt-2" style="height: calc(100vh - 110px);">
-            <div class="col-12 col-lg-8 col-xl-6" style="max-width: 1200px; display: flex; flex-direction: column; height: 105%;">
-                <div class="bg-white rounded-3 p-3 mb-4 scrollable-content" style="box-shadow: none; height: 100%; overflow-y: auto;">
+        <div class="row justify-content-center mt-2">
+            <div class="col-12 col-lg-8 col-xl-6 order-1 order-lg-1 checkout-form-section">
+                <div class="bg-white rounded-3 p-3 p-md-4 mb-3 mb-lg-4 scrollable-content" style="box-shadow: none; overflow-y: auto;">
                     <div class="mb-3">
-                        <a href="{{ url('/cart') }}" class="btn btn-outline-success">
-                            &larr; Back
-                        </a>
+                        <button type="button" id="checkoutBackBtn" class="btn btn-outline-success">&larr; Back</button>
                     </div>
                     <div class="mb-4" style="font-weight: 600; font-size: 1.15rem;">Sender Information:</div>
                     <div class="row mb-3">
@@ -152,27 +155,45 @@
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-lg-4 col-xl-4" style="display: flex; flex-direction: column; height: 100%;">
-                <div class="bg-white rounded-3 p-3 mb-4" style="box-shadow: none; height: 100%; display: flex; flex-direction: column;">
-                    <!-- Sticky Purchase Summary Section -->
-                    <div class="sticky-purchase-summary" style="position: sticky; top: 0; background: white; z-index: 10; padding-bottom: 1rem; border-bottom: 1px solid #e9ecef; margin-bottom: 1rem;">
-                        <div class="mb-3" style="font-weight: 600; font-size: 1.15rem;">Purchase Summary:</div>
+            <!-- Purchase Summary Box - Always Visible -->
+            <div class="col-12 col-lg-4 col-xl-4 order-2 order-lg-2 purchase-summary-section">
+                <div class="bg-white rounded-3 p-3 p-md-4 purchase-summary-card" style="box-shadow: none; display: flex; flex-direction: column;">
+                    <!-- Purchase Summary Header -->
+                    <div class="purchase-summary-header mb-3">
+                        <div class="mb-3" style="font-weight: 600; font-size: 1.1rem;">Purchase Summary</div>
                         @foreach($cartItems as $item)
                         <div class="d-flex align-items-center mb-3">
-                            <img src="{{ asset('storage/' . $item->product->image) }}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 8px;">
-                            <div class="flex-grow-1 ms-2">
-                                <div style="font-weight: 500;">{{ $item->product->name }}</div>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <span class="badge bg-success" style="font-size: 0.9rem; padding: 8px 12px;">{{ $item->quantity }}</span>
-                            </div>
-                            <div class="ms-3" style="font-weight: 500; font-size: 1.08rem;">₱{{ number_format($item->quantity * $item->product->price, 2) }}</div>
+                            @if($item->item_type === 'custom_bouquet')
+                                <!-- Custom Bouquet Display -->
+                                <div class="flex-grow-1 ms-2">
+                                    @php
+                                        $modalId = $item->customBouquet ? $item->customBouquet->id : (isset($item->custom_bouquet_id) ? $item->custom_bouquet_id : 'temp');
+                                    @endphp
+                                    <button type="button" class="btn btn-link p-0 text-decoration-none text-start" data-bs-toggle="modal" data-bs-target="#customBouquetModal{{ $modalId }}" style="font-weight: 500; color: #7bb47b; font-size: 1rem;">
+                                        Custom Bouquet
+                                    </button>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-success" style="font-size: 0.9rem; padding: 8px 12px;">{{ $item->quantity }}</span>
+                                </div>
+                                <div class="ms-3" style="font-weight: 500; font-size: 1.08rem;">₱{{ number_format($item->quantity * ($item->customBouquet ? ($item->customBouquet->unit_price ?? ($item->customBouquet->total_price / max($item->customBouquet->quantity, 1))) : 0), 2) }}</div>
+                            @else
+                                <!-- Regular Product Display -->
+                                <img src="{{ asset('storage/' . $item->product->image) }}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 8px;">
+                                <div class="flex-grow-1 ms-2">
+                                    <div style="font-weight: 500;">{{ $item->product->name }}</div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-success" style="font-size: 0.9rem; padding: 8px 12px;">{{ $item->quantity }}</span>
+                                </div>
+                                <div class="ms-3" style="font-weight: 500; font-size: 1.08rem;">₱{{ number_format($item->quantity * ($item->product ? $item->product->price : 0), 2) }}</div>
+                            @endif
                         </div>
                         @endforeach
                     </div>
                     
                     <!-- Scrollable Content Area -->
-                    <div class="scrollable-right-content" style="flex: 1; overflow-y: auto;">
+                    <div class="scrollable-right-content purchase-summary-content" style="flex: 1; overflow-y: auto;">
                     {{-- Loyalty Stamps Section --}}
                     <div class="mb-3 mt-3">
                         <div class="card" style="border: 2px solid #e8f5e8; background: linear-gradient(135deg, #f8f9fa, #e8f5e8);">
@@ -471,6 +492,17 @@ function populateDefaultAddress() {
 
 // Update shipping fee when address selection changes
 document.addEventListener('DOMContentLoaded', function() {
+    // Back button: go to previous page if exists; fallback to cart
+    const backBtn = document.getElementById('checkoutBackBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', function() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '{{ url('/cart') }}';
+            }
+        });
+    }
     const addressSelect = document.getElementById('addressSelect');
     const checkoutForm = document.getElementById('checkoutForm');
     
@@ -970,27 +1002,34 @@ document.addEventListener('DOMContentLoaded', function() {
     scrollbar-color: #8ACB88 transparent;
 }
 
-/* Sticky purchase summary styling */
-.sticky-purchase-summary {
-    position: sticky;
-    top: 0;
-    background: white;
-    z-index: 10;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #e9ecef;
-    margin-bottom: 1rem;
-}
-
-/* Ensure equal height columns */
-.row.justify-content-center {
-    align-items: stretch;
-}
-
-/* Make sure both columns have equal height */
-.col-12.col-lg-8.col-xl-6,
-.col-12.col-lg-4.col-xl-4 {
-    display: flex;
-    flex-direction: column;
+/* Ensure equal height columns on desktop */
+@media (min-width: 992px) {
+    .row.justify-content-center {
+        align-items: stretch;
+    }
+    .checkout-form-section,
+    .purchase-summary-section {
+        display: flex;
+        flex-direction: column;
+    }
+    .scrollable-content {
+        flex: 1;
+        max-height: 83vh; /* taller to remove bottom gap while keeping scroll */
+        overflow-y: auto;
+    }
+    .purchase-summary-card {
+        max-height: 83vh; /* taller to match left section */
+        overflow-y: auto;
+    }
+    .purchase-summary-header {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
 }
 
 
@@ -1010,7 +1049,398 @@ document.addEventListener('DOMContentLoaded', function() {
 .form-control[type="text"][name*="message"] {
     text-transform: capitalize;
 }
+
+/* Mobile Responsive Styles for Checkout */
+@media (max-width: 991.98px) {
+    .checkout-container {
+        padding-bottom: 1rem;
+    }
+    .checkout-form-section {
+        margin-bottom: 1rem;
+    }
+    .purchase-summary-section {
+        margin-top: 0 !important;
+        margin-bottom: 2rem;
+    }
+    .purchase-summary-card {
+        position: relative !important;
+        max-height: none !important;
+    }
+    .purchase-summary-header {
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+    .purchase-summary-content {
+        max-height: none !important;
+        overflow-y: visible !important;
+    }
+    .scrollable-content {
+        max-height: none !important;
+        overflow-y: visible !important;
+    }
+}
+
+@media (max-width: 650px) {
+    .checkout-container {
+        padding: 0.5rem 0.25rem 1rem 0.25rem !important; /* No need for extra bottom padding since navbar is hidden */
+    }
+    .checkout-form-section,
+    .purchase-summary-section {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+    .purchase-summary-section {
+        margin-bottom: 1rem !important; /* Reduced margin since navbar is hidden */
+    }
+    .purchase-summary-card {
+        padding: 0.75rem !important;
+        padding-bottom: 2rem !important; /* Extra bottom padding in card */
+        font-size: 0.9rem;
+        margin-bottom: 30px;
+    }
+    .purchase-summary-header {
+        font-size: 1rem !important;
+    }
+    .purchase-summary-header .mb-3 {
+        margin-bottom: 0.75rem !important;
+        font-size: 1rem !important;
+    }
+    .purchase-summary-content {
+        font-size: 0.9rem;
+        padding-bottom: 30px !important; /* Extra space at bottom */
+    }
+    .purchase-summary-content .d-flex {
+        font-size: 0.85rem;
+    }
+    .purchase-summary-content img {
+        width: 45px !important;
+        height: 45px !important;
+    }
+    .purchase-summary-content .badge {
+        font-size: 0.75rem !important;
+        padding: 6px 10px !important;
+    }
+    #proceedBtn {
+        font-size: 0.95rem !important;
+        padding: 12px !important;
+        margin-bottom: 1rem !important; /* Normal spacing since navbar is hidden */
+        margin-top: 20px !important; /* Space above button */
+    }
+    .scrollable-content {
+        padding-bottom: 30px; /* Extra space for scrollable content */
+    }
+    /* Ensure purchase summary section has proper spacing */
+    .purchase-summary-section .purchase-summary-card {
+        margin-bottom: 0;
+    }
+    
+    /* Custom Bouquet Modal Responsive */
+    @media (max-width: 767.98px) {
+        .custom-bouquet-modal .modal-dialog {
+            width: 95vw !important;
+            max-width: 95vw !important;
+            margin: 5vh auto !important;
+        }
+        
+        .custom-bouquet-modal .modal-body {
+            padding: 1rem !important;
+            max-height: 75vh !important;
+        }
+        
+        .custom-bouquet-modal .modal-body img {
+            max-height: 250px !important;
+        }
+        
+        .custom-bouquet-modal .table {
+            font-size: 0.85rem;
+        }
+        
+        .custom-bouquet-modal .table th,
+        .custom-bouquet-modal .table td {
+            padding: 0.5rem 0.25rem !important;
+        }
+        
+        .custom-bouquet-modal {
+            z-index: 6000 !important;
+        }
+        
+        .modal-backdrop.show {
+            z-index: 5990 !important;
+        }
+        
+        .component-preview-container {
+            width: 90vw !important;
+            max-width: 350px !important;
+            height: 350px !important;
+        }
+    }
+}
 </style>
     </div>
 </div>
+
+<!-- Custom Bouquet Detail Modal -->
+@foreach($cartItems as $item)
+    @if($item->item_type === 'custom_bouquet')
+        @php
+            $bouquet = $item->customBouquet ?? null;
+            if (!$bouquet && isset($item->custom_bouquet_id)) {
+                $bouquet = \App\Models\CustomBouquet::find($item->custom_bouquet_id);
+            }
+            $modalId = $bouquet ? $bouquet->id : (isset($item->custom_bouquet_id) ? $item->custom_bouquet_id : 'temp');
+            $items = \App\Models\CustomizeItem::where('status', true)->get();
+            $assemblyFee = \App\Models\Setting::get('assembling_fee', 150);
+            $components = [];
+            $totalPrice = $assemblyFee;
+            
+            // Get wrapper
+            if ($bouquet->wrapper) {
+                $item_data = $items->firstWhere('name', $bouquet->wrapper);
+                if ($item_data) {
+                    $components[] = [
+                        'category' => 'Wrapper',
+                        'name' => $bouquet->wrapper,
+                        'quantity' => 1,
+                        'price' => $item_data->price ?? 0
+                    ];
+                    $totalPrice += $item_data->price ?? 0;
+                }
+            }
+            
+            // Get flowers
+            foreach (['focal_flower_1', 'focal_flower_2', 'focal_flower_3'] as $flowerField) {
+                if ($bouquet->$flowerField) {
+                    $item_data = $items->firstWhere('name', $bouquet->$flowerField);
+                    if ($item_data) {
+                        $components[] = [
+                            'category' => 'Fresh Flowers',
+                            'name' => $bouquet->$flowerField,
+                            'quantity' => 1,
+                            'price' => $item_data->price ?? 0
+                        ];
+                        $totalPrice += $item_data->price ?? 0;
+                    }
+                }
+            }
+            
+            // Get greenery
+            if ($bouquet->greenery) {
+                $item_data = $items->firstWhere('name', $bouquet->greenery);
+                if ($item_data) {
+                    $components[] = [
+                        'category' => 'Greenery',
+                        'name' => $bouquet->greenery,
+                        'quantity' => 1,
+                        'price' => $item_data->price ?? 0
+                    ];
+                    $totalPrice += $item_data->price ?? 0;
+                }
+            }
+            
+            // Get filler
+            if ($bouquet->filler) {
+                $item_data = $items->firstWhere('name', $bouquet->filler);
+                if ($item_data) {
+                    $components[] = [
+                        'category' => 'Artificial Flowers',
+                        'name' => $bouquet->filler,
+                        'quantity' => 1,
+                        'price' => $item_data->price ?? 0
+                    ];
+                    $totalPrice += $item_data->price ?? 0;
+                }
+            }
+            
+            // Get ribbon
+            if ($bouquet->ribbon) {
+                $item_data = $items->firstWhere('name', $bouquet->ribbon);
+                if ($item_data) {
+                    $components[] = [
+                        'category' => 'Ribbon',
+                        'name' => $bouquet->ribbon,
+                        'quantity' => 1,
+                        'price' => $item_data->price ?? 0
+                    ];
+                    $totalPrice += $item_data->price ?? 0;
+                }
+            }
+            
+            // Add assembly fee
+            $components[] = [
+                'category' => 'Service',
+                'name' => 'Assembly Fee',
+                'quantity' => 1,
+                'price' => $assemblyFee
+            ];
+        @endphp
+        
+        <div class="modal fade custom-bouquet-modal" id="customBouquetModal{{ $modalId }}" tabindex="-1" aria-labelledby="customBouquetModalLabel{{ $modalId }}" aria-hidden="true">
+            <div class="modal-dialog modal-md modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 12px;">
+                    <div class="modal-header" style="border-bottom: 1px solid #e9ecef;">
+                        <h6 class="modal-title" id="customBouquetModalLabel{{ $modalId }}" style="font-weight: 600; color: #222; font-size: 1rem;">Custom Bouquet Details</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="max-height: 65vh; overflow-y: auto;">
+                        <!-- Bouquet Preview Image -->
+                        <div class="text-center mb-3">
+                            @php
+                                // Get raw preview_image value from database (not accessor)
+                                $rawPreviewPath = $bouquet->getAttributes()['preview_image'] ?? null;
+                                $isComposite = $rawPreviewPath && (strpos($rawPreviewPath, 'custom_bouquets/') === 0 || strpos($rawPreviewPath, 'custom_bouquet_') !== false);
+                                
+                                // Build component images array
+                                $componentImages = [];
+                                $flowerIndex = 0;
+                                
+                                // Wrapper (background) - matches customize page: fills container
+                                if ($bouquet->wrapper) {
+                                    $wrapperItem = $items->firstWhere('name', $bouquet->wrapper);
+                                    if ($wrapperItem && $wrapperItem->image && file_exists(storage_path('app/public/' . $wrapperItem->image))) {
+                                        $componentImages[] = [
+                                            'image' => asset('storage/' . $wrapperItem->image), 
+                                            'type' => 'wrapper',
+                                            'z' => 10,
+                                            'style' => 'inset: 0; width: 100%; height: 100%; object-fit: cover;'
+                                        ];
+                                    }
+                                }
+                                
+                                // Flowers (overlay) - matches customize page positioning
+                                foreach (['focal_flower_1', 'focal_flower_2', 'focal_flower_3'] as $flowerField) {
+                                    if ($bouquet->$flowerField) {
+                                        $flowerItem = $items->firstWhere('name', $bouquet->$flowerField);
+                                        if ($flowerItem && $flowerItem->image && file_exists(storage_path('app/public/' . $flowerItem->image))) {
+                                            // Match customize page: first flower centered, others positioned relative
+                                            if ($flowerIndex == 0) {
+                                                // First flower: matches customize page style (centered, 45% from bottom)
+                                                $style = 'width: 20%; height: auto; object-fit: contain; bottom: 45%; left: 44%; transform: translateX(-50%);';
+                                            } elseif ($flowerIndex == 1) {
+                                                // Second flower: positioned to the right
+                                                $style = 'width: 18%; height: auto; object-fit: contain; bottom: 45%; left: 56%; transform: translateX(-50%);';
+                                            } else {
+                                                // Third flower: positioned to the left
+                                                $style = 'width: 18%; height: auto; object-fit: contain; bottom: 45%; left: 32%; transform: translateX(-50%);';
+                                            }
+                                            $componentImages[] = [
+                                                'image' => asset('storage/' . $flowerItem->image), 
+                                                'type' => 'flower',
+                                                'z' => 60,
+                                                'style' => $style
+                                            ];
+                                            $flowerIndex++;
+                                        }
+                                    }
+                                }
+                                
+                                // Greenery - matches customize page: 42% width, centered, 44% from bottom
+                                if ($bouquet->greenery) {
+                                    $greeneryItem = $items->firstWhere('name', $bouquet->greenery);
+                                    if ($greeneryItem && $greeneryItem->image && file_exists(storage_path('app/public/' . $greeneryItem->image))) {
+                                        $componentImages[] = [
+                                            'image' => asset('storage/' . $greeneryItem->image), 
+                                            'type' => 'greenery',
+                                            'z' => 20,
+                                            'style' => 'width: 42%; height: auto; object-fit: contain; bottom: 44%; left: 50%; transform: translateX(-50%); opacity: 0.95;'
+                                        ];
+                                    }
+                                }
+                                
+                                // Filler - matches customize page: 20% width, right side, 45% from bottom
+                                if ($bouquet->filler) {
+                                    $fillerItem = $items->firstWhere('name', $bouquet->filler);
+                                    if ($fillerItem && $fillerItem->image && file_exists(storage_path('app/public/' . $fillerItem->image))) {
+                                        $componentImages[] = [
+                                            'image' => asset('storage/' . $fillerItem->image), 
+                                            'type' => 'filler',
+                                            'z' => 25,
+                                            'style' => 'width: 20%; height: auto; object-fit: contain; bottom: 45%; left: 56%; transform: translateX(-50%);'
+                                        ];
+                                    }
+                                }
+                                
+                                // Ribbon (top layer) - matches customize page: 20% width, centered, 29% from bottom
+                                if ($bouquet->ribbon) {
+                                    $ribbonItem = $items->firstWhere('name', $bouquet->ribbon);
+                                    if ($ribbonItem && $ribbonItem->image && file_exists(storage_path('app/public/' . $ribbonItem->image))) {
+                                        $componentImages[] = [
+                                            'image' => asset('storage/' . $ribbonItem->image), 
+                                            'type' => 'ribbon',
+                                            'z' => 80,
+                                            'style' => 'width: 20%; height: auto; object-fit: contain; bottom: 29%; left: 50%; transform: translateX(-50%);'
+                                        ];
+                                    }
+                                }
+                            @endphp
+                            
+                            @if($isComposite && $rawPreviewPath && file_exists(storage_path('app/public/' . $rawPreviewPath)))
+                                <!-- Composite image (GD generated) -->
+                                <img src="{{ $bouquet->preview_image }}" alt="Custom Bouquet Preview" style="max-width: 100%; max-height: 250px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            @elseif(count($componentImages) > 0)
+                                <!-- CSS-based component layering (fallback when GD not available) -->
+                                <div class="component-preview-container" style="position: relative; width: 250px; height: 250px; margin: 0 auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; background: #fff;">
+                                    @foreach($componentImages as $comp)
+                                        <img src="{{ $comp['image'] }}" 
+                                             alt="Component {{ $comp['type'] }}" 
+                                             style="position: absolute; z-index: {{ $comp['z'] }}; {{ $comp['style'] }}">
+                                    @endforeach
+                                </div>
+                            @else
+                                <!-- Fallback: generic image -->
+                                <img src="{{ asset('images/landingpage_bouquet/bokk.png') }}" alt="Custom Bouquet Preview" style="max-width: 100%; max-height: 250px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            @endif
+                        </div>
+                        
+                        <!-- Price Breakdown -->
+                        <div class="mb-3">
+                            <h6 style="font-weight: 600; color: #222; margin-bottom: 12px; border-bottom: 2px solid #7bb47b; padding-bottom: 6px; font-size: 0.95rem;">Price Summary</h6>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead style="background: #f8f9fa;">
+                                        <tr>
+                                            <th style="font-size: 0.75rem; font-weight: 600; color: #555;">Category</th>
+                                            <th style="font-size: 0.75rem; font-weight: 600; color: #555;">Component</th>
+                                            <th style="font-size: 0.75rem; font-weight: 600; color: #555; text-align: center;">Quantity</th>
+                                            <th style="font-size: 0.75rem; font-weight: 600; color: #555; text-align: right;">Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($components as $component)
+                                        <tr>
+                                            <td style="font-size: 0.8rem; color: #666;">{{ $component['category'] }}</td>
+                                            <td style="font-size: 0.8rem; color: #222; font-weight: 500;">{{ $component['name'] }}</td>
+                                            <td style="font-size: 0.8rem; color: #666; text-align: center;">{{ $component['quantity'] }}</td>
+                                            <td style="font-size: 0.8rem; color: #222; text-align: right; font-weight: 500;">₱{{ number_format($component['price'], 2) }}</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot style="border-top: 2px solid #dee2e6;">
+                                        <tr>
+                                            <td colspan="3" style="font-size: 0.85rem; font-weight: 600; color: #222; padding-top: 10px;">Total Price:</td>
+                                            <td style="font-size: 0.9rem; font-weight: 600; color: #7bb47b; text-align: right; padding-top: 10px;">₱{{ number_format($totalPrice, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" style="font-size: 0.8rem; color: #666; padding-top: 6px;">Quantity:</td>
+                                            <td style="font-size: 0.8rem; color: #222; text-align: right; padding-top: 6px; font-weight: 500;">{{ $item->quantity }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" style="font-size: 0.85rem; font-weight: 600; color: #222; padding-top: 6px;">Subtotal:</td>
+                                            <td style="font-size: 0.9rem; font-weight: 600; color: #7bb47b; text-align: right; padding-top: 6px;">₱{{ number_format($totalPrice * $item->quantity, 2) }}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid #e9ecef;">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+@endforeach
+
 @endsection 

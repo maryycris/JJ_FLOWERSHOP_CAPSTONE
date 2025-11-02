@@ -1,29 +1,75 @@
 @extends('layouts.customer_app')
 
 @section('content')
-<div class="container-fluid py-1" style="min-height: 90vh;">
+<div class="container-fluid py-2" style="min-height: 90vh;">
     <div class="row justify-content-center">
         <div class="col-10 col-xl-9"><div class="row justify-content-center">
-            <div class="py-4" style="background: #CDE7C9; min-height: 78vh; border-radius: 1rem;">
+            <div class="py-4 customize-shell" style="background: #CDE7C9; min-height: 20vh; border-radius: 1rem;">
                 <div class="row h-100">
         <!-- Left Panel - Customization -->
-        <div class="col-lg-6" style="background: #CDE7C9; padding: 0.5rem 2rem; overflow-y: auto; max-height: 78vh;">
+        <div class="col-lg-6 order-2 order-lg-1" style="background: #CDE7C9; padding: 0.5rem 2rem; overflow-y: auto; max-height: 78vh;">
             <div class="h-100 d-flex flex-column">
                 <!-- Header -->
                 <div class="text-center mb-2">
                     <h4 class="fw-bold text-dark mb-2">Customize your Desired Bouquet</h4>
                     <br>
                     <div class="d-flex justify-content-center mb-3">
-                        <button class="btn btn-success btn-sm">
+                        <button id="noticeToggleBtn" class="btn btn-success btn-sm">
                             <i class="bi bi-info-circle me-1"></i>Notice to Customers
                         </button>
                     </div>
                 </div>
                 
-                <hr class="my-3">
+                <!-- Notice to Customers Section -->
+                <div id="noticeSection" class="notice-section" style="display: none; background: #E6F5E6; padding: 2rem; border-radius: 1rem; margin-bottom: 1rem;">
+                    <div class="text-center mb-4">
+                        <h5 class="fw-bold text-dark mb-3" style="font-size: 1.2rem;">
+                            <i class="bi bi-flower1 text-danger me-2"></i>Notice to Customers - Bouquet Customization
+                            <i class="bi bi-flower1 text-danger ms-2"></i>
+                        </h5>
+                    </div>
+                    
+                    <div class="notice-content" style="color: #2d5016; font-size: 0.95rem; line-height: 1.8;">
+                        <p class="mb-3">
+                            Thank you for choosing our customization service! Please note that we have limited supplies of flowers, ribbons, and other materials. We kindly ask that you select only from the available options in the customization area.
+                        </p>
+                        <p class="mb-3">
+                            If you have a specific bouquet design in mind or a reference photo, we encourage you to chat with our clerk using the chat box. We're here to help bring your vision to life!
+                        </p>
+                        <p class="mb-4">
+                            We will do our best to accommodate your requests. If a particular flower or material from your reference photo is unavailable, we will inform you and suggest suitable alternatives that match your design.
+                        </p>
+                        
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-dark mb-3" style="font-size: 1rem;">
+                                <i class="bi bi-flower1 text-success me-2"></i>How to Customize Your Bouquet:
+                            </h6>
+                            <ol style="padding-left: 1.5rem; line-height: 2;">
+                                <li class="mb-2">
+                                    <strong>Choose your flowers</strong> - Select from the flower types available in the customization panel.
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Pick your wrapping</strong> - Choose your preferred wrapping style and ribbon color.
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Review your design</strong> - Double-check your selections before proceeding.
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Submit your order</strong> - Click "Buy Now" or "Add to Cart" once you're satisfied.
+                                </li>
+                            </ol>
+                        </div>
+                        
+                        <p class="mb-0 text-center" style="font-style: italic; color: #5a7c3a;">
+                            <i class="bi bi-chat-dots me-2"></i>Need help? Use the chat box to talk to our clerk if you have a design reference or special request.
+                        </p>
+                    </div>
+                </div>
+                
+                <hr class="my-3" id="customizationDivider">
                 
                 <!-- Customization Form -->
-                <form id="bouquetCustomizationForm" class="flex-grow-1 d-flex flex-column">
+                <form id="bouquetCustomizationForm" class="flex-grow-1 d-flex flex-column" style="display: flex !important;">
                     @csrf
                     
                     <!-- Bouquet Wrapper Selection -->
@@ -48,7 +94,7 @@
                                         </div>
                                         <div class="wrapper-info mt-2 text-center">
                                             <small class="fw-medium text-dark" style="font-size: 10px;">{{ $wrap->name }}</small>
-                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($wrap->price ?? 0,2) }}</div>
+                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($wrap->inventoryItem ? $wrap->inventoryItem->price : ($wrap->price ?? 0), 2) }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -87,7 +133,7 @@
                                         </div>
                                         <div class="flower-info mt-2 text-center">
                                             <small class="fw-medium text-dark" style="font-size: 10px;">{{ $focal->name }}</small>
-                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($focal->price ?? 0,2) }}</div>
+                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($focal->inventoryItem ? $focal->inventoryItem->price : ($focal->price ?? 0), 2) }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -128,7 +174,7 @@
                                         </div>
                                         <div class="greenery-info mt-2 text-center">
                                             <small class="fw-medium text-dark" style="font-size: 10px;">{{ $greenery->name }}</small>
-                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($greenery->price ?? 0,2) }}</div>
+                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($greenery->inventoryItem ? $greenery->inventoryItem->price : ($greenery->price ?? 0), 2) }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -168,7 +214,7 @@
                                         </div>
                                         <div class="filler-info mt-2 text-center">
                                             <small class="fw-medium text-dark" style="font-size: 10px;">{{ $filler->name }}</small>
-                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($filler->price ?? 0,2) }}</div>
+                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($filler->inventoryItem ? $filler->inventoryItem->price : ($filler->price ?? 0), 2) }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -196,7 +242,7 @@
                             <h6 class="fw-bold text-dark mb-0">Choose Ribbons</h6>
                         </div>
                         <div class="row g-3">
-                            @foreach(($items['Ribbons'] ?? []) as $ribbon)
+                            @foreach(($items['Ribbon'] ?? []) as $ribbon)
                             <div class="col-3">
                                 <div class="ribbon-option" data-ribbon="{{ $ribbon->name }}" data-price="{{ $ribbon->price ?? 0 }}" data-image="{{ $ribbon->image ? asset('storage/'.$ribbon->image) : '' }}">
                                     <div class="ribbon-card position-relative">
@@ -212,7 +258,7 @@
                                         </div>
                                         <div class="ribbon-info mt-2 text-center">
                                             <small class="fw-medium text-dark" style="font-size: 10px;">{{ $ribbon->name }}</small>
-                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($ribbon->price ?? 0,2) }}</div>
+                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($ribbon->inventoryItem ? $ribbon->inventoryItem->price : ($ribbon->price ?? 0), 2) }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -235,7 +281,7 @@
                         <h6 class="fw-bold text-dark mb-2">Quantity</h6>
                         <div class="input-group" style="max-width: 150px;">
                             <button class="btn btn-outline-secondary btn-sm" type="button" id="decreaseQty">-</button>
-                            <input type="number" class="form-control form-control-sm text-center" id="window.quantity" name="window.quantity" value="1" min="1" max="10">
+                            <input type="number" class="form-control form-control-sm text-center" id="quantity" name="quantity" value="1" min="1" max="10">
                             <button class="btn btn-outline-secondary btn-sm" type="button" id="increaseQty">+</button>
                         </div>
                     </div>
@@ -257,12 +303,12 @@
         </div>
         
         <!-- Right Panel - Bouquet Preview -->
-        <div class="col-lg-6" style="background: #CDE7C9; padding: 2rem;">
-            <div class="h-100 d-flex flex-column align-items-center">
+        <div class="col-lg-6 order-1 order-lg-2" style="background: #CDE7C9; padding: 2rem;">
+            <div class="h-100 d-flex flex-column align-items-center sticky-mobile" id="previewSection">
             <!-- Bouquet Preview Container -->
-            <div class="bouquet-preview-container position-relative" style="width: 360px; max-width: 100%;">
+            <div class="bouquet-preview-container position-relative" style="width: 360px; max-width: 100%;" id="bouquetPreviewContainer">
                 <!-- Regular Bouquet Preview -->
-                <div class="img-fluid" style="width: 100%; height: 320px; background: #F1F6F1; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
+                <div class="img-fluid bouquet-canvas" style="width: 100%; height: 320px; background: #F1F6F1; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); position: relative; overflow: hidden;">
                     <!-- Base Bouquet Shape -->
                     <div class="bouquet-base" style="position: absolute; width: 80%; height: 60%; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; opacity: 0.3; transition: all 0.5s ease;"></div>
                     
@@ -270,21 +316,21 @@
                     <div id="wrapperLayer" class="ingredient-layer" style="position: absolute; width: 100%; height: 100%; border-radius: 0.5rem; opacity: 0; transition: all 0.5s ease;"></div>
                     <img id="imgWrapper" alt="wrapper" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:none; z-index:10; pointer-events:none;"/>
                     
-                    <!-- Flower Layer (single after removal of 2 & 3) -->
+                    <!-- Fresh Flower Layer (single after removal of 2 & 3) -->
                     <div id="focal1Layer" class="ingredient-layer" style="position: absolute; width: 100%; height: 100%; border-radius: 0.5rem; opacity: 0; transition: all 0.5s ease;"></div>
-                    <img id="imgFlower" alt="flower" style="position:absolute; width:20%; height:auto; object-fit:contain; bottom:45%; left:50%; transform:translateX(-50%); display:none; z-index:60; pointer-events:none;"/>
+                    <img id="imgFlower" alt="flower" style="position:absolute; width:20%; height:auto; object-fit:contain; bottom:45%; left:44%; transform:translateX(-50%); display:none; z-index:60; pointer-events:none;"/>
                     
                     <!-- Greenery Layer -->
                     <div id="greeneryLayer" class="ingredient-layer" style="position: absolute; width: 100%; height: 100%; border-radius: 0.5rem; opacity: 0; transition: all 0.5s ease;"></div>
-                    <img id="imgGreenery" alt="greenery" style="position:absolute; width:82%; height:auto; object-fit:contain; bottom:16%; left:50%; transform:translateX(-50%); display:none; z-index:20; opacity:.95; pointer-events:none;"/>
+                    <img id="imgGreenery" alt="greenery" style="position:absolute; width:42%; height:auto; object-fit:contain; bottom:44%; left:50%; transform:translateX(-50%); display:none; z-index:20; opacity:.95; pointer-events:none;"/>
                     
-                    <!-- Filler Layer -->
+                    <!-- Artificial Flower Filler Layer -->
                     <div id="fillerLayer" class="ingredient-layer" style="position: absolute; width: 100%; height: 100%; border-radius: 0.5rem; opacity: 0; transition: all 0.5s ease;"></div>
-                    <img id="imgFiller" alt="filler" style="position:absolute; width:70%; height:auto; object-fit:contain; bottom:18%; left:50%; transform:translateX(-50%); display:none; z-index:25; pointer-events:none;"/>
+                    <img id="imgFiller" alt="filler" style="position:absolute; width:20%; height:auto; object-fit:contain; bottom:45%; left:56%; transform:translateX(-50%); display:none; z-index:25; pointer-events:none;"/>
                     
                     <!-- Ribbon Layer -->
                     <div id="ribbonLayer" class="ingredient-layer" style="position: absolute; width: 100%; height: 100%; border-radius: 0.5rem; opacity: 0; transition: all 0.5s ease;"></div>
-                    <img id="imgRibbon" alt="ribbon" style="position:absolute; width:52%; height:auto; object-fit:contain; bottom:0%; left:50%; transform:translateX(-50%); display:none; z-index:80; pointer-events:none;"/>
+                    <img id="imgRibbon" alt="ribbon" style="position:absolute; width:20%; height:auto; object-fit:contain; bottom:29%; left:50%; transform:translateX(-50%); display:none; z-index:80; pointer-events:none;"/>
                     
                     <!-- Default Message -->
                     <div id="defaultMessage" class="text-center text-muted" style="position: relative; z-index: 10;">
@@ -297,7 +343,7 @@
                 </div>
                 
                 <!-- Price Summary -->
-                <div class="mt-3 w-100" style="max-width: 360px;">
+                <div class="mt-3 w-100" style="max-width: 360px;" id="priceSummarySection">
                     <div class="price-summary bg-white rounded-3 shadow-sm p-3" id="priceSummaryCard" style="cursor: pointer; transition: all 0.3s ease;" data-bs-toggle="modal" data-bs-target="#priceSummaryModal">
                         <div class="fw-semibold text-dark mb-2">Price Summary</div>
                         <hr class="my-2">
@@ -324,29 +370,44 @@
                 <div class="row">
                     <div class="col-12">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span>Wrappers:</span>
+                                <div>
+                                    <span>Wrappers:</span>
+                                    <div class="text-muted small" id="modalWrapperName">None selected</div>
+                                </div>
                                         <span id="modalWrapperPrice">₱0.00</span>
                             </div>
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span>Fresh Flowers:</span>
-                                <input type="number" class="form-control form-control-sm text-center" id="modalFreshFlowerQty" value="1" min="1" max="10" style="width: 50px; padding: 4px; font-size: 12px;">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span>Fresh Flowers:</span>
+                                        <input type="number" class="form-control form-control-sm text-center" id="modalFreshFlowerQty" value="1" min="1" max="10" style="width: 50px; padding: 4px; font-size: 12px;">
+                                    </div>
+                                    <div class="text-muted small" id="modalFreshFlowerName">None selected</div>
                                 </div>
                             <span id="modalFocalFlower1Price">₱0.00</span>
                             </div>
                         <div class="d-flex justify-content-between mb-3">
-                                <span>Greenery:</span>
+                                <div>
+                                    <span>Greenery:</span>
+                                    <div class="text-muted small" id="modalGreeneryName">None selected</div>
+                                </div>
                             <span id="modalGreeneryPrice">₱0.00</span>
                             </div>
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span>Artificial Flowers:</span>
-                                <input type="number" class="form-control form-control-sm text-center" id="modalArtificialFlowerQty" value="1" min="1" max="10" style="width: 50px; padding: 4px; font-size: 12px;">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span>Artificial Flowers:</span>
+                                        <input type="number" class="form-control form-control-sm text-center" id="modalArtificialFlowerQty" value="1" min="1" max="10" style="width: 50px; padding: 4px; font-size: 12px;">
+                                    </div>
+                                    <div class="text-muted small" id="modalArtificialFlowerName">None selected</div>
                                 </div>
                             <span id="modalFillerPrice">₱0.00</span>
                             </div>
                         <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
                                     <span>Ribbons:</span>
+                                    <div class="text-muted small" id="modalRibbonName">None selected</div>
+                                </div>
                             <span id="modalRibbonPrice">₱0.00</span>
                                 </div>
                         <div class="d-flex justify-content-between mb-3">
@@ -377,12 +438,33 @@
 <input type="hidden" id="selectedFiller" name="filler" value="">
 <input type="hidden" id="selectedRibbon" name="ribbon" value="">
 <input type="hidden" id="selectedMoneyAmount" name="money_amount" value="">
-<input type="hidden" id="window.bouquetType" name="bouquet_type" value="regular">
+<input type="hidden" id="bouquetType" name="bouquet_type" value="regular">
 
 @endsection
 
 @push('styles')
 <style>
+/* Notice Section Styles */
+.notice-section {
+    transition: all 0.3s ease;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#previewSection, #priceSummarySection, #bouquetCustomizationForm {
+    transition: opacity 0.3s ease, display 0.3s ease;
+}
+
 .wrapper-option, .focal1-option, .greenery-option, .filler-option, .ribbon-option, .money-option, .occasion-option {
     cursor: pointer;
     transition: all 0.6s ease;
@@ -568,10 +650,30 @@
         padding: 1rem;
     }
     
-    .bouquet-preview-container {
-        width: 250px !important;
-        height: 300px !important;
-    }
+    .bouquet-preview-container { width: 320px !important; }
+    .bouquet-preview-container .bouquet-canvas { height: 280px !important; }
+}
+/* Mobile sticky preview + price summary at top */
+@media (max-width: 650px) {
+    .sticky-mobile { position: sticky; top: 40px; z-index: 5; }
+    .sticky-mobile .price-summary { margin-bottom: .5rem; }
+    /* Ensure the preview section has full width on mobile */
+    .order-1.order-lg-2 { padding-top: .5rem !important; }
+    /* Target the page shell to fit typical 1000px devices */
+    .customize-shell { min-height: 330px !important; }
+    /* Left column scroll within fixed height so preview stays visible */
+    .order-2.order-lg-1 { max-height: 330px !important; overflow-y: auto !important; }
+    /* Nudge the whole section closer to the top navbar */
+    .container-fluid { padding-top: 0 !important; }
+    .customize-shell { margin-top: 0 !important; }
+    /* Make the main content column wider on mobile */
+    .col-10.col-xl-9 { width: 96% !important; }
+    .col-10.col-xl-9 > .row { margin-left: 0 !important; margin-right: 0 !important; }
+}
+
+/* Center Price Summary modal on mobile */
+@media (max-width: 650px) {
+    #priceSummaryModal .modal-dialog { width: 90vw !important; max-width: 90vw !important; margin: 20vh auto !important; }
 }
 </style>
 @endpush
@@ -617,7 +719,7 @@ window.updatePrice = function() {
     total += ribbonPrice * window.quantity;
 
     // Money amount price (if money bouquet)
-    if (window.window.bouquetType === 'money') {
+    if (window.bouquetType === 'money') {
         const moneyPrice = window.selectedMoneyAmount ? window.selectedMoneyAmount.price : 0;
         total += moneyPrice * window.quantity;
     }
@@ -663,6 +765,12 @@ window.updateModalPrices = function() {
         modalWrapperPrice.textContent = `₱${wrapperPrice.toFixed(2)}`;
     }
     
+    // Update wrapper name
+    const modalWrapperName = document.getElementById('modalWrapperName');
+    if (modalWrapperName) {
+        modalWrapperName.textContent = window.selectedWrapper ? window.selectedWrapper.name : 'None selected';
+    }
+    
     const focal1Price = window.selectedFocalFlower1 ? window.selectedFocalFlower1.price : 0;
     const freshFlowerQty = window.freshFlowerQuantity || 1;
     const focalFlower1Total = focal1Price * freshFlowerQty * window.quantity;
@@ -671,10 +779,22 @@ window.updateModalPrices = function() {
         modalFocalFlower1Price.textContent = `₱${focalFlower1Total.toFixed(2)}`;
     }
     
+    // Update fresh flower name
+    const modalFreshFlowerName = document.getElementById('modalFreshFlowerName');
+    if (modalFreshFlowerName) {
+        modalFreshFlowerName.textContent = window.selectedFocalFlower1 ? window.selectedFocalFlower1.name : 'None selected';
+    }
+    
     const greeneryPrice = window.selectedGreenery ? window.selectedGreenery.price * window.quantity : 0;
     const modalGreeneryPrice = document.getElementById('modalGreeneryPrice');
     if (modalGreeneryPrice) {
         modalGreeneryPrice.textContent = `₱${greeneryPrice.toFixed(2)}`;
+    }
+    
+    // Update greenery name
+    const modalGreeneryName = document.getElementById('modalGreeneryName');
+    if (modalGreeneryName) {
+        modalGreeneryName.textContent = window.selectedGreenery ? window.selectedGreenery.name : 'None selected';
     }
     
     const fillerPrice = window.selectedFiller ? window.selectedFiller.price : 0;
@@ -685,10 +805,22 @@ window.updateModalPrices = function() {
         modalFillerPrice.textContent = `₱${fillerTotal.toFixed(2)}`;
     }
     
+    // Update artificial flower name
+    const modalArtificialFlowerName = document.getElementById('modalArtificialFlowerName');
+    if (modalArtificialFlowerName) {
+        modalArtificialFlowerName.textContent = window.selectedFiller ? window.selectedFiller.name : 'None selected';
+    }
+    
     const ribbonPrice = window.selectedRibbon ? window.selectedRibbon.price * window.quantity : 0;
     const modalRibbonPrice = document.getElementById('modalRibbonPrice');
     if (modalRibbonPrice) {
         modalRibbonPrice.textContent = `₱${ribbonPrice.toFixed(2)}`;
+    }
+    
+    // Update ribbon name
+    const modalRibbonName = document.getElementById('modalRibbonName');
+    if (modalRibbonName) {
+        modalRibbonName.textContent = window.selectedRibbon ? window.selectedRibbon.name : 'None selected';
     }
     
     const hasMaterials = window.selectedWrapper || window.selectedFocalFlower1 || window.selectedGreenery || window.selectedFiller || window.selectedRibbon || window.selectedMoneyAmount;
@@ -706,6 +838,37 @@ window.updateModalPrices = function() {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Notice toggle functionality
+    const noticeToggleBtn = document.getElementById('noticeToggleBtn');
+    const noticeSection = document.getElementById('noticeSection');
+    const customizationForm = document.getElementById('bouquetCustomizationForm');
+    const customizationDivider = document.getElementById('customizationDivider');
+    let isNoticeVisible = false;
+    
+    if (noticeToggleBtn) {
+        noticeToggleBtn.addEventListener('click', function() {
+            isNoticeVisible = !isNoticeVisible;
+            
+            if (isNoticeVisible) {
+                // Show notice, hide only customization form (keep preview and price summary visible)
+                noticeSection.style.display = 'block';
+                if (customizationForm) customizationForm.style.display = 'none';
+                if (customizationDivider) customizationDivider.style.display = 'none';
+                
+                // Change button text
+                this.innerHTML = '<i class="bi bi-flower1 me-1"></i>Make your bouquet now';
+            } else {
+                // Hide notice, show customization form
+                noticeSection.style.display = 'none';
+                if (customizationForm) customizationForm.style.display = 'flex';
+                if (customizationDivider) customizationDivider.style.display = 'block';
+                
+                // Change button text back
+                this.innerHTML = '<i class="bi bi-info-circle me-1"></i>Notice to Customers';
+            }
+        });
+    }
+    
     // Make all variables global so they can be accessed by the global functions
     window.selectedWrapper = null;
     window.selectedFocalFlower1 = null;
@@ -716,10 +879,10 @@ document.addEventListener('DOMContentLoaded', function() {
     window.selectedRibbon = null;
     window.selectedMoneyAmount = null;
     window.selectedOccasion = null;
-    window.window.quantity = 1;
-    window.window.bouquetType = 'regular'; // 'regular' or 'money'
+    window.quantity = 1;
+    window.bouquetType = 'regular'; // 'regular' or 'money'
     
-    window.assemblyFee = 150;
+    window.assemblyFee = {{ $assemblingFee ?? 150 }};
     
     // Initialize modal quantities
     window.freshFlowerQuantity = 1;
@@ -728,7 +891,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Bouquet type toggle handlers
     // Bouquet type toggle handlers - commented out since buttons were removed
     /*
-    document.getElementById('regularBouquetBtn').addEventListener('click', function() {
+    // Regular bouquet button
+    const regularBouquetBtn = document.getElementById('regularBouquetBtn');
+    if (regularBouquetBtn) {
+        regularBouquetBtn.addEventListener('click', function() {
         window.bouquetType = 'regular';
         this.classList.remove('btn-outline-success');
         this.classList.add('btn-success');
@@ -851,7 +1017,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-select recommended components based on occasion - commented out since occasion section was removed
     /*
     function autoSelectOccasionComponents() {
-        if (!selectedOccasion) return;
+        if (!window.selectedOccasion) return;
         
         // Clear previous selections
         clearAllSelections();
@@ -967,7 +1133,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
                 
                 document.getElementById('selectedFocalFlower1').value = window.selectedFocalFlower1.name;
-                console.log('Focal flower selected:', selectedFocalFlower1);
+                console.log('Focal flower selected:', window.selectedFocalFlower1);
             }
             
             updatePreview();
@@ -1017,7 +1183,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 price: parseFloat(this.dataset.price)
             };
             
-            document.getElementById('selectedFocalFlower3').value = selectedFocalFlower3.name;
+            document.getElementById('selectedFocalFlower3').value = window.selectedFocalFlower3.name;
             updatePreview();
             window.updatePrice();
         });
@@ -1129,7 +1295,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('decreaseQty').addEventListener('click', function() {
         if (window.quantity > 1) {
             window.quantity--;
-            document.getElementById('window.quantity').value = window.quantity;
+            document.getElementById('quantity').value = window.quantity;
             window.updatePrice();
         }
     });
@@ -1137,90 +1303,115 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('increaseQty').addEventListener('click', function() {
         if (window.quantity < 10) {
             window.quantity++;
-            document.getElementById('window.quantity').value = window.quantity;
+            document.getElementById('quantity').value = window.quantity;
             window.updatePrice();
         }
     });
     
-    document.getElementById('window.quantity').addEventListener('change', function() {
+    document.getElementById('quantity').addEventListener('change', function() {
         window.quantity = Math.max(1, Math.min(10, parseInt(this.value) || 1));
         this.value = window.quantity;
         updatePrice();
     });
     
     // Fresh Flower window.quantity controls
-    document.getElementById('freshFlowerQty').addEventListener('change', function(e) {
-        e.stopPropagation();
-        let qty = Math.max(1, Math.min(10, parseInt(this.value) || 1));
-        this.value = qty;
-        updatePrice();
-    });
+    // Fresh flower quantity controls
+    const freshFlowerQty = document.getElementById('freshFlowerQty');
+    if (freshFlowerQty) {
+        freshFlowerQty.addEventListener('change', function(e) {
+            e.stopPropagation();
+            let qty = Math.max(1, Math.min(10, parseInt(this.value) || 1));
+            this.value = qty;
+            updatePrice();
+        });
+    }
     
-    document.getElementById('freshFlowerQty').addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
+    const freshFlowerQtyClick = document.getElementById('freshFlowerQty');
+    if (freshFlowerQtyClick) {
+        freshFlowerQtyClick.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
     
-    // Artificial Flower window.quantity controls
-    document.getElementById('artificialFlowerQty').addEventListener('change', function(e) {
-        e.stopPropagation();
-        let qty = Math.max(1, Math.min(10, parseInt(this.value) || 1));
-        this.value = qty;
-        updatePrice();
-    });
+    // Artificial Flower quantity controls
+    const artificialFlowerQty = document.getElementById('artificialFlowerQty');
+    if (artificialFlowerQty) {
+        artificialFlowerQty.addEventListener('change', function(e) {
+            e.stopPropagation();
+            let qty = Math.max(1, Math.min(10, parseInt(this.value) || 1));
+            this.value = qty;
+            updatePrice();
+        });
+        
+        artificialFlowerQty.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
     
-    document.getElementById('artificialFlowerQty').addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
+    // Color selection handlers - wrapped in null checks
+    const wrapperColorSelect = document.getElementById('wrapperColorSelect');
+    if (wrapperColorSelect) {
+        wrapperColorSelect.addEventListener('change', function(e) {
+            e.stopPropagation();
+            console.log('Wrapper color selected:', this.value);
+            // Add color-specific logic here if needed
+        });
+        
+        wrapperColorSelect.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
     
-    // Color selection handlers
-    document.getElementById('wrapperColorSelect').addEventListener('change', function(e) {
-        e.stopPropagation();
-        console.log('Wrapper color selected:', this.value);
-        // Add color-specific logic here if needed
-    });
+    const freshFlowerColorSelect = document.getElementById('freshFlowerColorSelect');
+    if (freshFlowerColorSelect) {
+        freshFlowerColorSelect.addEventListener('change', function(e) {
+            e.stopPropagation();
+            console.log('Fresh flower color selected:', this.value);
+            // Add color-specific logic here if needed
+        });
+        
+        freshFlowerColorSelect.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
     
-    document.getElementById('wrapperColorSelect').addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
+    const artificialFlowerColorSelect = document.getElementById('artificialFlowerColorSelect');
+    if (artificialFlowerColorSelect) {
+        artificialFlowerColorSelect.addEventListener('change', function(e) {
+            e.stopPropagation();
+            console.log('Artificial flower color selected:', this.value);
+            // Add color-specific logic here if needed
+        });
+        
+        artificialFlowerColorSelect.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
     
-    document.getElementById('freshFlowerColorSelect').addEventListener('change', function(e) {
-        e.stopPropagation();
-        console.log('Fresh flower color selected:', this.value);
-        // Add color-specific logic here if needed
-    });
-    
-    document.getElementById('freshFlowerColorSelect').addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-    
-    document.getElementById('artificialFlowerColorSelect').addEventListener('change', function(e) {
-        e.stopPropagation();
-        console.log('Artificial flower color selected:', this.value);
-        // Add color-specific logic here if needed
-    });
-    
-    document.getElementById('artificialFlowerColorSelect').addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-    
-    document.getElementById('ribbonColorSelect').addEventListener('change', function(e) {
-        e.stopPropagation();
-        console.log('Ribbon color selected:', this.value);
-        // Add color-specific logic here if needed
-    });
-    
-    document.getElementById('ribbonColorSelect').addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
+    const ribbonColorSelect = document.getElementById('ribbonColorSelect');
+    if (ribbonColorSelect) {
+        ribbonColorSelect.addEventListener('change', function(e) {
+            e.stopPropagation();
+            console.log('Ribbon color selected:', this.value);
+            // Add color-specific logic here if needed
+        });
+        
+        ribbonColorSelect.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
     
     // Prevent clicks inside price details from closing the summary
-    document.getElementById('priceDetails').addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
+    const priceDetails = document.getElementById('priceDetails');
+    if (priceDetails) {
+        priceDetails.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
     
     // Update money preview
     function updateMoneyPreview() {
-        if (selectedMoneyAmount) {
+        if (window.selectedMoneyAmount) {
             const moneyAmountElement = document.querySelector('.money-amount');
             if (moneyAmountElement) {
                 moneyAmountElement.textContent = `₱${window.selectedMoneyAmount.amount}`;
@@ -1237,7 +1428,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Hide default message when materials are selected
         const defaultMessage = document.getElementById('defaultMessage');
-        const hasMaterials = window.selectedWrapper || window.selectedFocalFlower1 || window.selectedGreenery || window.selectedFiller || selectedRibbon;
+        const hasMaterials = window.selectedWrapper || window.selectedFocalFlower1 || window.selectedGreenery || window.selectedFiller || window.selectedRibbon;
         
         if (hasMaterials) {
             defaultMessage.style.display = 'none';
@@ -1265,11 +1456,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Update flower layer (single)
-        updateFlowerLayer('focal1Layer', selectedFocalFlower1);
+        updateFlowerLayer('focal1Layer', window.selectedFocalFlower1);
         
         // Update greenery layer
         const greeneryLayer = document.getElementById('greeneryLayer');
-        if (selectedGreenery) {
+        if (window.selectedGreenery) {
             greeneryLayer.style.opacity = '0.8';
             greeneryLayer.style.background = getGreeneryStyle(window.selectedGreenery.name);
             greeneryLayer.classList.add('ingredient-added');
@@ -1288,7 +1479,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update filler layer
         const fillerLayer = document.getElementById('fillerLayer');
-        if (selectedFiller) {
+        if (window.selectedFiller) {
             fillerLayer.style.opacity = '0.6';
             fillerLayer.style.background = getFillerStyle(window.selectedFiller.name);
             fillerLayer.classList.add('ingredient-added');
@@ -1297,17 +1488,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 const sel = document.querySelector('.filler-option.selected');
                 imgF.src = sel && sel.dataset.image ? sel.dataset.image : '';
                 imgF.style.display = imgF.src ? 'block' : 'none';
+                
+                // Smart positioning logic
+                updateFlowerPositions();
             }
         } else {
             fillerLayer.style.opacity = '0';
             fillerLayer.classList.remove('ingredient-added');
             const imgF = document.getElementById('imgFiller');
             if (imgF) imgF.style.display = 'none';
+            
+            // Update positions when filler is removed
+            updateFlowerPositions();
         }
         
         // Update ribbon layer
         const ribbonLayer = document.getElementById('ribbonLayer');
-        if (selectedRibbon) {
+        if (window.selectedRibbon) {
             ribbonLayer.style.opacity = '0.9';
             ribbonLayer.style.background = getRibbonStyle(window.selectedRibbon.name);
             ribbonLayer.classList.add('ingredient-added');
@@ -1340,12 +1537,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 const sel = document.querySelector('.focal1-option.selected');
                 imgFl.src = sel && sel.dataset.image ? sel.dataset.image : '';
                 imgFl.style.display = imgFl.src ? 'block' : 'none';
+                
+                // Smart positioning logic
+                updateFlowerPositions();
             }
         } else {
             layer.style.opacity = '0';
             layer.classList.remove('ingredient-added');
             const imgFl = document.getElementById('imgFlower');
             if (imgFl) imgFl.style.display = 'none';
+            
+            // Update positions when flower is removed
+            updateFlowerPositions();
+        }
+    }
+    
+    // Smart positioning function for flowers
+    function updateFlowerPositions() {
+        const imgFlower = document.getElementById('imgFlower');
+        const imgFiller = document.getElementById('imgFiller');
+        
+        const hasFreshFlower = window.selectedFocalFlower1;
+        const hasArtificialFlower = window.selectedFiller;
+        
+        if (hasFreshFlower && hasArtificialFlower) {
+            // Both flowers: position them side by side
+            if (imgFlower) {
+                imgFlower.style.left = '44%';
+            }
+            if (imgFiller) {
+                imgFiller.style.left = '56%';
+            }
+        } else if (hasFreshFlower || hasArtificialFlower) {
+            // Single flower: center it
+            if (imgFlower) {
+                imgFlower.style.left = '50%';
+            }
+            if (imgFiller) {
+                imgFiller.style.left = '50%';
+            }
         }
     }
     
@@ -1411,12 +1641,12 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         
         if (window.bouquetType === 'money') {
-            if (!selectedMoneyAmount) {
+            if (!window.selectedMoneyAmount) {
                 alert('Please select a money amount for your money bouquet.');
                 return;
             }
         } else {
-            if (!selectedWrapper && !selectedFocalFlower1 && !selectedGreenery && !selectedFiller && !selectedRibbon) {
+            if (!window.selectedWrapper && !window.selectedFocalFlower1 && !window.selectedGreenery && !window.selectedFiller && !window.selectedRibbon) {
                 alert('Please select at least one material for your bouquet.');
                 return;
             }
@@ -1426,17 +1656,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData();
         formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
         formData.append('bouquet_type', window.bouquetType);
-        formData.append('window.quantity', window.quantity);
+        formData.append('quantity', window.quantity);
         
         if (window.bouquetType === 'money') {
             formData.append('money_amount', window.selectedMoneyAmount.amount);
         } else {
             if (window.selectedWrapper) formData.append('wrapper', window.selectedWrapper.name);
-            if (selectedFocalFlower1) formData.append('focal_flower_1', window.selectedFocalFlower1.name);
+            if (window.selectedFocalFlower1) formData.append('focal_flower_1', window.selectedFocalFlower1.name);
             
-            if (selectedGreenery) formData.append('greenery', window.selectedGreenery.name);
-            if (selectedFiller) formData.append('filler', window.selectedFiller.name);
-            if (selectedRibbon) formData.append('ribbon', window.selectedRibbon.name);
+            if (window.selectedGreenery) formData.append('greenery', window.selectedGreenery.name);
+            if (window.selectedFiller) formData.append('filler', window.selectedFiller.name);
+            if (window.selectedRibbon) formData.append('ribbon', window.selectedRibbon.name);
         }
         
         // Submit to backend
@@ -1463,12 +1693,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add to cart functionality
     document.getElementById('addToCartBtn').addEventListener('click', function() {
         if (window.bouquetType === 'money') {
-            if (!selectedMoneyAmount) {
+            if (!window.selectedMoneyAmount) {
                 alert('Please select a money amount for your money bouquet.');
                 return;
             }
         } else {
-            if (!selectedWrapper && !selectedFocalFlower1 && !selectedGreenery && !selectedFiller && !selectedRibbon) {
+            if (!window.selectedWrapper && !window.selectedFocalFlower1 && !window.selectedGreenery && !window.selectedFiller && !window.selectedRibbon) {
                 alert('Please select at least one material for your bouquet.');
                 return;
             }
@@ -1478,17 +1708,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData();
         formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
         formData.append('bouquet_type', window.bouquetType);
-        formData.append('window.quantity', window.quantity);
+        formData.append('quantity', window.quantity);
         
         if (window.bouquetType === 'money') {
             formData.append('money_amount', window.selectedMoneyAmount.amount);
         } else {
             if (window.selectedWrapper) formData.append('wrapper', window.selectedWrapper.name);
-            if (selectedFocalFlower1) formData.append('focal_flower_1', window.selectedFocalFlower1.name);
+            if (window.selectedFocalFlower1) formData.append('focal_flower_1', window.selectedFocalFlower1.name);
             
-            if (selectedGreenery) formData.append('greenery', window.selectedGreenery.name);
-            if (selectedFiller) formData.append('filler', window.selectedFiller.name);
-            if (selectedRibbon) formData.append('ribbon', window.selectedRibbon.name);
+            if (window.selectedGreenery) formData.append('greenery', window.selectedGreenery.name);
+            if (window.selectedFiller) formData.append('filler', window.selectedFiller.name);
+            if (window.selectedRibbon) formData.append('ribbon', window.selectedRibbon.name);
         }
         
         // Submit to backend
@@ -1499,24 +1729,80 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Added!',
-                    text: data.message,
-                    confirmButtonColor: '#4CAF50'
-                }).then(() => {
-                    location.reload();
-                });
+                // Show toast notification similar to checkout redirect
+                showCheckoutAlert(data.message || 'Custom bouquet added to cart successfully!');
+                // Redirect to cart page after short delay
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 1500);
             } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+                // Show error notification
+                showCheckoutAlert(data.message || 'Failed to add to cart', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred while adding to cart.' });
+            showCheckoutAlert('An error occurred while adding to cart.', 'error');
         });
     });
     
+    // Buy Now functionality
+    document.getElementById('buyNowBtn').addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent form submission
+        
+        if (window.bouquetType === 'money') {
+            if (!window.selectedMoneyAmount) {
+                alert('Please select a money amount for your money bouquet.');
+                return;
+            }
+        } else {
+            if (!window.selectedWrapper && !window.selectedFocalFlower1 && !window.selectedGreenery && !window.selectedFiller && !window.selectedRibbon) {
+                alert('Please select at least one material for your bouquet.');
+                return;
+            }
+        }
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+        formData.append('bouquet_type', window.bouquetType);
+        formData.append('quantity', window.quantity);
+        
+        if (window.bouquetType === 'money') {
+            formData.append('money_amount', window.selectedMoneyAmount.amount);
+        } else {
+            if (window.selectedWrapper) formData.append('wrapper', window.selectedWrapper.name);
+            if (window.selectedFocalFlower1) formData.append('focal_flower_1', window.selectedFocalFlower1.name);
+            
+            if (window.selectedGreenery) formData.append('greenery', window.selectedGreenery.name);
+            if (window.selectedFiller) formData.append('filler', window.selectedFiller.name);
+            if (window.selectedRibbon) formData.append('ribbon', window.selectedRibbon.name);
+        }
+        
+        // Submit to backend
+        fetch('{{ route("customer.products.bouquet-customize.buy-now") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show toast notification similar to cart success
+                showCheckoutAlert(data.message || 'Redirecting to checkout...');
+                // Redirect to checkout page after short delay
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 1500);
+            } else {
+                // Show error notification
+                showCheckoutAlert(data.message || 'An error occurred', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred while processing buy now.' });
+        });
+    });
     
     function syncModalValues() {
         // Sync fresh flower quantity
@@ -1540,14 +1826,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Sync modal when modal is shown
-    document.getElementById('priceSummaryModal').addEventListener('show.bs.modal', function() {
-        if (typeof syncModalValues === 'function') {
-            syncModalValues();
-        }
-        
-        // Add event listeners to modal window.quantity inputs
-        setupModalQuantityListeners();
-    });
+    const priceSummaryModal = document.getElementById('priceSummaryModal');
+    if (priceSummaryModal) {
+        priceSummaryModal.addEventListener('show.bs.modal', function() {
+            if (typeof syncModalValues === 'function') {
+                syncModalValues();
+            }
+            
+            // Add event listeners to modal quantity inputs
+            setupModalQuantityListeners();
+        });
+    }
     
     function setupModalQuantityListeners() {
         // Remove existing listeners first to prevent duplicates
@@ -1705,11 +1994,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const materials = [];
         
         if (window.selectedWrapper) materials.push(`📦 ${window.selectedWrapper.name}`);
-        if (selectedFocalFlower1) materials.push(`🌸 ${window.selectedFocalFlower1.name}`);
+        if (window.selectedFocalFlower1) materials.push(`🌸 ${window.selectedFocalFlower1.name}`);
         
-        if (selectedGreenery) materials.push(`🌿 ${window.selectedGreenery.name}`);
-        if (selectedFiller) materials.push(`✨ ${window.selectedFiller.name}`);
-        if (selectedRibbon) materials.push(`🎀 ${window.selectedRibbon.name}`);
+        if (window.selectedGreenery) materials.push(`🌿 ${window.selectedGreenery.name}`);
+        if (window.selectedFiller) materials.push(`✨ ${window.selectedFiller.name}`);
+        if (window.selectedRibbon) materials.push(`🎀 ${window.selectedRibbon.name}`);
         
         if (materials.length === 0) {
             recipeSummary.innerHTML = '<em>Select materials to see your arrangement components...</em>';
@@ -1718,6 +2007,83 @@ document.addEventListener('DOMContentLoaded', function() {
                 `<span class="recipe-ingredient">${material}</span>`
             ).join(' ');
         }
+    }
+    </script>
+    
+    <!-- Toast Alert Function for Checkout -->
+    <script>
+    function showCheckoutAlert(message, type = 'success') {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.checkout-toast-alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Determine alert styling
+        const isSuccess = type === 'success';
+        const bgColor = isSuccess ? '#d4edda' : '#f8d7da';
+        const borderColor = isSuccess ? '#c3e6cb' : '#f5c6cb';
+        const textColor = isSuccess ? '#155724' : '#721c24';
+        const icon = isSuccess ? 'check-circle' : 'exclamation-triangle';
+        
+        // Create toast alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'checkout-toast-alert';
+        alertDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 320px;
+            max-width: 450px;
+            background: ${bgColor};
+            border: 1px solid ${borderColor};
+            border-radius: 8px;
+            padding: 14px 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
+        alertDiv.innerHTML = `
+            <i class="fas fa-${icon}" style="color: ${textColor}; font-size: 18px; flex-shrink: 0;"></i>
+            <span style="color: ${textColor}; font-weight: 500; flex: 1; font-size: 14px;">${message}</span>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        // Auto remove after 3 seconds with fade out
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+                alertDiv.style.opacity = '0';
+                alertDiv.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 300);
+            }
+        }, 3000);
+    }
+    
+    // Add CSS animation if not exists
+    if (!document.getElementById('checkout-alert-animation')) {
+        const style = document.createElement('style');
+        style.id = 'checkout-alert-animation';
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     }
     </script>
     @endpush

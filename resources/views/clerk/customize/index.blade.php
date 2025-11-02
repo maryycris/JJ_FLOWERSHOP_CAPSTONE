@@ -46,7 +46,7 @@
                                     </div>
                                     <div class="card-body p-2">
                                         <div class="fw-semibold">{{ $item->name }}</div>
-                                        <div class="text-muted small">₱{{ number_format($item->price ?? 0,2) }}</div>
+                                        <div class="text-muted small">₱{{ number_format($item->computed_price ?? ($item->inventoryItem->price ?? ($item->price ?? 0)), 2) }}</div>
                                     </div>
                                     <div class="card-footer d-flex justify-content-center gap-2 p-2">
                                         <button class="btn btn-sm action-btn edit-btn" data-bs-toggle="modal" data-bs-target="#editModal{{ $item->id }}" title="Edit"><i class="bi bi-pencil-square"></i></button>
@@ -89,7 +89,7 @@
                                     </div>
                                     <div class="mb-2">
                                         <label class="form-label">Price</label>
-                                        <input type="number" step="0.01" name="price" id="itemPriceEdit{{ $item->id }}" class="form-control" readonly value="{{ $item->price }}">
+                                        <input type="number" step="0.01" name="price" id="itemPriceEdit{{ $item->id }}" class="form-control" readonly value="{{ $item->inventoryItem ? $item->inventoryItem->price : ($item->price ?? 0) }}">
                                         <small class="text-muted">Price will be auto-filled from inventory</small>
                                     </div>
                                     <div class="mb-2"><label class="form-label">Image</label><input type="file" name="image" class="form-control"></div>
@@ -363,15 +363,26 @@ async function loadInventoryItems() {
         const response = await fetch(`/clerk/api/inventory/${category}`);
         const items = await response.json();
         
-        // Set up search functionality
-        searchInput.addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            const filteredItems = items.filter(item => 
-                item.name.toLowerCase().includes(query)
-            );
-            
-            displayItems(filteredItems);
+        // Set up search functionality - only search on Enter key press
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value.toLowerCase();
+                const filteredItems = items.filter(item => 
+                    item.name.toLowerCase().includes(query)
+                );
+                
+                displayItems(filteredItems);
+            }
         });
+        // Remove live typing search - only search on Enter key press
+        // searchInput.addEventListener('input', function() {
+        //     const query = this.value.toLowerCase();
+        //     const filteredItems = items.filter(item => 
+        //         item.name.toLowerCase().includes(query)
+        //     );
+        //     
+        //     displayItems(filteredItems);
+        // });
         
         // Show all items initially
         displayItems(items);
@@ -461,15 +472,26 @@ async function loadInventoryItemsEdit(itemId) {
         const response = await fetch(`/clerk/api/inventory/${category}`);
         const items = await response.json();
         
-        // Set up search functionality
-        searchInput.addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            const filteredItems = items.filter(item => 
-                item.name.toLowerCase().includes(query)
-            );
-            
-            displayItemsEdit(filteredItems, itemId);
+        // Set up search functionality - only search on Enter key press
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value.toLowerCase();
+                const filteredItems = items.filter(item => 
+                    item.name.toLowerCase().includes(query)
+                );
+                
+                displayItemsEdit(filteredItems, itemId);
+            }
         });
+        // Remove live typing search - only search on Enter key press
+        // searchInput.addEventListener('input', function() {
+        //     const query = this.value.toLowerCase();
+        //     const filteredItems = items.filter(item => 
+        //         item.name.toLowerCase().includes(query)
+        //     );
+        //     
+        //     displayItemsEdit(filteredItems, itemId);
+        // });
         
         // Show all items initially
         displayItemsEdit(items, itemId);

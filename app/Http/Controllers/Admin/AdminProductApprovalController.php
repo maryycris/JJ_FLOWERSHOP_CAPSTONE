@@ -126,8 +126,16 @@ class AdminProductApprovalController extends Controller
     public function getProductDetails($productId)
     {
         try {
-            $product = CatalogProduct::with(['compositions'])
+            $product = CatalogProduct::with(['compositions.componentProduct'])
                 ->findOrFail($productId);
+
+            // Add category to each composition from component product
+            $product->compositions->transform(function($composition) {
+                if ($composition->componentProduct) {
+                    $composition->category = $composition->componentProduct->category;
+                }
+                return $composition;
+            });
 
             return response()->json([
                 'success' => true,
@@ -147,11 +155,20 @@ class AdminProductApprovalController extends Controller
     public function getProductCompositions($productId)
     {
         try {
-            $product = CatalogProduct::with(['compositions'])->findOrFail($productId);
+            $product = CatalogProduct::with(['compositions.componentProduct'])
+                ->findOrFail($productId);
+
+            // Add category to each composition from component product
+            $compositions = $product->compositions->map(function($composition) {
+                if ($composition->componentProduct) {
+                    $composition->category = $composition->componentProduct->category;
+                }
+                return $composition;
+            });
             
             return response()->json([
                 'success' => true,
-                'compositions' => $product->compositions
+                'compositions' => $compositions
             ]);
         } catch (\Exception $e) {
             return response()->json([

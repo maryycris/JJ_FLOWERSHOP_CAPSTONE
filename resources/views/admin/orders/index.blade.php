@@ -8,7 +8,7 @@
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h2 class="mb-0">{{ $type == 'online' ? 'Online Orders' : 'Walk-in Orders' }}</h2>
                 @if($type == 'walkin')
-                    <a href="{{ route('admin.orders.walkin.delivery') }}" class="btn btn-success">Add New</a>
+                    <a href="{{ route('admin.orders.create') }}" class="btn btn-success">Add New</a>
                 @endif
             </div>
             <div class="row mb-3">
@@ -91,10 +91,11 @@
                                     <td>{{ $order->user->name ?? 'Walk-in Customer' }}</td>
                                     <td>{{ $order->id }}</td>
                                     <td>{{ $order->created_at->format('m/d/Y') }}</td>
-                                    <td>₱{{ number_format($order->total_price, 2) }}</td>
                                     <td>
                                         @if($order->status === 'quotation')
                                             <span class="badge bg-warning text-dark">Quotation</span>
+                                        @elseif($order->status === 'sales_order')
+                                            <span class="badge bg-success">SALES ORDER</span>
                                         @elseif($order->status === 'validated')
                                             <span class="badge bg-info">Validated</span>
                                         @elseif($order->status === 'done')
@@ -105,6 +106,7 @@
                                             <span class="badge bg-secondary">{{ ucfirst($order->status) }}</span>
                                         @endif
                                     </td>
+                                    <td>₱{{ number_format($order->total_price, 2) }}</td>
                                     <td>
                                         @if($order->status === 'approved')
                                             <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#assignDeliveryModal{{ $order->id }}">Assign for Delivery</button>

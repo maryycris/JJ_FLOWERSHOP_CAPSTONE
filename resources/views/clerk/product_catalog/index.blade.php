@@ -519,12 +519,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 performSearch();
             }
         });
-        // Optional: live typing debounce search
-        clearTimeout(searchInput.__t);
-        searchInput.addEventListener('input', function(){
-            clearTimeout(searchInput.__t);
-            searchInput.__t = setTimeout(performSearch, 400);
-        });
+        // Remove live typing search - only search on Enter key press
+        // clearTimeout(searchInput.__t);
+        // searchInput.addEventListener('input', function(){
+        //     clearTimeout(searchInput.__t);
+        //     searchInput.__t = setTimeout(performSearch, 400);
+        // });
     }
 
     if (filterApply) {
@@ -696,7 +696,16 @@ document.addEventListener('DOMContentLoaded', function() {
             var product = JSON.parse(button.getAttribute('data-product'));
 
             var form = editProductModal.querySelector('#editProductForm');
-            form.action = '/clerk/product_catalog/' + product.id;
+            form.action = '{{ route("clerk.product_catalog.update", ":id") }}'.replace(':id', product.id);
+
+            // Refresh CSRF token when modal opens
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta) {
+                var csrfInput = form.querySelector('input[name="_token"]');
+                if (csrfInput) {
+                    csrfInput.value = csrfMeta.getAttribute('content');
+                }
+            }
 
             editProductModal.querySelector('#edit_product_name').value = product.name;
             editProductModal.querySelector('#edit_product_price').value = product.price;
@@ -717,6 +726,81 @@ document.addEventListener('DOMContentLoaded', function() {
             loadCurrentCompositions(product.id);
         });
 
+        // Handle edit product form submission with CSRF token refresh
+        var editProductForm = document.getElementById('editProductForm');
+        if (editProductForm) {
+            editProductForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get fresh CSRF token from meta tag
+                var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+                
+                // Update CSRF token in form
+                var csrfInput = editProductForm.querySelector('input[name="_token"]');
+                if (csrfInput && csrfToken) {
+                    csrfInput.value = csrfToken;
+                }
+                
+                // Create FormData
+                var formData = new FormData(editProductForm);
+                
+                // Ensure CSRF token is in FormData
+                if (csrfToken) {
+                    formData.set('_token', csrfToken);
+                }
+                
+                // Add _method for PUT
+                formData.set('_method', 'PUT');
+                
+                // Submit via fetch with proper headers
+                fetch(editProductForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (response.status === 419) {
+                        // CSRF token expired, refresh page to get new token
+                        window.location.reload();
+                        return;
+                    }
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    return response.json().catch(() => response.text());
+                })
+                .then(data => {
+                    if (typeof data === 'object' && data.success) {
+                        // Close modal
+                        var modal = bootstrap.Modal.getInstance(editProductModal);
+                        if (modal) modal.hide();
+                        
+                        // Show success message
+                        alert('Product change request submitted for admin approval!');
+                        
+                        // Reload page to show updated data
+                        window.location.reload();
+                    } else if (typeof data === 'object' && data.message) {
+                        alert(data.message);
+                    } else {
+                        // Success - reload page
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while submitting the form. Please try again.');
+                });
+            });
+        }
+
         // Delete Product Modal population
         var deleteProductModal = document.getElementById('deleteProductModal');
         deleteProductModal.addEventListener('show.bs.modal', function (event) {
@@ -724,11 +808,95 @@ document.addEventListener('DOMContentLoaded', function() {
             var product = JSON.parse(button.getAttribute('data-product'));
 
             var form = deleteProductModal.querySelector('#deleteProductForm');
-            form.action = '/clerk/product_catalog/' + product.id;
+            form.action = '{{ route("clerk.product_catalog.destroy", ":id") }}'.replace(':id', product.id);
+
+            // Refresh CSRF token when modal opens
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta) {
+                var csrfInput = form.querySelector('input[name="_token"]');
+                if (csrfInput) {
+                    csrfInput.value = csrfMeta.getAttribute('content');
+                }
+            }
 
             deleteProductModal.querySelector('#delete_product_name').value = product.name;
             deleteProductModal.querySelector('#delete_reason').value = '';
         });
+
+        // Handle delete product form submission with CSRF token refresh
+        var deleteProductForm = document.getElementById('deleteProductForm');
+        if (deleteProductForm) {
+            deleteProductForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get fresh CSRF token from meta tag
+                var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+                
+                // Update CSRF token in form
+                var csrfInput = deleteProductForm.querySelector('input[name="_token"]');
+                if (csrfInput && csrfToken) {
+                    csrfInput.value = csrfToken;
+                }
+                
+                // Create FormData
+                var formData = new FormData(deleteProductForm);
+                
+                // Ensure CSRF token is in FormData
+                if (csrfToken) {
+                    formData.set('_token', csrfToken);
+                }
+                
+                // Add _method for DELETE
+                formData.set('_method', 'DELETE');
+                
+                // Submit via fetch with proper headers
+                fetch(deleteProductForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (response.status === 419) {
+                        // CSRF token expired, refresh page to get new token
+                        window.location.reload();
+                        return;
+                    }
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    return response.json().catch(() => response.text());
+                })
+                .then(data => {
+                    if (typeof data === 'object' && data.success) {
+                        // Close modal
+                        var modal = bootstrap.Modal.getInstance(deleteProductModal);
+                        if (modal) modal.hide();
+                        
+                        // Show success message
+                        alert('Product deletion request submitted for admin approval!');
+                        
+                        // Reload page to show updated data
+                        window.location.reload();
+                    } else if (typeof data === 'object' && data.message) {
+                        alert(data.message);
+                    } else {
+                        // Success - reload page
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while submitting the form. Please try again.');
+                });
+            });
+        }
 
     });
 
@@ -1380,11 +1548,18 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // If we have composition data, populate the fields
         if (composition) {
-            // Set category
+            // Wait a moment for DOM to be ready
+            await new Promise(resolve => setTimeout(resolve, 10));
+            
+            // Set category first - this must be done before loading materials
             const categorySelect = document.getElementById(`edit-composition-category-${index}`);
-            if (categorySelect) {
-                categorySelect.value = composition.category || '';
-                // Load materials and then set the component values
+            if (categorySelect && composition.category) {
+                categorySelect.value = composition.category;
+                
+                // Trigger change event to ensure proper initialization
+                categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                // Load materials after category is set
                 await updateCompositionMaterials(index);
                 
                 // Set component name and ID after materials are loaded
@@ -1398,6 +1573,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Set the search input value to show the selected material
+                const searchInput = document.getElementById(`edit-composition-search-${index}`);
+                if (searchInput) {
+                    searchInput.value = composition.component_name || '';
+                }
+            } else if (categorySelect) {
+                // If no category, still load materials (for backward compatibility)
+                await updateCompositionMaterials(index);
+                
+                const componentNameInput = document.querySelector(`#edit-composition-select-${index}`).parentElement.querySelector('.composition-component-name');
+                if (componentNameInput) {
+                    componentNameInput.value = composition.component_name || '';
+                }
+                const componentSelect = document.getElementById(`edit-composition-select-${index}`);
+                if (componentSelect) {
+                    componentSelect.value = composition.component_id || '';
+                }
+                
                 const searchInput = document.getElementById(`edit-composition-search-${index}`);
                 if (searchInput) {
                     searchInput.value = composition.component_name || '';
@@ -1564,6 +1756,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <table class="table table-sm">
                                     <thead>
                                         <tr>
+                                            <th>Category</th>
                                             <th>Material</th>
                                             <th>Quantity</th>
                                             <th>Unit</th>
@@ -1572,6 +1765,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <tbody>
                                         ${product.compositions.map(comp => `
                                             <tr>
+                                                <td>${comp.category || 'N/A'}</td>
                                                 <td>${comp.component_name}</td>
                                                 <td>${comp.quantity}</td>
                                                 <td>${comp.unit}</td>

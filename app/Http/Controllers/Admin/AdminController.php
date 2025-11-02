@@ -45,6 +45,58 @@ class AdminController extends Controller
             ->whereNull('deleted_at')
             ->get();
 
+        // Revenue Analytics
+        $todayRevenue = Order::whereDate('created_at', today())
+            ->whereIn('order_status', ['completed', 'delivered', 'paid'])
+            ->sum('total_price');
+
+        $thisWeekRevenue = Order::whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+            ->whereIn('order_status', ['completed', 'delivered', 'paid'])
+            ->sum('total_price');
+
+        $thisMonthRevenue = Order::whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->whereIn('order_status', ['completed', 'delivered', 'paid'])
+            ->sum('total_price');
+
+        // Sales chart data (last 7 days)
+        $salesChartData = [];
+        $salesChartLabels = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $dailyRevenue = Order::whereDate('created_at', $date)
+                ->whereIn('order_status', ['completed', 'delivered', 'paid'])
+                ->sum('total_price');
+            
+            $salesChartLabels[] = $date->format('M d');
+            $salesChartData[] = (float) $dailyRevenue;
+        }
+
+        // Orders chart data (last 7 days)
+        $ordersChartData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $dailyOrders = Order::whereDate('created_at', $date)->count();
+            $ordersChartData[] = $dailyOrders;
+        }
+
+        // Top selling products this month
+        $topProductsThisMonth = \DB::table('order_product')
+            ->join('products', 'order_product.product_id', '=', 'products.id')
+            ->join('orders', 'order_product.order_id', '=', 'orders.id')
+            ->whereMonth('orders.created_at', Carbon::now()->month)
+            ->whereYear('orders.created_at', Carbon::now()->year)
+            ->whereIn('orders.order_status', ['completed', 'delivered', 'paid'])
+            ->select('products.name', \DB::raw('SUM(order_product.quantity) as total_sold'), \DB::raw('SUM(order_product.quantity * products.price) as total_revenue'))
+            ->groupBy('products.name')
+            ->orderByDesc('total_sold')
+            ->limit(5)
+            ->get();
+
+        // Order type distribution
+        $onlineOrdersCount = Order::where('type', 'online')->count();
+        $walkinOrdersCount = Order::where('type', 'walkin')->count();
+
         return view('admin.dashboard', [
             'pendingOrdersCount' => $orderCounts['pending'],
             'approvedOrdersCount' => $orderCounts['approved'],
@@ -57,6 +109,15 @@ class AdminController extends Controller
             'totalMovementsToday' => $totalMovementsToday,
             'recentMovements' => $recentMovements,
             'restockProducts' => $restockProducts,
+            'todayRevenue' => $todayRevenue,
+            'thisWeekRevenue' => $thisWeekRevenue,
+            'thisMonthRevenue' => $thisMonthRevenue,
+            'salesChartLabels' => $salesChartLabels,
+            'salesChartData' => $salesChartData,
+            'ordersChartData' => $ordersChartData,
+            'topProductsThisMonth' => $topProductsThisMonth,
+            'onlineOrdersCount' => $onlineOrdersCount,
+            'walkinOrdersCount' => $walkinOrdersCount,
         ]);
     }
 

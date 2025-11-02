@@ -2,21 +2,89 @@
 
 @section('title', 'Invoice Details')
 
+@push('styles')
+<style>
+/* Invoice Details Styling - matching invoice index hierarchy */
+.card-title {
+    font-size: 1.1rem !important;
+    font-weight: 600;
+}
+
+.card-header h5 {
+    font-size: 0.95rem !important;
+    font-weight: 600;
+}
+
+.card-body p {
+    font-size: 0.85rem;
+}
+
+.card-body strong {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Table styling */
+.table {
+    font-size: 0.85rem;
+}
+
+.table thead th {
+    font-size: 0.8rem !important;
+    font-weight: 600;
+    background-color: #e6f4ea;
+}
+
+.table tbody td {
+    font-size: 0.85rem;
+}
+
+/* Order link styling */
+.card-body a[href*="orders"], .card-body a[href*="sales-orders"] {
+    color: #7bb47b !important;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.card-body a[href*="orders"]:hover, .card-body a[href*="sales-orders"]:hover {
+    color: #5aa65a !important;
+    text-decoration: underline;
+}
+
+/* Amount styling */
+.text-success {
+    font-size: 0.85rem;
+}
+
+/* Button sizing in header */
+.card-header .card-tools .btn {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+    line-height: 1.3 !important;
+}
+
+.card-header .card-tools .btn i {
+    font-size: 0.7rem;
+    margin-right: 0.25rem;
+}
+</style>
+@endpush
+
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid" style="margin-top: -2rem; padding-top: 0.5rem;">
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title mb-0">Invoice Details - {{ $invoice->invoice_number }}</h3>
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: #e6f4ea;">
+                    <h3 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600;">Invoice Details - {{ $invoice->invoice_number }}</h3>
                     <div class="card-tools">
-                        <a href="{{ route('admin.invoices.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('invoices.index') }}" class="btn btn-sm btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to Invoices
                         </a>
                         @if($invoice->status === 'ready' && $invoice->payment_type === 'cod')
-                            <button type="button" class="btn btn-success ml-2" onclick="openPaymentWizard({{ $invoice->id }})">
+                            <a href="{{ route('invoices.payment', $invoice) }}" class="btn btn-sm btn-success ms-2">
                                 <i class="fas fa-credit-card"></i> Register Payment
-                            </button>
+                            </a>
                         @endif
                     </div>
                 </div>
@@ -25,7 +93,7 @@
                         <!-- Invoice Information -->
                         <div class="col-md-8">
                             <div class="card">
-                                <div class="card-header">
+                                <div class="card-header" style="background: #e6f4ea;">
                                     <h5>Invoice Information</h5>
                                 </div>
                                 <div class="card-body">
@@ -33,32 +101,58 @@
                                         <div class="col-md-6">
                                             <p><strong>Invoice Number:</strong> {{ $invoice->invoice_number }}</p>
                                             <p><strong>Order Number:</strong> 
-                                                <a href="{{ route('admin.orders.show', $invoice->order_id) }}">#{{ $invoice->order_id }}</a>
+                                                <a href="{{ route('admin.sales-orders.show', $invoice->order_id) }}">#{{ $invoice->order_id }}</a>
                                             </p>
                                             <p><strong>Invoice Date:</strong> {{ $invoice->created_at->format('M d, Y') }}</p>
                                             <p><strong>Payment Type:</strong> 
                                                 @if($invoice->payment_type === 'online')
-                                                    <span class="badge badge-info">Online</span>
+                                                    <span class="badge" style="background-color: #4caf50; color: white;">Online</span>
                                                 @else
-                                                    <span class="badge badge-primary">COD</span>
+                                                    <span class="badge" style="background-color: #66bb6a; color: white;">COD</span>
                                                 @endif
                                             </p>
                                         </div>
                                         <div class="col-md-6">
                                             <p><strong>Status:</strong> 
                                                 @if($invoice->status === 'paid')
-                                                    <span class="badge badge-success">Paid</span>
+                                                    <span class="badge" style="background-color: #28a745; color: white;">Paid</span>
                                                 @elseif($invoice->status === 'ready')
-                                                    <span class="badge badge-warning">Ready</span>
+                                                    <span class="badge" style="background-color: #90ee90; color: black;">Ready</span>
                                                 @elseif($invoice->status === 'draft')
-                                                    <span class="badge badge-secondary">Draft</span>
+                                                    <span class="badge" style="background-color: #c8e6c9; color: black;">Draft</span>
                                                 @else
-                                                    <span class="badge badge-danger">Cancelled</span>
+                                                    <span class="badge" style="background-color: #2d5016; color: white;">Cancelled</span>
                                                 @endif
                                             </p>
-                                            <p><strong>Customer:</strong> {{ $invoice->order->user->name }}</p>
-                                            <p><strong>Email:</strong> {{ $invoice->order->user->email }}</p>
-                                            <p><strong>Phone:</strong> {{ $invoice->order->user->contact_number ?? 'N/A' }}</p>
+                                            @php
+                                                $notes = $invoice->order->notes ?? '';
+                                                $billName = $invoice->order->user->name ?? 'Walk-in Customer';
+                                                $contactFromNotes = null;
+                                                $emailFromNotes = null;
+
+                                                if (!empty($notes)) {
+                                                    if (preg_match('/Customer:\s*(.*?)(?:[;,]|$)/', $notes, $m)) {
+                                                        $billName = trim($m[1]);
+                                                    }
+                                                    if (preg_match('/Contact:\s*(.*?)(?:[;,]|$)/', $notes, $m)) {
+                                                        $contactFromNotes = trim($m[1]);
+                                                    }
+                                                    if (preg_match('/Email:\s*([^;,\s]+@[^;,\s]+)/', $notes, $m)) {
+                                                        $emailFromNotes = trim($m[1]);
+                                                    }
+                                                }
+
+                                                // Prefer delivery recipient phone if available, else contact from notes, else user's contact
+                                                $phone = $invoice->order->delivery->recipient_phone ?? $contactFromNotes ?? ($invoice->order->user->contact_number ?? null);
+                                                $email = $emailFromNotes ?? ($invoice->order->user->email ?? null);
+                                            @endphp
+                                            <p><strong>Customer:</strong> {{ $billName }}</p>
+                                            @if($email)
+                                                <p><strong>Email:</strong> {{ $email }}</p>
+                                            @endif
+                                            @if($phone)
+                                                <p><strong>Phone:</strong> {{ $phone }}</p>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -66,7 +160,7 @@
 
                             <!-- Products -->
                             <div class="card mt-3">
-                                <div class="card-header">
+                                <div class="card-header" style="background: #e6f4ea;">
                                     <h5>Products</h5>
                                 </div>
                                 <div class="card-body">
@@ -85,11 +179,19 @@
                                                 <tr>
                                                     <td>
                                                         <div class="d-flex align-items-center">
-                                                            @if($product->image)
-                                                                <img src="{{ asset('storage/' . $product->image) }}" 
+                                                            @php
+                                                                $productImage = $product->image ?? null;
+                                                                if ($productImage && !empty($productImage)) {
+                                                                    if (!str_starts_with($productImage, 'http') && !str_starts_with($productImage, '/')) {
+                                                                        $productImage = asset('storage/' . $productImage);
+                                                                    }
+                                                                }
+                                                            @endphp
+                                                            @if($productImage)
+                                                                <img src="{{ $productImage }}" 
                                                                      alt="{{ $product->name }}" 
                                                                      class="img-thumbnail" 
-                                                                     style="width: 50px; height: 50px; object-fit: cover; margin-right: 10px;">
+                                                                     style="width: 50px; height: 50px; object-fit: cover; margin-right: 10px; display: block;">
                                                             @endif
                                                             <div>
                                                                 <strong>{{ $product->name }}</strong>
@@ -106,6 +208,71 @@
                                                     <td>₱{{ number_format($product->pivot->quantity * $product->price, 2) }}</td>
                                                 </tr>
                                                 @endforeach
+                                                @foreach($invoice->order->customBouquets as $bouquet)
+                                                @php
+                                                    $orderQty = $bouquet->pivot->quantity;
+                                                    $customData = $bouquet->customization_data ?? [];
+                                                    $freshFlowerQty = $customData['freshFlowerQuantity'] ?? 1;
+                                                    $artificialFlowerQty = $customData['artificialFlowerQuantity'] ?? 1;
+                                                    
+                                                    $components = [];
+                                                    
+                                                    // Wrapper
+                                                    if ($bouquet->wrapper) {
+                                                        $components[] = "Wrapper: {$bouquet->wrapper} (x{$orderQty})";
+                                                    }
+                                                    
+                                                    // Fresh Flowers
+                                                    $freshFlowers = [];
+                                                    if ($bouquet->focal_flower_1) {
+                                                        $freshFlowers[] = $bouquet->focal_flower_1;
+                                                    }
+                                                    if ($bouquet->focal_flower_2) {
+                                                        $freshFlowers[] = $bouquet->focal_flower_2;
+                                                    }
+                                                    if ($bouquet->focal_flower_3) {
+                                                        $freshFlowers[] = $bouquet->focal_flower_3;
+                                                    }
+                                                    if (!empty($freshFlowers)) {
+                                                        $totalFreshQty = $freshFlowerQty * $orderQty;
+                                                        $components[] = "Fresh Flowers: " . implode(', ', $freshFlowers) . " (x{$totalFreshQty})";
+                                                    }
+                                                    
+                                                    // Greenery
+                                                    if ($bouquet->greenery) {
+                                                        $components[] = "Greenery: {$bouquet->greenery} (x{$orderQty})";
+                                                    }
+                                                    
+                                                    // Artificial Flowers (Filler)
+                                                    if ($bouquet->filler) {
+                                                        $totalArtificialQty = $artificialFlowerQty * $orderQty;
+                                                        $components[] = "Artificial Flowers: {$bouquet->filler} (x{$totalArtificialQty})";
+                                                    }
+                                                    
+                                                    // Ribbon
+                                                    if ($bouquet->ribbon) {
+                                                        $components[] = "Ribbon: {$bouquet->ribbon} (x{$orderQty})";
+                                                    }
+                                                    
+                                                    $componentDescription = !empty($components) ? implode('<br>', $components) : '';
+                                                    $unitPrice = $bouquet->unit_price ?? ($bouquet->total_price / max($orderQty, 1));
+                                                @endphp
+                                                <tr>
+                                                    <td>
+                                                        <div>
+                                                            <strong>Custom Bouquet</strong>
+                                                            @if(!empty($componentDescription))
+                                                                <div style="font-size: 0.8rem; color: #666; margin-top: 4px; line-height: 1.6;">
+                                                                    {!! $componentDescription !!}
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                    <td>{{ $orderQty }}</td>
+                                                    <td>₱{{ number_format($unitPrice, 2) }}</td>
+                                                    <td>₱{{ number_format($unitPrice * $orderQty, 2) }}</td>
+                                                </tr>
+                                                @endforeach
                                             </tbody>
                                         </table>
                                     </div>
@@ -115,7 +282,7 @@
                             <!-- Delivery Information -->
                             @if($invoice->order->delivery)
                             <div class="card mt-3">
-                                <div class="card-header">
+                                <div class="card-header" style="background: #e6f4ea;">
                                     <h5>Delivery Information</h5>
                                 </div>
                                 <div class="card-body">
@@ -141,7 +308,7 @@
                         <!-- Payment Summary -->
                         <div class="col-md-4">
                             <div class="card">
-                                <div class="card-header">
+                                <div class="card-header" style="background: #e6f4ea;">
                                     <h5>Payment Summary</h5>
                                 </div>
                                 <div class="card-body">
@@ -176,7 +343,7 @@
                             <!-- Payment History -->
                             @if($invoice->payments->count() > 0)
                             <div class="card mt-3">
-                                <div class="card-header">
+                                <div class="card-header" style="background: #e6f4ea;">
                                     <h5>Payment History</h5>
                                 </div>
                                 <div class="card-body">
@@ -190,6 +357,9 @@
                                             {{ $payment->payment_date->format('M d, Y') }}
                                             @if($payment->memo)
                                                 - {{ $payment->memo }}
+                                            @endif
+                                            @if($payment->processedBy)
+                                                <br>Processed by: {{ $payment->processedBy->name }}
                                             @endif
                                         </small>
                                     </div>
@@ -205,110 +375,33 @@
     </div>
 </div>
 
-<!-- Payment Wizard Modal -->
-<div class="modal fade" id="paymentWizardModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Register Payment</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="paymentForm">
-                    @csrf
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="mode_of_payment">Mode of Payment <span class="text-danger">*</span></label>
-                                <select class="form-control" id="mode_of_payment" name="mode_of_payment" required>
-                                    <option value="">Select Payment Mode</option>
-                                    <option value="cash">Cash</option>
-                                    <option value="gcash">GCash</option>
-                                    <option value="bank">Bank Transfer</option>
-                                    <option value="card">Card Payment</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="amount">Amount <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="amount" name="amount" 
-                                       step="0.01" min="0.01" value="{{ $invoice->total_amount }}" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="payment_date">Payment Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="payment_date" name="payment_date" 
-                                       value="{{ date('Y-m-d') }}" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="memo">Memo (Optional)</label>
-                                <input type="text" class="form-control" id="memo" name="memo" 
-                                       placeholder="Payment reference or notes">
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="validatePayment()">
-                    <i class="fas fa-check"></i> Validate Payment
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
+<!-- SweetAlert Success Message -->
+@if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '{{ session('success') }}',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        });
+    </script>
+@endif
 
-@section('scripts')
-<script>
-function openPaymentWizard(invoiceId) {
-    $('#paymentWizardModal').modal('show');
-}
+@if(session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: '{{ session('error') }}',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        });
+    </script>
+@endif
 
-function validatePayment() {
-    const formData = new FormData(document.getElementById('paymentForm'));
-    
-    // Show loading state
-    const validateBtn = document.querySelector('button[onclick="validatePayment()"]');
-    const originalText = validateBtn.innerHTML;
-    validateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-    validateBtn.disabled = true;
-
-    fetch(`/admin/invoices/{{ $invoice->id }}/register-payment`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Payment registered successfully!');
-            $('#paymentWizardModal').modal('hide');
-            location.reload();
-        } else {
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while registering payment');
-    })
-    .finally(() => {
-        validateBtn.innerHTML = originalText;
-        validateBtn.disabled = false;
-    });
-}
-</script>
 @endsection

@@ -2,19 +2,87 @@
 
 @section('title', 'Invoice Details')
 
+@push('styles')
+<style>
+/* Invoice Details Styling - matching invoice index hierarchy */
+.card-title {
+    font-size: 1.1rem !important;
+    font-weight: 600;
+}
+
+.card-header h5 {
+    font-size: 0.95rem !important;
+    font-weight: 600;
+}
+
+.card-body p {
+    font-size: 0.85rem;
+}
+
+.card-body strong {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Table styling */
+.table {
+    font-size: 0.85rem;
+}
+
+.table thead th {
+    font-size: 0.8rem !important;
+    font-weight: 600;
+    background-color: #e6f4ea;
+}
+
+.table tbody td {
+    font-size: 0.85rem;
+}
+
+/* Order link styling */
+.card-body a[href*="orders"] {
+    color: #7bb47b !important;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.card-body a[href*="orders"]:hover {
+    color: #5aa65a !important;
+    text-decoration: underline;
+}
+
+/* Amount styling */
+.text-success {
+    font-size: 0.85rem;
+}
+
+/* Button sizing in header */
+.card-header .card-tools .btn {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+    line-height: 1.3 !important;
+}
+
+.card-header .card-tools .btn i {
+    font-size: 0.7rem;
+    margin-right: 0.25rem;
+}
+</style>
+@endpush
+
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title mb-0">Invoice Details - {{ $invoice->invoice_number }}</h3>
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: #e6f4ea;">
+                    <h3 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600;">Invoice Details - {{ $invoice->invoice_number }}</h3>
                     <div class="card-tools">
-                        <a href="{{ route('clerk.invoices.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('clerk.invoices.index') }}" class="btn btn-sm btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to Invoices
                         </a>
                         @if($invoice->status === 'ready' && $invoice->payment_type === 'cod')
-                            <button type="button" class="btn btn-success ml-2" onclick="openPaymentWizard({{ $invoice->id }})">
+                            <button type="button" class="btn btn-sm btn-success ms-2" data-bs-toggle="modal" data-bs-target="#paymentWizardModal">
                                 <i class="fas fa-credit-card"></i> Register Payment
                             </button>
                         @endif
@@ -25,7 +93,7 @@
                         <!-- Invoice Information -->
                         <div class="col-md-8">
                             <div class="card">
-                                <div class="card-header">
+                                <div class="card-header" style="background: #e6f4ea;">
                                     <h5>Invoice Information</h5>
                                 </div>
                                 <div class="card-body">
@@ -38,22 +106,22 @@
                                             <p><strong>Invoice Date:</strong> {{ $invoice->created_at->format('M d, Y') }}</p>
                                             <p><strong>Payment Type:</strong> 
                                                 @if($invoice->payment_type === 'online')
-                                                    <span class="badge badge-info">Online</span>
+                                                    <span class="badge" style="background-color: #4caf50; color: white;">Online</span>
                                                 @else
-                                                    <span class="badge badge-primary">COD</span>
+                                                    <span class="badge" style="background-color: #66bb6a; color: white;">COD</span>
                                                 @endif
                                             </p>
                                         </div>
                                         <div class="col-md-6">
                                             <p><strong>Status:</strong> 
                                                 @if($invoice->status === 'paid')
-                                                    <span class="badge badge-success">Paid</span>
+                                                    <span class="badge" style="background-color: #28a745; color: white;">Paid</span>
                                                 @elseif($invoice->status === 'ready')
-                                                    <span class="badge badge-warning">Ready</span>
+                                                    <span class="badge" style="background-color: #90ee90; color: black;">Ready</span>
                                                 @elseif($invoice->status === 'draft')
-                                                    <span class="badge badge-secondary">Draft</span>
+                                                    <span class="badge" style="background-color: #c8e6c9; color: black;">Draft</span>
                                                 @else
-                                                    <span class="badge badge-danger">Cancelled</span>
+                                                    <span class="badge" style="background-color: #2d5016; color: white;">Cancelled</span>
                                                 @endif
                                             </p>
                                             <p><strong>Customer:</strong> {{ $invoice->order->user->name }}</p>
@@ -66,7 +134,7 @@
 
                             <!-- Products -->
                             <div class="card mt-3">
-                                <div class="card-header">
+                                <div class="card-header" style="background: #e6f4ea;">
                                     <h5>Products</h5>
                                 </div>
                                 <div class="card-body">
@@ -106,6 +174,78 @@
                                                     <td>₱{{ number_format($product->pivot->quantity * $product->price, 2) }}</td>
                                                 </tr>
                                                 @endforeach
+                                                @foreach($invoice->order->customBouquets as $bouquet)
+                                                @php
+                                                    $orderQty = $bouquet->pivot->quantity;
+                                                    $customData = $bouquet->customization_data ?? [];
+                                                    $freshFlowerQty = $customData['freshFlowerQuantity'] ?? 1;
+                                                    $artificialFlowerQty = $customData['artificialFlowerQuantity'] ?? 1;
+                                                    
+                                                    $components = [];
+                                                    
+                                                    // Wrapper
+                                                    if ($bouquet->wrapper) {
+                                                        $components[] = "Wrapper: {$bouquet->wrapper} (x{$orderQty})";
+                                                    }
+                                                    
+                                                    // Fresh Flowers
+                                                    $freshFlowers = [];
+                                                    if ($bouquet->focal_flower_1) {
+                                                        $freshFlowers[] = $bouquet->focal_flower_1;
+                                                    }
+                                                    if ($bouquet->focal_flower_2) {
+                                                        $freshFlowers[] = $bouquet->focal_flower_2;
+                                                    }
+                                                    if ($bouquet->focal_flower_3) {
+                                                        $freshFlowers[] = $bouquet->focal_flower_3;
+                                                    }
+                                                    if (!empty($freshFlowers)) {
+                                                        $totalFreshQty = $freshFlowerQty * $orderQty;
+                                                        $components[] = "Fresh Flowers: " . implode(', ', $freshFlowers) . " (x{$totalFreshQty})";
+                                                    }
+                                                    
+                                                    // Greenery
+                                                    if ($bouquet->greenery) {
+                                                        $components[] = "Greenery: {$bouquet->greenery} (x{$orderQty})";
+                                                    }
+                                                    
+                                                    // Artificial Flowers (Filler)
+                                                    if ($bouquet->filler) {
+                                                        $totalArtificialQty = $artificialFlowerQty * $orderQty;
+                                                        $components[] = "Artificial Flowers: {$bouquet->filler} (x{$totalArtificialQty})";
+                                                    }
+                                                    
+                                                    // Ribbon
+                                                    if ($bouquet->ribbon) {
+                                                        $components[] = "Ribbon: {$bouquet->ribbon} (x{$orderQty})";
+                                                    }
+                                                    
+                                                    $componentDescription = !empty($components) ? implode('<br>', $components) : '';
+                                                    $unitPrice = $bouquet->unit_price ?? ($bouquet->total_price / max($orderQty, 1));
+                                                @endphp
+                                                <tr>
+                                                    <td>
+                                                        <div>
+                                                            <strong>Custom Bouquet</strong>
+                                                            @if(!empty($componentDescription))
+                                                                <div style="font-size: 0.8rem; color: #666; margin-top: 4px; line-height: 1.6;">
+                                                                    {!! $componentDescription !!}
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                    <td>{{ $orderQty }}</td>
+                                                    <td>₱{{ number_format($unitPrice, 2) }}</td>
+                                                    <td>₱{{ number_format($unitPrice * $orderQty, 2) }}</td>
+                                                </tr>
+                                                @endforeach
+                                                @if($invoice->order->products->isEmpty() && $invoice->order->customBouquets->isEmpty())
+                                                <tr>
+                                                    <td colspan="4" class="text-center text-muted py-3">
+                                                        No products found
+                                                    </td>
+                                                </tr>
+                                                @endif
                                             </tbody>
                                         </table>
                                     </div>
@@ -115,7 +255,7 @@
                             <!-- Delivery Information -->
                             @if($invoice->order->delivery)
                             <div class="card mt-3">
-                                <div class="card-header">
+                                <div class="card-header" style="background: #e6f4ea;">
                                     <h5>Delivery Information</h5>
                                 </div>
                                 <div class="card-body">
@@ -141,7 +281,7 @@
                         <!-- Payment Summary -->
                         <div class="col-md-4">
                             <div class="card">
-                                <div class="card-header">
+                                <div class="card-header" style="background: #e6f4ea;">
                                     <h5>Payment Summary</h5>
                                 </div>
                                 <div class="card-body">
@@ -176,7 +316,7 @@
                             <!-- Payment History -->
                             @if($invoice->payments->count() > 0)
                             <div class="card mt-3">
-                                <div class="card-header">
+                                <div class="card-header" style="background: #e6f4ea;">
                                     <h5>Payment History</h5>
                                 </div>
                                 <div class="card-body">
@@ -206,14 +346,12 @@
 </div>
 
 <!-- Payment Wizard Modal -->
-<div class="modal fade" id="paymentWizardModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
+<div class="modal fade" id="paymentWizardModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Register Payment</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="paymentForm">
@@ -259,7 +397,7 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-success" onclick="validatePayment()">
                     <i class="fas fa-check"></i> Validate Payment
                 </button>
@@ -271,9 +409,7 @@
 
 @section('scripts')
 <script>
-function openPaymentWizard(invoiceId) {
-    $('#paymentWizardModal').modal('show');
-}
+// No opener needed: using data-bs-toggle="modal" on the button
 
 function validatePayment() {
     const formData = new FormData(document.getElementById('paymentForm'));

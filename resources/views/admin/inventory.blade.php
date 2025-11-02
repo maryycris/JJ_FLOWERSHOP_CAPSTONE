@@ -20,7 +20,7 @@
 }
 
 .btn-icon i {
-    font-size: 14px;
+    font-size: 12px;
 }
 
 /* Action Buttons Styling */
@@ -97,6 +97,7 @@
     color: #28a745 !important;
     background-color: #f8f9fa;
     border-color: #dee2e6 #dee2e6 #f8f9fa;
+    font-weight: 500;
 }
 
 
@@ -127,6 +128,7 @@
 /* Inventory Table Styling */
 .table {
     font-size: 0.75rem;
+    background-color: white;
 }
 
 .table thead th {
@@ -134,12 +136,22 @@
     font-weight: 600;
     padding: 0.5rem 0.3rem;
     vertical-align: middle;
+    background-color: white;
+}
+
+.table tbody {
+    background-color: white;
 }
 
 .table tbody td {
     font-size: 0.7rem;
     padding: 0.4rem 0.3rem;
     vertical-align: middle;
+    background-color: white;
+}
+
+.table tbody tr {
+    background-color: white;
 }
 
 /* Action Buttons */
@@ -192,6 +204,11 @@
     padding: 0.2rem 0.4rem;
 }
 
+/* Input Group Text */
+.input-group-text {
+    font-size: 0.8rem;
+}
+
 /* Inventory Logs Content */
 #inventory-logs .card-title {
     font-size: 1rem;
@@ -199,6 +216,42 @@
 
 #inventory-logs .card-text {
     font-size: 0.8rem;
+}
+
+/* Content Positioning and Spacing Adjustments */
+.mx-auto {
+    padding-top: 12px !important; /* Reduced from 24px */
+}
+
+/* Search and Action Bar Spacing */
+.d-flex.flex-wrap.justify-content-between.align-items-center.mt-3 {
+    margin-top: 1rem !important; /* Reduced from mt-3 */
+    margin-bottom: 0.5rem !important; /* Added small bottom margin */
+}
+
+/* Category Tabs Spacing */
+#inventoryTabs {
+    margin-bottom: 1rem !important; /* Reduced from mb-3 */
+}
+
+/* Table Container Spacing */
+.tab-content {
+    margin-top: 0.5rem;
+}
+
+/* Inventory Scroll Container */
+.inventory-scroll {
+    margin-top: 0.25rem;
+}
+
+/* Overall Page Spacing */
+.container-fluid {
+    padding-top: 0.5rem;
+}
+
+/* Reduce gap between search bar and category tabs */
+.gap-2 {
+    gap: 0.5rem !important;
 }
 
 /* Update Request Tabs */
@@ -396,22 +449,22 @@
         @foreach(['Fresh Flowers', 'Dried Flowers', 'Artificial Flowers', 'Greenery', 'Floral Supplies', 'Packaging Materials', 'Wrappers', 'Ribbon', 'Other Offers'] as $category)
             <div class="tab-pane fade @if($loop->first) show active @endif" id="{{ Str::slug($category) }}" role="tabpanel">
             <div class="table-responsive inventory-scroll">
-                    <table class="table table-bordered align-middle" style="font-size: 0.85rem;">
+                    <table class="table table-bordered align-middle">
                         <thead>
                     <tr>
-                                <th style="font-size: 0.8rem;">Product Code</th>
-                        <th style="font-size: 0.8rem;">Name</th>
-                        <th style="font-size: 0.8rem;">Category</th>
-                                <th style="font-size: 0.8rem;">Selling Price</th>
-                                <th style="font-size: 0.8rem;">Acquisition Cost</th>
-                                <th colspan="2" style="font-size: 0.8rem;">Reordering Rules<br><small>(Min / Max)</small></th>
-                                <th style="font-size: 0.8rem;">Qty On Hand</th>
-                                <th style="font-size: 0.8rem;">Qty Consumed</th>
-                                <th style="font-size: 0.8rem;">Qty Damaged</th>
-                                <th style="font-size: 0.8rem;">Qty Sold</th>
-                                <th style="font-size: 0.8rem;">Qty to Purchase<br><small>(Max - On Hand)</small></th>
-                                <th style="font-size: 0.8rem;">Date</th>
-                                <th style="font-size: 0.8rem;">Actions</th>
+                                <th>Product Code</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                                <th>Selling Price</th>
+                                <th>Acquisition Cost</th>
+                                <th colspan="2">Reordering Rules<br><small>(Min / Max)</small></th>
+                                <th>Qty On Hand</th>
+                                <th>Qty Consumed</th>
+                                <th>Qty Damaged</th>
+                                <th>Qty Sold</th>
+                                <th>Qty to Purchase<br><small>(Max - On Hand)</small></th>
+                                <th>Date</th>
+                                <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -427,19 +480,19 @@
                                         @if($product->is_marked_for_deletion) 
                                             class="marked-for-deletion row-deleted"
                                         @endif>
-                                    <td style="font-size: 0.8rem;">{{ $product->code ?? $product->id }}</td>
-                                    <td style="font-size: 0.8rem;">{{ $product->name }}</td>
-                                    <td style="font-size: 0.8rem;">{{ $product->category }}</td>
-                                    <td style="font-size: 0.8rem;">{{ $product->price }}</td>
-                                    <td style="font-size: 0.8rem;">{{ $product->cost_price ?? '-' }}</td>
-                                    <td style="font-size: 0.8rem;">{{ $min }}</td>
-                                    <td style="font-size: 0.8rem;">{{ $max }}</td>
-                                    <td style="font-size: 0.8rem;">{{ $stock }}</td>
-                                    <td style="font-size: 0.8rem;">{{ $product->qty_consumed ?? '-' }}</td>
-                                    <td style="font-size: 0.8rem;">{{ $product->qty_damaged ?? '-' }}</td>
-                                    <td style="font-size: 0.8rem;">{{ $product->qty_sold ?? '-' }}</td>
-                                    <td style="font-size: 0.8rem;">{{ $qtyToPurchase }}</td>
-                                    <td style="font-size: 0.8rem;">{{ $product->created_at ? $product->created_at->format('Y-m-d') : '-' }}</td>
+                                    <td>{{ $product->code ?? $product->id }}</td>
+                                    <td>{{ $product->name }}</td>
+                                    <td>{{ $product->category }}</td>
+                                    <td>{{ $product->price }}</td>
+                                    <td>{{ $product->cost_price ?? '-' }}</td>
+                                    <td>{{ $min }}</td>
+                                    <td>{{ $max }}</td>
+                                    <td>{{ $stock }}</td>
+                                    <td>{{ $product->qty_consumed ?? '-' }}</td>
+                                    <td>{{ $product->qty_damaged ?? '-' }}</td>
+                                    <td>{{ $product->qty_sold ?? '-' }}</td>
+                                    <td>{{ $qtyToPurchase }}</td>
+                                    <td>{{ $product->created_at ? $product->created_at->format('Y-m-d') : '-' }}</td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
                                             <!-- Edit Button -->
@@ -589,22 +642,22 @@
                                 <strong>{{ $cat }}:</strong> {{ $catLogs->count() }} pending logs
                             </div>
                             @if($catLogs->count() > 0)
-                                <table class="table table-striped" style="font-size: 0.85rem;">
+                                <table class="table table-striped">
                                     <thead>
                                         <tr>
-                                            <th style="font-size: 0.8rem;">Product Code</th>
-                                            <th style="font-size: 0.8rem;">Name</th>
-                                            <th style="font-size: 0.8rem;">Category</th>
-                                            <th style="font-size: 0.8rem;">Selling Price</th>
-                                            <th style="font-size: 0.8rem;">Acquisition Cost</th>
-                                            <th style="font-size: 0.8rem;">Reordering Rules (Min / Max)</th>
-                                            <th style="font-size: 0.8rem;">Qty On Hand</th>
-                                            <th style="font-size: 0.8rem;">Qty Consumed</th>
-                                            <th style="font-size: 0.8rem;">Qty Damaged</th>
-                                            <th style="font-size: 0.8rem;">Qty Sold</th>
-                                            <th style="font-size: 0.8rem;">Qty to Purchase (Max - On Hand)</th>
-                                            <th style="font-size: 0.8rem;">Date</th>
-                                            <th style="width: 120px; font-size: 0.8rem;">Actions</th>
+                                            <th>Product Code</th>
+                                            <th>Name</th>
+                                            <th>Category</th>
+                                            <th>Selling Price</th>
+                                            <th>Acquisition Cost</th>
+                                            <th>Reordering Rules (Min / Max)</th>
+                                            <th>Qty On Hand</th>
+                                            <th>Qty Consumed</th>
+                                            <th>Qty Damaged</th>
+                                            <th>Qty Sold</th>
+                                            <th>Qty to Purchase (Max - On Hand)</th>
+                                            <th>Date</th>
+                                            <th style="width: 120px;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -615,18 +668,18 @@
                                                 $rowClass = $log->action === 'create' ? 'row-added' : ($log->action === 'edit' ? 'row-edited' : 'row-deleted');
                                             @endphp
                                             <tr class="{{ $rowClass }}">
-                                                <td style="font-size: 0.8rem;">{{ $log->action === 'create' ? 'NEW' : ($p->code ?? $p->id ?? 'N/A') }}</td>
-                                                <td style="font-size: 0.8rem;">{{ $nv['name'] ?? ($p->name ?? 'Product Deleted') }}</td>
-                                                <td style="font-size: 0.8rem;">{{ $nv['category'] ?? ($p->category ?? 'N/A') }}</td>
-                                                <td style="font-size: 0.8rem;">{{ $nv['price'] ?? ($p->price ?? '0') }}</td>
-                                                <td style="font-size: 0.8rem;">{{ $nv['cost_price'] ?? ($p->cost_price ?? 'N/A') }}</td>
-                                                <td style="font-size: 0.8rem;">{{ ($nv['reorder_min'] ?? ($p->reorder_min ?? 0)) . ' / ' . ($nv['reorder_max'] ?? ($p->reorder_max ?? 0)) }}</td>
-                                                <td style="font-size: 0.8rem;">{{ $nv['stock'] ?? ($p->stock ?? 0) }}</td>
-                                                <td style="font-size: 0.8rem;">{{ $nv['qty_consumed'] ?? ($p->qty_consumed ?? 0) }}</td>
-                                                <td style="font-size: 0.8rem;">{{ $nv['qty_damaged'] ?? ($p->qty_damaged ?? 0) }}</td>
-                                                <td style="font-size: 0.8rem;">{{ $nv['qty_sold'] ?? ($p->qty_sold ?? 0) }}</td>
-                                                <td style="font-size: 0.8rem;">{{ max(0, (int)($nv['reorder_max'] ?? ($p->reorder_max ?? 0)) - (int)($nv['stock'] ?? ($p->stock ?? 0))) }}</td>
-                                                <td style="font-size: 0.8rem;">{{ optional(optional($log)->created_at)->format('Y-m-d') }}</td>
+                                                <td>{{ $log->action === 'create' ? 'NEW' : ($p->code ?? $p->id ?? 'N/A') }}</td>
+                                                <td>{{ $nv['name'] ?? ($p->name ?? 'Product Deleted') }}</td>
+                                                <td>{{ $nv['category'] ?? ($p->category ?? 'N/A') }}</td>
+                                                <td>{{ $nv['price'] ?? ($p->price ?? '0') }}</td>
+                                                <td>{{ $nv['cost_price'] ?? ($p->cost_price ?? 'N/A') }}</td>
+                                                <td>{{ ($nv['reorder_min'] ?? ($p->reorder_min ?? 0)) . ' / ' . ($nv['reorder_max'] ?? ($p->reorder_max ?? 0)) }}</td>
+                                                <td>{{ $nv['stock'] ?? ($p->stock ?? 0) }}</td>
+                                                <td>{{ $nv['qty_consumed'] ?? ($p->qty_consumed ?? 0) }}</td>
+                                                <td>{{ $nv['qty_damaged'] ?? ($p->qty_damaged ?? 0) }}</td>
+                                                <td>{{ $nv['qty_sold'] ?? ($p->qty_sold ?? 0) }}</td>
+                                                <td>{{ max(0, (int)($nv['reorder_max'] ?? ($p->reorder_max ?? 0)) - (int)($nv['stock'] ?? ($p->stock ?? 0))) }}</td>
+                                                <td>{{ optional(optional($log)->created_at)->format('Y-m-d') }}</td>
                                                 <td>
                                                     @if(($log->status ?? 'pending') === 'pending')
                                                         <form method="post" action="{{ route('admin.admin.inventory.approve-pending') }}" onsubmit="return approveSingle(event, {{ $log->id }});" class="d-inline">
@@ -834,12 +887,25 @@ let currentActiveCategoryTab = null;
 
 // Initialize tab state preservation
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if URL has hash fragment to activate a specific tab (e.g., from notification)
+    if (window.location.hash === '#inventory-logs') {
+        // Activate the inventory logs tab
+        const inventoryLogsTab = document.querySelector('#inventory-logs-tab');
+        if (inventoryLogsTab) {
+            const tab = new bootstrap.Tab(inventoryLogsTab);
+            tab.show();
+            currentActiveMainTab = 'inventory-logs-tab';
+        }
+        // Remove hash from URL without scrolling
+        history.replaceState(null, null, window.location.pathname + window.location.search);
+    }
+    
     // Check if there's a saved main tab state
     const savedMainTab = sessionStorage.getItem('activeInventoryMainTab');
     const savedCategoryTab = sessionStorage.getItem('activeInventoryCategoryTab');
     
-    if (savedMainTab) {
-        // Activate the saved main tab
+    if (savedMainTab && !window.location.hash) {
+        // Activate the saved main tab (only if no hash fragment)
         const mainTabButton = document.querySelector(`#${savedMainTab}`);
         if (mainTabButton) {
             const tab = new bootstrap.Tab(mainTabButton);
@@ -848,7 +914,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         // Clear the saved main tab state
         sessionStorage.removeItem('activeInventoryMainTab');
-    } else {
+    } else if (!window.location.hash) {
         // Store the initially active main tab
         const activeMainTab = document.querySelector('#mainInventoryTabs .nav-link.active');
         if (activeMainTab) {
@@ -1006,14 +1072,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Show success message
-                alert('Product updated successfully!');
+                showAlert('Product updated successfully!', 'success');
             } else {
-                alert('Error: ' + (data.message || 'Unknown error occurred'));
+                showAlert('Error: ' + (data.message || 'Unknown error occurred'), 'error');
             }
         })
         .catch(error => {
             console.error('Error updating product:', error);
-            alert('Error updating product. Please try again. Error: ' + error.message);
+            showAlert('Error updating product. Please try again. Error: ' + error.message, 'error');
         });
     }
     
@@ -1118,29 +1184,89 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Function to show alerts
-    function showAlert(message, type) {
+    // Function to show cleaner alerts (matching Customize section style)
+    function showAlert(message, type = 'success') {
         // Remove existing alerts
-        const existingAlerts = document.querySelectorAll('.alert');
+        const existingAlerts = document.querySelectorAll('.clean-alert');
         existingAlerts.forEach(alert => alert.remove());
         
-        // Create new alert
+        // Determine alert styling
+        const isSuccess = type === 'success' || type === 'Success';
+        const alertType = isSuccess ? 'success' : 'danger';
+        const icon = isSuccess ? 'check-circle' : 'exclamation-triangle';
+        const bgColor = isSuccess ? '#d4edda' : '#f8d7da';
+        const borderColor = isSuccess ? '#c3e6cb' : '#f5c6cb';
+        const textColor = isSuccess ? '#155724' : '#721c24';
+        
+        // Create new alert with cleaner styling
         const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
-        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alertDiv.className = 'clean-alert';
+        alertDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 320px;
+            max-width: 450px;
+            background: ${bgColor};
+            border: 1px solid ${borderColor};
+            border-radius: 8px;
+            padding: 14px 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
         alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <i class="fas fa-${icon}" style="color: ${textColor}; font-size: 18px; flex-shrink: 0;"></i>
+            <span style="color: ${textColor}; font-weight: 500; flex: 1; font-size: 14px;">${message}</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="flex-shrink: 0; opacity: 0.7;"></button>
         `;
         
         document.body.appendChild(alertDiv);
         
-        // Auto remove after 5 seconds
+        // Auto remove after 4 seconds with fade out
         setTimeout(() => {
             if (alertDiv.parentNode) {
-                alertDiv.remove();
+                alertDiv.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 300);
             }
-        }, 5000);
+        }, 4000);
+    }
+    
+    // Add CSS animations if not already present
+    if (!document.getElementById('clean-alert-styles')) {
+        const style = document.createElement('style');
+        style.id = 'clean-alert-styles';
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     }
     
     // Use event delegation for dynamically loaded content
@@ -1181,7 +1307,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     if (searchInput) {
-        searchInput.addEventListener('input', function(e){ filterRows(e.target.value); });
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                filterRows(e.target.value);
+            }
+        });
+        // Remove live typing search - only search on Enter key press
+        // searchInput.addEventListener('input', function(e){ filterRows(e.target.value); });
     }
     if (clearBtn) {
         clearBtn.addEventListener('click', function(){ searchInput.value = ''; filterRows(''); searchInput.focus(); });
@@ -1203,8 +1335,8 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Processing...';
             fetch('{{ route('admin.admin.inventory.approve-pending') }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') } })
                 .then(r => r.json())
-                .then(data => { alert(data.message || 'Inventory changes accepted.'); location.reload(); })
-                .catch(() => { alert('Failed to apply changes.'); btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-circle me-1"></i> Accept Changes'; });
+                .then(data => { showAlert(data.message || 'Inventory changes accepted.', 'success'); setTimeout(() => location.reload(), 1000); })
+                .catch(() => { showAlert('Failed to apply changes.', 'error'); btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-circle me-1"></i> Accept Changes'; });
         });
     }
     
@@ -1213,7 +1345,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (declineBtn) {
         declineBtn.addEventListener('click', function() {
             if (confirm('Are you sure you want to decline these inventory changes?')) {
-                alert('Inventory changes have been declined.');
+                showAlert('Inventory changes have been declined.', 'success');
                 
                 // Here you would typically:
                 // 1. Mark the request as declined
@@ -1261,8 +1393,8 @@ function submitAdminAction(e, form) {
     e.preventDefault();
     fetch(form.action, { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') } })
         .then(r => r.json())
-        .then(data => { alert(data.message || 'Done'); location.reload(); })
-        .catch(() => alert('Request failed'));
+        .then(data => { showAlert(data.message || 'Done', 'success'); setTimeout(() => location.reload(), 1000); })
+        .catch(() => showAlert('Request failed', 'error'));
     return false;
 }
 
@@ -1278,12 +1410,12 @@ function approveSingle(e, logId) {
                     row.remove();
                 }
                 // Show success message
-                alert('Change approved successfully!');
+                showAlert('Change approved successfully!', 'success');
             } else { 
-                alert(data.message || 'Failed'); 
+                showAlert(data.message || 'Failed', 'error'); 
             } 
         })
-        .catch(() => alert('Request failed'));
+        .catch(() => showAlert('Request failed', 'error'));
     return false;
 }
 
@@ -1300,12 +1432,12 @@ function rejectSingle(e, logId) {
                     row.remove();
                 }
                 // Show success message
-                alert('Change declined successfully!');
+                showAlert('Change declined successfully!', 'success');
             } else { 
-                alert(data.message || 'Failed'); 
+                showAlert(data.message || 'Failed', 'error'); 
             } 
         })
-        .catch(() => alert('Request failed'));
+        .catch(() => showAlert('Request failed', 'error'));
     return false;
 }
 
@@ -1398,14 +1530,14 @@ function confirmDelete(productId, productName) {
                     row.remove();
                 }
                 
-                alert(`"${productName}" has been deleted successfully!`);
+                showAlert(`"${productName}" has been deleted successfully!`, 'success');
             } else {
-                alert('Failed to delete product: ' + (data.message || 'Unknown error'));
+                showAlert('Failed to delete product: ' + (data.message || 'Unknown error'), 'error');
             }
         })
         .catch(error => {
             console.error('Delete error:', error);
-            alert('Error deleting product. Please try again.');
+            showAlert('Error deleting product. Please try again.', 'error');
         });
     }
 }

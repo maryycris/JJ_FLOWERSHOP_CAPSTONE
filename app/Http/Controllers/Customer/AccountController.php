@@ -34,20 +34,13 @@ class AccountController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
-            'street_address' => 'required|string|max:255',
-            'barangay' => 'required|string|max:255',
-            'municipality' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
         ]);
 
         $user = Auth::user();
         $user->first_name = $request->first_name;
         $user->last_name = $request->last_name;
         $user->contact_number = $request->contact_number;
-        $user->street_address = $request->street_address;
-        $user->barangay = $request->barangay;
-        $user->municipality = $request->municipality;
-        $user->city = $request->city;
+        // Address lines are managed by Address Book; do not override here
         $user->save();
 
         return back()->with('success', 'Profile updated successfully!');

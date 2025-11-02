@@ -17,10 +17,15 @@ class CartController extends Controller
         if (!$user) {
             return redirect()->route('login')->withErrors(['You must be logged in to view your cart.']);
         }
-        $cartItems = $user->cartItems()->with('product')->get();
+        $cartItems = $user->cartItems()->with(['product', 'customBouquet'])->get();
         $subtotal = 0;
         foreach ($cartItems as $item) {
-            $subtotal += $item->quantity * $item->product->price;
+            if ($item->item_type === 'custom_bouquet') {
+                $unitPrice = $item->customBouquet ? ($item->customBouquet->unit_price ?? ($item->customBouquet->total_price ?? 0)) : 0;
+                $subtotal += $unitPrice * $item->quantity;
+            } else {
+                $subtotal += $item->product ? $item->product->price * $item->quantity : 0;
+            }
         }
         return view('customer.cart.index', compact('cartItems', 'subtotal'));
     }
@@ -122,7 +127,15 @@ class CartController extends Controller
         $cartItem->quantity = $request->quantity;
         $cartItem->save();
 
-        return response()->json(['success' => true, 'new_quantity' => $cartItem->quantity, 'new_total_price' => number_format($cartItem->quantity * $cartItem->product->price, 2)]);
+        // Compute new total price depending on item type
+        $newTotal = 0;
+        if ($cartItem->item_type === 'custom_bouquet' && $cartItem->customBouquet) {
+            $unitPrice = $cartItem->customBouquet->unit_price ?? ($cartItem->customBouquet->total_price ?? 0);
+            $newTotal = $unitPrice * $cartItem->quantity;
+        } else if ($cartItem->product) {
+            $newTotal = $cartItem->quantity * $cartItem->product->price;
+        }
+        return response()->json(['success' => true, 'new_quantity' => $cartItem->quantity, 'new_total_price' => number_format($newTotal, 2)]);
     }
 
     public function removeItem(CartItem $cartItem)

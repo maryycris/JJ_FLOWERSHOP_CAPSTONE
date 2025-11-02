@@ -2,20 +2,216 @@
 
 @section('title', 'Invoice Management')
 
+@push('styles')
+<style>
+/* Invoice Table Styling - matching inventory */
+#invoicesTable.table {
+    font-size: 0.85rem;
+    background-color: white;
+}
+
+#invoicesTable.table thead th {
+    font-size: 0.8rem !important;
+    font-weight: 600;
+    padding: 0.5rem 0.3rem;
+    vertical-align: middle;
+    background-color: #e6f4ea;
+}
+
+#invoicesTable.table tbody td {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.3rem;
+    vertical-align: middle;
+    background-color: white;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Order link styling */
+.order-link {
+    color: #7bb47b !important;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.order-link:hover {
+    color: #5aa65a !important;
+    text-decoration: underline;
+}
+
+/* Actions column - center icons */
+#invoicesTable.table thead th:last-child,
+#invoicesTable.table tbody td:last-child {
+    text-align: center;
+}
+
+/* Action buttons - black icon only, background on hover - HIGH SPECIFICITY */
+#invoicesTable tbody td .btn-group .invoice-action-btn,
+#invoicesTable tbody td .btn-group a.invoice-action-btn,
+table#invoicesTable tbody td .btn-group .invoice-action-btn,
+table#invoicesTable tbody td .btn-group a.invoice-action-btn {
+    background: transparent !important;
+    border: none !important;
+    background-color: transparent !important;
+    color: #000000 !important;
+    padding: 0.3rem 0.4rem !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none !important;
+    border-radius: 3px;
+    margin: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    min-width: auto !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+#invoicesTable tbody td .btn-group .invoice-action-btn i,
+#invoicesTable tbody td .btn-group .invoice-action-btn i.fas,
+table#invoicesTable tbody td .btn-group .invoice-action-btn i {
+    font-size: 0.85rem !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+}
+
+#invoicesTable tbody td .btn-group .invoice-action-btn:hover,
+#invoicesTable tbody td .btn-group a.invoice-action-btn:hover,
+table#invoicesTable tbody td .btn-group .invoice-action-btn:hover {
+    background-color: #7bb47b !important;
+    background: #7bb47b !important;
+}
+
+#invoicesTable tbody td .btn-group .invoice-action-btn:hover i,
+#invoicesTable tbody td .btn-group .invoice-action-btn:hover i.fas,
+table#invoicesTable tbody td .btn-group .invoice-action-btn:hover i {
+    color: #ffffff !important;
+}
+
+/* Remove btn-group spacing and override Bootstrap */
+#invoicesTable.table .btn-group,
+#invoicesTable.table tbody .btn-group {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center;
+    gap: 0.1rem !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Invoice Pagination - Smaller and No White Background - Exclusive to Invoice Page */
+.card-body .pagination-container {
+    background: transparent !important;
+    padding: 0.1rem 0 !important;
+    box-shadow: none !important;
+    margin: 0.10rem 0 0 0 !important;
+}
+
+.card-body .pagination-custom {
+    font-size: 0.7rem !important;
+    margin: 0 !important;
+}
+
+.card-body .pagination-custom .page-link {
+    color: #7bb47b !important;
+    background-color: white !important;
+    border: 1px solid #e6f4ea !important;
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.7rem !important;
+    margin: 0 2px !important;
+    border-radius: 4px !important;
+    transition: all 0.2s ease !important;
+    font-weight: 500 !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.card-body .pagination-custom .page-link:hover {
+    color: #fff !important;
+    background-color: #7bb47b !important;
+    border-color: #7bb47b !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(123, 180, 123, 0.3) !important;
+}
+
+.card-body .pagination-custom .page-item.active .page-link {
+    color: #fff !important;
+    background-color: #7bb47b !important;
+    border-color: #7bb47b !important;
+    box-shadow: 0 2px 8px rgba(123, 180, 123, 0.4) !important;
+}
+
+.card-body .pagination-custom .page-item.disabled .page-link {
+    color: #6c757d !important;
+    background-color: #fff !important;
+    border-color: #dee2e6 !important;
+    cursor: not-allowed !important;
+}
+
+.card-body .pagination-custom .page-item.disabled .page-link:hover {
+    color: #6c757d !important;
+    background-color: #fff !important;
+    border-color: #dee2e6 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Search form styling */
+.card-body .form-control, 
+.card-body .form-select {
+    font-size: 0.85rem;
+}
+
+.card-body .btn-success {
+    font-size: 0.85rem;
+}
+
+</style>
+@endpush
+
 @section('content')
 <div>
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title mb-0">Invoice Management</h3>
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-primary" onclick="refreshInvoices()">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                    </div>
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: #e6f4ea;">
+                    <h3 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600;">Invoice Management</h3>
                 </div>
                 <div class="card-body">
+                    <!-- Search and Filter -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <form method="GET" action="" class="d-flex">
+                                <input type="text" name="search" class="form-control me-2" placeholder="Search by invoice number or customer name..." value="{{ request('search') }}">
+                                <button type="submit" class="btn btn-success">Search</button>
+                            </form>
+                        </div>
+                        <div class="col-md-3">
+                            <form method="GET" action="">
+                                @if(request('search'))
+                                    <input type="hidden" name="search" value="{{ request('search') }}">
+                                @endif
+                                <select class="form-select" name="status" onchange="this.form.submit()">
+                                    <option value="">All Status</option>
+                                    <option value="ready" {{ request('status') == 'ready' ? 'selected' : '' }}>Ready</option>
+                                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+                    
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped" id="invoicesTable">
                             <thead>
@@ -37,7 +233,7 @@
                                         <strong>{{ $invoice->invoice_number }}</strong>
                                     </td>
                                     <td>
-                                        <a href="{{ route('clerk.orders.show', $invoice->order_id) }}" class="text-primary">
+                                        <a href="{{ route('clerk.orders.show', $invoice->order_id) }}" class="order-link">
                                             #{{ $invoice->order_id }}
                                         </a>
                                     </td>
@@ -50,41 +246,37 @@
                                     </td>
                                     <td>
                                         @if($invoice->status === 'paid')
-                                            <span class="badge badge-success">Paid</span>
+                                            <span class="badge" style="background-color: #28a745; color: white;">Paid</span>
                                         @elseif($invoice->status === 'ready')
-                                            <span class="badge badge-warning">Ready</span>
+                                            <span class="badge" style="background-color: #90ee90; color: black;">Ready</span>
                                         @elseif($invoice->status === 'draft')
-                                            <span class="badge badge-secondary">Draft</span>
+                                            <span class="badge" style="background-color: #c8e6c9; color: black;">Draft</span>
                                         @else
-                                            <span class="badge badge-danger">Cancelled</span>
+                                            <span class="badge" style="background-color: #2d5016; color: white;">Cancelled</span>
                                         @endif
                                     </td>
                                     <td>
                                         @if($invoice->payment_type === 'online')
-                                            <span class="badge badge-info">Online</span>
+                                            <span class="badge" style="background-color: #4caf50; color: white;">Online</span>
                                         @else
-                                            <span class="badge badge-primary">COD</span>
+                                            <span class="badge" style="background-color: #66bb6a; color: white;">COD</span>
                                         @endif
                                     </td>
                                     <td>
-                                        <div class="btn-group" role="group">
+                                        <div class="btn-group" role="group" style="display: flex; justify-content: center; gap: 0.15rem;">
                                             <a href="{{ route('clerk.invoices.show', $invoice->id) }}" 
-                                               class="btn btn-sm btn-info" title="View Invoice">
+                                               class="invoice-action-btn" 
+                                               title="View Invoice">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             
                                             @if($invoice->status === 'ready' && $invoice->payment_type === 'cod')
-                                                <button type="button" class="btn btn-sm btn-success" 
-                                                        onclick="openPaymentWizard({{ $invoice->id }})" 
-                                                        title="Register Payment">
+                                                <a href="{{ route('clerk.invoices.show', $invoice->id) }}" 
+                                                   class="invoice-action-btn" 
+                                                   title="Register Payment">
                                                     <i class="fas fa-credit-card"></i>
-                                                </button>
+                                                </a>
                                             @endif
-                                            
-                                            <a href="{{ route('clerk.invoices.show', $invoice->id) }}?download=1" 
-                                               class="btn btn-sm btn-secondary" title="Download PDF">
-                                                <i class="fas fa-download"></i>
-                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -100,6 +292,16 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- Pagination -->
+                    @if($invoices->hasPages())
+                        <x-pagination 
+                            :currentPage="$invoices->currentPage()"
+                            :totalPages="$invoices->lastPage()"
+                            :baseUrl="request()->url()" 
+                            :queryParams="array_filter(request()->only(['search', 'status']))" 
+                        />
+                    @endif
                 </div>
             </div>
         </div>
@@ -220,16 +422,6 @@ function validatePayment() {
     });
 }
 
-function refreshInvoices() {
-    location.reload();
-}
-
-// Initialize DataTable if needed
-$(document).ready(function() {
-    $('#invoicesTable').DataTable({
-        "pageLength": 25,
-        "order": [[ 3, "desc" ]]
-    });
-});
+// Remove DataTable initialization - using Laravel pagination instead
 </script>
 @endsection

@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\ProductComposition;
+use App\Models\CatalogProduct;
+use App\Models\CatalogProductComposition;
 use Illuminate\Support\Collection;
 
 class ProductCompositionService
@@ -29,20 +31,38 @@ class ProductCompositionService
             'can_fulfill' => true
         ];
 
-        foreach ($product->compositions as $composition) {
-            $component = Product::find($composition->component_id);
-            
-            $required = $composition->quantity * $requiredQuantity;
-            $available = $component ? $component->stock : 0;
+        $compositions = $product->compositions;
+
+        // Fallback: if no product-level compositions, try catalog product compositions by name
+        if ($compositions->isEmpty()) {
+            $catalog = CatalogProduct::where('name', $product->name)
+                ->where('status', true)
+                ->where('is_approved', true)
+                ->with('compositions')
+                ->first();
+
+            if ($catalog && $catalog->compositions->count() > 0) {
+                $compositions = $catalog->compositions;
+            }
+        }
+
+        foreach ($compositions as $composition) {
+            // CatalogProductComposition has componentProduct relation; normalize fields
+            $componentId = $composition->component_id;
+            $component = Product::find($componentId);
+
+            $quantityPerUnit = $composition->quantity;
+            $required = $quantityPerUnit * $requiredQuantity;
+            $available = $component ? (int) $component->stock : 0;
             $sufficient = $available >= $required;
-            
+
             if (!$sufficient) {
                 $breakdown['can_fulfill'] = false;
                 $breakdown['insufficient_components']++;
             } else {
                 $breakdown['sufficient_components']++;
             }
-            
+
             $breakdown['components'][] = [
                 'composition' => $composition,
                 'component' => $component,

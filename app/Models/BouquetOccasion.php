@@ -61,4 +61,36 @@ class BouquetOccasion extends Model
         
         return $products;
     }
+
+    /**
+     * Check if occasion is active
+     */
+    public function isActive(): bool
+    {
+        return $this->is_active === true;
+    }
+
+    /**
+     * Get formatted base price
+     */
+    public function getFormattedBasePriceAttribute(): string
+    {
+        return '₱' . number_format($this->base_price ?? 0, 2);
+    }
+
+    /**
+     * Scope: Get active occasions
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope: Get occasions by slug
+     */
+    public function scopeBySlug($query, $slug)
+    {
+        return $query->where('slug', $slug);
+    }
 }

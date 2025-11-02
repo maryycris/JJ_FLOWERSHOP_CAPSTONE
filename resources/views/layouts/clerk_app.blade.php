@@ -23,7 +23,16 @@
                     <img src="/images/logo.png" alt="JJ Flower Shop" class="clerk-logo-img">
                     <div class="clerk-shop-title">J ' J FLOWER<br><span>SHOP <span class="fs-6">Est. 2023</span></span></div>
                 </div>
-                <div class="clerk-user dropdown">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Notifications icon (moved beside profile) -->
+                    <a href="{{ route('clerk.notifications.index') }}" class="text-white text-decoration-none" title="Notifications">
+                        <i class="bi bi-bell" style="font-size: 1.1rem;"></i>
+                    </a>
+                    <!-- Chat icon (moved beside profile) -->
+                    <a href="#" class="text-white text-decoration-none" title="Chat">
+                        <i class="bi bi-chat" style="font-size: 1.1rem;"></i>
+                    </a>
+                    <div class="clerk-user dropdown">
                     <a href="#" class="d-flex align-items-center gap-2 text-white text-decoration-none dropdown-toggle" id="clerkProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="cursor:pointer;">
                         @if(auth()->user()->profile_picture)
                             @php
@@ -37,7 +46,8 @@
                         {{ Auth::user()->name ?? 'CLERK' }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="clerkProfileDropdown">
-                        <li><a class="dropdown-item" href="{{ route('clerk.profile.edit') }}">My Profile</a></li>
+                        <li><a class="dropdown-item" href="{{ route('clerk.dashboard') }}">Dashboard</a></li>
+                        <li><a class="dropdown-item" href="{{ route('clerk.profile.edit') }}">Edit Profile</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}">
@@ -46,21 +56,22 @@
                             </form>
                         </li>
                     </ul>
+                    </div>
                 </div>
             </div>
             <hr class="clerk-navbar-divider">
             <div class="clerk-navbar-links">
                 <a href="{{ route('clerk.product_catalog.index') }}" class="clerk-navbar-link @if(request()->routeIs('clerk.product_catalog.*')) active @endif">
                     <i class="bi bi-grid"></i>
-                    <span>Product catalog</span>
-                </a>
-                <a href="{{ route('clerk.customize.index') }}" class="clerk-navbar-link @if(request()->routeIs('clerk.customize.*')) active @endif">
-                    <i class="bi bi-brush"></i>
-                    <span>Customize</span>
+                    <span>Product Catalog</span>
                 </a>
                 <a href="{{ route('clerk.inventory.manage') }}" class="clerk-navbar-link @if(request()->routeIs('clerk.inventory.*')) active @endif">
                     <i class="bi bi-box"></i>
                     <span>Inventory</span>
+                </a>
+                <a href="{{ route('clerk.invoices.index') }}" class="clerk-navbar-link @if(request()->routeIs('clerk.invoices.*')) active @endif">
+                    <i class="bi bi-receipt"></i>
+                    <span>Invoices</span>
                 </a>
                 <a href="{{ route('clerk.orders.index') }}" class="clerk-navbar-link @if(request()->routeIs('clerk.orders.*')) active @endif">
                     <i class="bi bi-cart"></i>
@@ -70,60 +81,14 @@
                     <i class="bi bi-gift"></i>
                     <span>Loyalty Cards</span>
                 </a>
-                <a href="#" class="clerk-navbar-link">
-                    <i class="bi bi-chat"></i>
-                    <span>Chat</span>
-                </a>
+                <!-- Chat link removed - icon moved beside profile -->
             </div>
         </nav>
         
-        @if(!(request()->routeIs('clerk.product_catalog.*') || request()->routeIs('clerk.customize.*') || request()->routeIs('clerk.orders.*') || request()->routeIs('clerk.clerk.inventory.*') || request()->routeIs('clerk.inventory.*')))
-        <div class="d-flex" id="wrapper">
-            <!-- Clerk Sidebar -->
-            <div class="sidebar-container sidebar-clean d-flex flex-column align-items-center" style="background: #F6FBF4; min-width: 220px; max-width: 260px; height: 100vh; padding-top: 48px;">
-                <div class="sidebar-profile text-center mb-4">
-                    <div class="sidebar-profile-icon mx-auto mb-2">
-                        @if(auth()->user()->profile_picture)
-                            @php
-                                $pp = auth()->user()->profile_picture;
-                                $profileSrc = filter_var($pp, FILTER_VALIDATE_URL) ? $pp : asset('storage/' . $pp);
-                            @endphp
-                            <img src="{{ $profileSrc }}" alt="Profile Picture" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #4CAF50;" onerror="this.onerror=null;this.src='{{ asset('images/default-avatar.png') }}';">
-                        @else
-                            <i class="bi bi-person-circle" style="font-size: 3.5rem; color: #888;"></i>
-                        @endif
-                    </div>
-                    <div class="sidebar-profile-label" style="font-size: 1.1rem; color: #222; font-weight: 500;">{{ auth()->user()->name ?? 'Clerk' }}</div>
-                </div>
-                <nav class="w-100">
-                    <ul class="nav flex-column align-items-center align-items-md-start w-100">
-                        <li class="nav-item w-100 mb-1">
-                            <a href="{{ route('clerk.dashboard') }}" class="sidebar-link @if(request()->routeIs('clerk.dashboard')) active @endif">Dashboard</a>
-                        </li>
-                        <li class="nav-item w-100 mb-1">
-                            <a href="{{ route('clerk.invoices.index') }}" class="sidebar-link @if(request()->routeIs('clerk.invoices.*')) active @endif">Invoices</a>
-                        </li>
-                        <li class="nav-item w-100 mb-1">
-                            <a href="{{ route('clerk.profile.edit') }}" class="sidebar-link @if(request()->routeIs('clerk.profile.*')) active @endif">Edit Profile</a>
-                        </li>
-                        <li class="nav-item w-100 mb-1">
-                            <a href="{{ route('clerk.notifications.index') }}" class="sidebar-link @if(request()->routeIs('clerk.notifications.*')) active @endif">Notifications</a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-            
-            <!-- Main Content -->
-            <div id="page-content-wrapper" class="flex-grow-1">
-                @yield('content')
-            </div>
-        </div>
-        @else
-        <!-- Main Content -->
+        <!-- Main Content (sidebar removed) -->
         <div class="container-fluid py-4" style="padding-left: 4.0vw; padding-right: 4.0vw;">
             @yield('content')
         </div>
-        @endif
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- SweetAlert2 CDN -->

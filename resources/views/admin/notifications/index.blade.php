@@ -29,9 +29,31 @@
                     $title = $data['title'] ?? ucfirst($data['type'] ?? 'Notification');
                     $message = $data['message'] ?? 'No message';
                     $targetUrl = $data['action_url'] ?? 'javascript:void(0)';
+                    
+                    // Override URL for specific notification types
+                    if (isset($data['type'])) {
+                        if ($data['type'] === 'order_completed' && isset($data['order_id'])) {
+                            // Order completed -> redirect to order details
+                            $targetUrl = route('admin.orders.show', $data['order_id']);
+                            $isClickable = true;
+                        } elseif ($data['type'] === 'product_change_request') {
+                            // Product change request -> redirect to product catalog
+                            $targetUrl = route('admin.products.index');
+                            $isClickable = true;
+                        } elseif ($data['type'] === 'product_approval') {
+                            // Product approval -> redirect to product catalog
+                            $targetUrl = route('admin.products.index');
+                            $isClickable = true;
+                        } elseif ($data['type'] === 'inventory_change') {
+                            // Inventory changes request -> redirect to inventory changes request tab
+                            $targetUrl = route('admin.inventory.index') . '#inventory-logs';
+                            $isClickable = true;
+                        }
+                    }
                 @endphp
-                <a href="{{ $targetUrl }}" class="list-group-item d-flex justify-content-between align-items-start text-decoration-none {{ $notification->read() ? 'bg-light text-muted' : '' }}" 
-                   @if($isClickable) onclick="handleAdminNotificationClick({{ $notification->id }})" @endif>
+                <a href="{{ $targetUrl }}" class="list-group-item d-flex justify-content-between align-items-start text-decoration-none notification-item {{ $notification->read() ? 'bg-light text-muted' : '' }}" 
+                   data-notification-id="{{ $notification->id }}"
+                   data-is-clickable="{{ $isClickable ? 'true' : 'false' }}">
                     <div class="ms-2 me-auto">
                         <div class="d-flex align-items-center mb-1">
                             <i class="{{ $icon }} text-{{ $color }} me-2"></i>
@@ -70,8 +92,10 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Handle checkbox clicks
         document.querySelectorAll('.mark-as-read-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
+            checkbox.addEventListener('change', function(e) {
+                e.stopPropagation(); // Prevent triggering the link click
                 const notificationId = this.dataset.notificationId;
                 const isChecked = this.checked;
 
@@ -87,56 +111,92 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Optionally, visually update the notification item
                             this.closest('.list-group-item').classList.add('bg-light', 'text-muted');
-                            this.disabled = true; // Disable the checkbox after marking as read
-                            // You might want to remove the checkbox or change its appearance further
+                            this.disabled = true;
                         } else {
-                            // Handle error
                             alert('Failed to mark notification as read.');
-                            this.checked = false; // Revert checkbox state
+                            this.checked = false;
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         alert('An error occurred while marking notification as read.');
-                        this.checked = false; // Revert checkbox state
+                        this.checked = false;
                     });
                 }
             });
         });
-    });
 
-    // Handle clickable notification clicks for admin
-    function handleAdminNotificationClick(notificationId) {
-        // Mark notification as read
-        fetch(`/admin/notifications/${notificationId}/mark-as-read`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update the notification UI
-                const notificationItem = document.querySelector(`[onclick*="${notificationId}"]`);
-                if (notificationItem) {
-                    notificationItem.classList.add('bg-light', 'text-muted');
-                    const checkbox = notificationItem.querySelector('.mark-as-read-checkbox');
-                    if (checkbox) {
-                        checkbox.checked = true;
-                        checkbox.disabled = true;
-                    }
+        // Handle notification link clicks using event delegation
+        document.querySelectorAll('.notification-item').forEach(notificationLink => {
+            notificationLink.addEventListener('click', function(e) {
+                // Don't interfere with checkbox clicks
+                if (e.target.type === 'checkbox' || e.target.closest('.form-check')) {
+                    return;
                 }
-            }
-        })
-        .catch(error => {
-            console.error('Error marking notification as read:', error);
+
+                const isClickable = this.dataset.isClickable === 'true';
+                if (!isClickable) {
+                    return;
+                }
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const notificationId = this.dataset.notificationId;
+                const targetUrl = this.getAttribute('href');
+
+                console.log('Notification clicked:', notificationId, 'Redirecting to:', targetUrl);
+
+                // Immediately update the UI
+                this.classList.add('bg-light', 'text-muted');
+
+                // Remove "New" badge
+                const newBadge = this.querySelector('.badge');
+                if (newBadge) {
+                    newBadge.remove();
+                }
+
+                // Check the checkbox
+                const checkbox = this.querySelector('.mark-as-read-checkbox');
+                if (checkbox && !checkbox.checked) {
+                    checkbox.checked = true;
+                    checkbox.disabled = true;
+                }
+
+                // Mark as read in background
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                if (csrfToken) {
+                    fetch(`/admin/notifications/${notificationId}/mark-as-read`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Notification marked as read:', notificationId);
+                    })
+                    .catch(error => {
+                        console.error('Error marking notification as read:', error);
+                    });
+                }
+
+                // Redirect after short delay
+                setTimeout(() => {
+                    window.location.href = targetUrl;
+                }, 100);
+            });
         });
-    }
+    });
 </script>
 @endpush
 

@@ -27,15 +27,25 @@ class OrderController extends Controller
     {
         // Check if the request is from a customer middleware and adjust the query accordingly
         if ($request->routeIs('customer.*')) {
-            $query = Auth::user()->orders()->with(['products' => function($q) {
-                $q->select('products.id', 'products.name', 'products.price', 'products.image')->limit(10); // Limit products and only select needed fields
-            }]);
+            $query = Auth::user()->orders()->with([
+                'products' => function($q) {
+                    $q->select('products.id', 'products.name', 'products.price', 'products.image')->limit(10); // Limit products and only select needed fields
+                },
+                'customBouquets' => function($q) {
+                    $q->select('custom_bouquets.id', 'custom_bouquets.bouquet_type', 'custom_bouquets.total_price', 'custom_bouquets.customization_data', 'custom_bouquets.focal_flower_1', 'custom_bouquets.focal_flower_2', 'custom_bouquets.focal_flower_3', 'custom_bouquets.greenery', 'custom_bouquets.wrapper', 'custom_bouquets.ribbon', 'custom_bouquets.filler')->limit(10); // Limit custom bouquets and only select needed fields
+                }
+            ]);
             
-            // Handle search by product name
+            // Handle search by product name or custom bouquet
             if ($request->has('search') && !empty($request->search)) {
                 $searchTerm = $request->search;
-                $query->whereHas('products', function($q) use ($searchTerm) {
-                    $q->where('name', 'like', "%{$searchTerm}%");
+                $query->where(function($q) use ($searchTerm) {
+                    $q->whereHas('products', function($productQuery) use ($searchTerm) {
+                        $productQuery->where('name', 'like', "%{$searchTerm}%");
+                    })->orWhereHas('customBouquets', function($bouquetQuery) use ($searchTerm) {
+                        $bouquetQuery->where('bouquet_type', 'like', "%{$searchTerm}%")
+                                   ->orWhere('customization_data', 'like', "%{$searchTerm}%");
+                    });
                 });
             }
             
@@ -80,11 +90,12 @@ class OrderController extends Controller
                         });
                         break;
                     case 'to_review':
+                        // Include orders considered finished/received for review eligibility
                         $query->where(function($q) {
-                            $q->where('order_status', 'completed')
+                            $q->whereIn('order_status', ['completed', 'delivered', 'received'])
                               ->orWhere(function($subQ) {
                                   $subQ->whereNull('order_status')
-                                       ->where('status', 'completed');
+                                       ->whereIn('status', ['completed', 'delivered', 'received']);
                               });
                         });
                         break;
@@ -144,8 +155,16 @@ class OrderController extends Controller
                 $onlineOrders = $onlineOrdersQuery->latest()->get();
                 $walkInOrders = collect();
             }
-            $status = $request->input('status');
-            return view('admin.orders.index', compact('onlineOrders', 'walkInOrders', 'status'));
+            // Redirect to the new unified Sales Orders page
+            $redirectUrl = route('admin.sales-orders.index');
+            
+            // Preserve query parameters
+            $queryParams = $request->only(['type', 'search', 'status']);
+            if (!empty(array_filter($queryParams))) {
+                $redirectUrl .= '?' . http_build_query($queryParams);
+            }
+            
+            return redirect($redirectUrl);
         }
     }
 
@@ -282,7 +301,7 @@ class OrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $order->load(['user', 'products', 'delivery', 'paymentTracking']); // Eager load relationships for the show view
+        $order->load(['user', 'products', 'customBouquets', 'delivery', 'paymentTracking']); // Eager load relationships for the show view
 
         if (Auth::user()->role === 'customer') {
             return view('customer.orders.show', compact('order'));
@@ -411,7 +430,7 @@ class OrderController extends Controller
      */
     public function invoice(Order $order)
     {
-        $order->load(['user', 'products', 'delivery']);
+        $order->load(['user', 'products', 'customBouquets', 'delivery']);
 
         if (Auth::user()->role === 'clerk') {
             return view('clerk.orders.invoice', compact('order'));
@@ -733,10 +752,16 @@ class OrderController extends Controller
         ]);
 
         try {
-            // For now, we'll just return success since there's no shop_reviews table
-            // In a real implementation, you would save this to a shop_reviews table
-            // or store it in a different way
-            
+            // Persist shop review
+            \DB::table('shop_reviews')->insert([
+                'user_id' => auth()->id(),
+                'rating' => $request->shop_rating,
+                'comment' => $request->shop_comment,
+                'liked_most' => $request->liked_most,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Shop review submitted successfully!'

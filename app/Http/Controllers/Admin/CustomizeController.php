@@ -7,6 +7,7 @@ use App\Traits\CustomizeFilterTrait;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\CustomizeItem;
+use App\Models\Setting;
 
 class CustomizeController extends Controller
 {
@@ -15,8 +16,28 @@ class CustomizeController extends Controller
     {
         $items = $this->getCustomizeItems();
         $categories = $this->getCustomizeCategories();
+        $assemblingFee = Setting::get('assembling_fee', 150);
         
-        return view('admin.customize.index', compact('items','categories'));
+        return view('admin.customize.index', compact('items','categories', 'assemblingFee'));
+    }
+
+    public function updateAssemblingFee(Request $request)
+    {
+        $request->validate([
+            'assembling_fee' => 'required|numeric|min:0'
+        ]);
+
+        Setting::set('assembling_fee', $request->assembling_fee);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Assembling fee updated successfully.',
+                'assembling_fee' => $request->assembling_fee
+            ]);
+        }
+
+        return back()->with('success', 'Assembling fee updated successfully.');
     }
 
     public function store(Request $request)

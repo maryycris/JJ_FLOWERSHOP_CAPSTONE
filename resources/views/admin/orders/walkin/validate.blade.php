@@ -10,12 +10,22 @@
                     <div class="p-3" style="border-bottom:1px solid #e6f0e6;">
                         <!-- Navigation and Order Info -->
                         <div class="d-flex align-items-center gap-3 mb-3">
-                            <a href="{{ route('admin.orders.walkin.create_invoice', $order->id) }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center" title="Back" aria-label="Back" style="width:34px;height:34px;padding:0;">
+                            <a href="{{ route('admin.orders.walkin.sales_order', $order->id) }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center" title="Back" aria-label="Back" style="width:34px;height:34px;padding:0;">
                                 <i class="bi bi-arrow-left"></i>
                             </a>
-                            <span class="badge bg-info">New</span>
-                            <div class="ms-2 small text-muted">Quotations / {{ sprintf('%05d', $order->id) }}</div>
-                            <div class="ms-2 small text-muted">{{ $inventoryMovement ? $inventoryMovement->movement_number : 'OUT / 0001' }}</div>
+                            <button type="button" class="btn btn-info btn-sm px-3 py-1" style="border-radius: 15px; font-size: 0.75rem;">New</button>
+                <div class="ms-2 small text-muted">
+                    <div>Quotations / {{ sprintf('%05d', $order->id) }}</div>
+                    <div class="fw-bold text-primary">
+                        @if($order->salesOrder)
+                            <a href="{{ route('admin.sales-orders.show', $order->id) }}" class="text-decoration-none text-primary" style="cursor: pointer;">
+                                {{ str_replace('-', '', $order->salesOrder->so_number) }}
+                            </a>
+                        @else
+                            SO{{ sprintf('%05d', $order->id) }}
+                        @endif
+                    </div>
+                </div>
                         </div>
                         
                         <!-- Action Buttons and Workflow -->
@@ -27,25 +37,21 @@
                                 <button type="button" class="btn btn-outline-secondary" onclick="printOrder()">
                                     <i class="bi bi-printer me-1"></i>Print
                                 </button>
-                                <a href="{{ route('admin.orders.index', ['type' => 'walkin']) }}" class="btn btn-outline-secondary">
+                                <a href="{{ route('admin.sales-orders.index') }}" class="btn btn-outline-secondary">
                                     <i class="bi bi-x-circle me-1"></i>Cancel
                                 </a>
                             </div>
                             
                             <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-outline-primary d-flex align-items-center" id="movesBtn">
-                                    <i class="bi bi-list me-1"></i>Moves
-                                </button>
-                                
                                 <!-- Workflow Indicator -->
                                 <div class="d-flex align-items-center gap-1 ms-3">
                                     <div class="badge bg-secondary text-white px-2 py-1">Draft</div>
                                     <i class="bi bi-chevron-right text-muted"></i>
                                     <div class="badge bg-secondary text-white px-2 py-1">Waiting</div>
                                     <i class="bi bi-chevron-right text-muted"></i>
-                                    <div class="badge bg-success text-white px-2 py-1">Ready</div>
+                                    <div class="badge {{ request('view') === 'moves' ? 'bg-success' : 'bg-secondary' }} text-white px-2 py-1" id="readyBadge">Ready</div>
                                     <i class="bi bi-chevron-right text-muted"></i>
-                                    <div class="badge bg-secondary text-white px-2 py-1">Done</div>
+                                    <div class="badge {{ $order->order_status === 'approved' || $order->order_status === 'completed' || $order->order_status === 'on_delivery' ? 'bg-success' : 'bg-secondary' }} text-white px-2 py-1" id="doneBadge">Done</div>
                                 </div>
                             </div>
                         </div>
@@ -64,10 +70,116 @@
                                 <div class="p-3">
                                     <div class="fw-semibold mb-2">Customer Information</div>
                                     <div class="small">
-                                        <div class="mb-1">{{ $order->user->name ?? 'Walk-in Customer' }}</div>
+                                        @php
+                                            $notes = $order->notes ?? '';
+                                            $customerName = $order->user->name ?? 'Walk-in Customer';
+                                            if (!empty($notes) && preg_match('/Customer:\s*(.*?)(?:[;,]|$)/', $notes, $m)) {
+                                                $customerName = trim($m[1]);
+                                            }
+                                            $emailFromNotes = null;
+                                            if (!empty($notes) && preg_match('/Email:\s*([^;,\s]+@[^;,\s]+)/', $notes, $m)) {
+                                                $emailFromNotes = trim($m[1]);
+                                            }
+                                            
+                                            // Get loyalty card info
+                                            $loyaltyCard = null;
+                                            $loyaltyStamps = 0;
+                                            $canEarnStamp = false;
+                                            
+                                            // Check if this order can earn a stamp (any product ≥ ₱500)
+                                            foreach ($order->products as $product) {
+                                                if ($product->price >= 500) {
+                                                    $canEarnStamp = true;
+                                                    break;
+                                                }
+                                            }
+                                            
+                                            // Check if customer can redeem loyalty discount (5 stamps)
+                                            $canRedeemDiscount = false;
+                                            $loyaltyDiscountAmount = 0;
+                                            $discountedProduct = null;
+                                            if ($loyaltyCard && $loyaltyCard->stamps_count >= 5) {
+                                                $canRedeemDiscount = true;
+                                                // Find most expensive bouquet for 50% discount
+                                                $bouquets = $order->products->filter(function($product) {
+                                                    return strtolower($product->category) === 'bouquet' && !str_contains(strtolower($product->category), 'mini');
+                                                });
+                                                if ($bouquets->isNotEmpty()) {
+                                                    $discountedProduct = $bouquets->sortByDesc('price')->first();
+                                                    $loyaltyDiscountAmount = $discountedProduct->price * 0.5;
+                                                }
+                                            }
+                                            
+                                            // For walk-in customers, try to find/create loyalty card by email
+                                            if ($order->user_id) {
+                                                $loyaltyCard = \App\Models\LoyaltyCard::where('user_id', $order->user_id)->where('status', 'active')->first();
+                                            } elseif ($emailFromNotes) {
+                                                // For walk-in customers, find user by email or create loyalty card
+                                                $user = \App\Models\User::where('email', $emailFromNotes)->first();
+                                                if ($user) {
+                                                    $loyaltyCard = \App\Models\LoyaltyCard::where('user_id', $user->id)->where('status', 'active')->first();
+                                                }
+                                            }
+                                            
+                                            if ($loyaltyCard) {
+                                                $loyaltyStamps = $loyaltyCard->stamps_count;
+                                            }
+                                        @endphp
+                                        <div class="mb-1">{{ $customerName }}</div>
+                                        @if($emailFromNotes)
+                                            <div class="mb-1">{{ $emailFromNotes }}</div>
+                                        @endif
                                         @if($order->delivery)
                                             <div class="mb-1">{{ $order->delivery->delivery_address }}</div>
                                         @endif
+                                        
+                                        <!-- Loyalty Card Info -->
+                                        @if($canRedeemDiscount)
+                                            <div class="mt-2 p-2" style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <small class="fw-semibold text-success">🎉 Loyalty Reward!</small>
+                                                    <small class="text-success fw-bold">{{ $loyaltyStamps }}/5 stamps</small>
+                                                </div>
+                                                <div class="mt-1">
+                                                    <small class="text-success fw-bold">
+                                                        <i class="bi bi-gift-fill me-1"></i>50% OFF on {{ $discountedProduct->name }}!
+                                                    </small>
+                                                    <br>
+                                                    <small class="text-success">
+                                                        Discount: ₱{{ number_format($loyaltyDiscountAmount, 2) }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        @elseif($canEarnStamp)
+                                            <div class="mt-2 p-2" style="background: #f8f9fa; border-radius: 4px;">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <small class="fw-semibold text-primary">Loyalty Card</small>
+                                                    @if($loyaltyCard)
+                                                        <small class="text-muted">{{ $loyaltyStamps }}/5 stamps</small>
+                                                    @else
+                                                        <small class="text-muted">New customer</small>
+                                                    @endif
+                                                </div>
+                                                <div class="mt-1">
+                                                    <small class="text-success">
+                                                        <i class="bi bi-star-fill me-1"></i>Earns 1 stamp (₱500+ order)
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        @elseif($loyaltyCard)
+                                            <div class="mt-2 p-2" style="background: #f8f9fa; border-radius: 4px;">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <small class="fw-semibold text-primary">Loyalty Card</small>
+                                                    <small class="text-muted">{{ $loyaltyStamps }}/5 stamps</small>
+                                                </div>
+                                                <div class="mt-1">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-star me-1"></i>No stamp (order < ₱500)
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        @endif
+                                        
                                         <div class="mt-2">
                                             <div class="mb-1"><span class="fw-semibold">Schedule Date:</span> <span class="text-muted">{{ optional($order->created_at)->format('m/d/Y') }}</span></div>
                                             <div><span class="fw-semibold">Order Number:</span> <span class="text-muted">{{ sprintf('%05d', $order->id) }}</span></div>
@@ -81,9 +193,6 @@
                         <div class="mt-3">
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <div class="px-3 py-2 fw-semibold" style="display:inline-block;background:#e6f5e6;border:1px solid #d9ecd9;border-bottom:0;border-top-left-radius:4px;border-top-right-radius:4px;">Operations</div>
-                                <button class="btn btn-outline-primary btn-sm" id="operationsBtn">
-                                    <i class="bi bi-gear me-1"></i>Operations
-                                </button>
                             </div>
                             <div class="table-responsive" style="border:1px solid #d9ecd9;">
                                 <table class="table mb-0" id="operationsTable">
@@ -199,7 +308,6 @@
                                                                             <th>Required</th>
                                                                             <th>Available</th>
                                                                             <th>Status</th>
-                                                                            <th>Shortage</th>
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
@@ -223,15 +331,6 @@
                                                                                         {{ $component['status'] }}
                                                                                     </span>
                                                                                 </td>
-                                                                                <td>
-                                                                                    @if($component['shortage'] > 0)
-                                                                                        <span class="text-danger">
-                                                                                            {{ $component['shortage'] }} {{ $component['composition']->unit }} short
-                                                                                        </span>
-                                                                                    @else
-                                                                                        <span class="text-success">✓</span>
-                                                                                    @endif
-                                                                                </td>
                                                                             </tr>
                                                                         @endforeach
                                                                     </tbody>
@@ -248,6 +347,14 @@
                                                 @else
                                                     <div class="text-muted">
                                                         <i class="fas fa-info-circle"></i> No composition data available for this product.
+                                                        <br>
+                                                        <small class="text-muted">
+                                                            To set up product compositions, go to 
+                                                            <a href="{{ route('admin.products.index') }}" target="_blank" class="text-decoration-none">
+                                                                Product Catalog
+                                                            </a> 
+                                                            and edit this product to add materials/components.
+                                                        </small>
                                                     </div>
                                                 @endif
                                             </div>
@@ -270,10 +377,7 @@
             <div class="modal-body text-center p-4">
                 <div class="mb-3 fw-semibold" id="confirmModalLabel">Are you sure you want to proceed ?</div>
                 <div class="d-flex justify-content-center gap-3">
-                    <form method="POST" action="{{ route('admin.orders.walkin.validate.confirm', $order) }}" class="m-0">
-                        @csrf
-                        <button type="submit" class="btn btn-success">Confirm</button>
-                    </form>
+                    <button type="button" class="btn btn-success" id="confirmValidateBtn">Confirm</button>
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </div>
@@ -290,18 +394,100 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize table interactions
     initializeTableInteractions();
+    
+    // Handle Validate button click via AJAX
+    const confirmValidateBtn = document.getElementById('confirmValidateBtn');
+    if (confirmValidateBtn) {
+        confirmValidateBtn.addEventListener('click', function() {
+            // Close the modal first
+            const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+            modal.hide();
+            
+            // Send AJAX request to validate
+            fetch(`{{ route('admin.orders.walkin.validate.confirm', $order->id) }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update Done badge to green
+                const doneBadge = document.getElementById('doneBadge');
+                if (doneBadge) {
+                    doneBadge.classList.remove('bg-secondary');
+                    doneBadge.classList.add('bg-success');
+                }
+                
+                // Make Ready badge grey again (return to process)
+                const readyBadge = document.getElementById('readyBadge');
+                if (readyBadge) {
+                    readyBadge.classList.remove('bg-success');
+                    readyBadge.classList.add('bg-secondary');
+                }
+                
+                // Hide Validate button since order is now validated
+                const validateBtn = document.querySelector('.btn-success[data-bs-target="#confirmModal"]');
+                if (validateBtn) {
+                    validateBtn.style.display = 'none';
+                }
+                
+                // Update Available stock numbers immediately without refresh
+                try {
+                    if (data && data.updated_components) {
+                        data.updated_components.forEach(c => {
+                            // Find all composition tables
+                            const tables = document.querySelectorAll('.table.table-sm.mb-0');
+                            tables.forEach(table => {
+                                const rows = table.querySelectorAll('tbody tr');
+                                rows.forEach(row => {
+                                    const idCell = row.querySelector('small.text-muted');
+                                    if (idCell && idCell.textContent.includes(`ID: ${c.product_id}`)) {
+                                        // Available is the 3rd column (index 2)
+                                        const availableCell = row.children[2];
+                                        if (availableCell) {
+                                            availableCell.textContent = `${c.stock_after} ${c.unit || ''}`.trim();
+                                        }
+                                    }
+                                });
+                            });
+                        });
+                    }
+                } catch (e) { 
+                    console.log('UI update error:', e);
+                }
+
+                // Show success message then force a refresh to reflect latest stock levels
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Order validated successfully!',
+                    timer: 900,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.reload();
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'An error occurred while validating the order',
+                    confirmButtonColor: '#d33'
+                });
+            });
+        });
+    }
 });
 
 function initializeEventListeners() {
     // Moves button functionality
-    document.getElementById('movesBtn').addEventListener('click', function() {
-        showMovesModal();
-    });
+    // Moves button removed
     
-    // Operations button functionality
-    document.getElementById('operationsBtn').addEventListener('click', function() {
-        showOperationsMenu();
-    });
     
     // Input change listeners
     document.addEventListener('input', function(e) {

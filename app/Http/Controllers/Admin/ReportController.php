@@ -40,27 +40,75 @@ class ReportController extends Controller
 
     public function sales()
     {
-        // Show all orders with priority to completed orders for sales reporting
-        $sales = Order::with('user', 'products')
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(function($order) {
-                // Use order_status if available, fallback to status
-                $currentStatus = $order->order_status ?? $order->status;
-                
-                return (object) [
-                    'date' => $order->created_at->format('m/d/Y'),
-                    'order_number' => str_pad($order->id, 5, '0', STR_PAD_LEFT),
-                    'customer' => $order->user->name ?? 'N/A',
-                    // Ensure qty always numeric
-                    'qty' => $order->products->sum(function($p) { return $p->pivot->quantity ?? 0; }),
-                    'total' => $order->total_price ?? 0,
-                    'status' => $currentStatus,
-                    'is_completed' => in_array($currentStatus, ['completed', 'delivered']),
-                    'completed_at' => $order->completed_at ? \Carbon\Carbon::parse($order->completed_at)->format('m/d/Y H:i') : null,
-                ];
-            });
-        return view('admin.reports.sales', compact('sales'));
+        return view('admin.reports.sales');
+    }
+
+    public function generateDetailedSales(Request $request)
+    {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        // Get regular products
+        $products = DB::table('order_product')
+            ->join('orders', 'order_product.order_id', '=', 'orders.id')
+            ->join('products', 'order_product.product_id', '=', 'products.id')
+            ->leftJoin('sales_orders', 'orders.id', '=', 'sales_orders.order_id')
+            ->whereDate('orders.created_at', '>=', $startDate)
+            ->whereDate('orders.created_at', '<=', $endDate)
+            ->select(
+                'sales_orders.so_number',
+                'products.name as product_name',
+                'order_product.quantity',
+                DB::raw('0 as discount'),
+                'products.price',
+                DB::raw('(order_product.quantity * products.price) as total'),
+                'orders.id as order_id'
+            )
+            ->get();
+
+        // Get custom bouquets
+        $customBouquets = DB::table('order_custom_bouquet')
+            ->join('orders', 'order_custom_bouquet.order_id', '=', 'orders.id')
+            ->join('custom_bouquets', 'order_custom_bouquet.custom_bouquet_id', '=', 'custom_bouquets.id')
+            ->leftJoin('sales_orders', 'orders.id', '=', 'sales_orders.order_id')
+            ->whereDate('orders.created_at', '>=', $startDate)
+            ->whereDate('orders.created_at', '<=', $endDate)
+            ->select(
+                'sales_orders.so_number',
+                DB::raw("CONCAT('Custom Bouquet - ', custom_bouquets.bouquet_type) as product_name"),
+                'order_custom_bouquet.quantity',
+                DB::raw('0 as discount'),
+                DB::raw('(custom_bouquets.total_price / custom_bouquets.quantity) as price'),
+                DB::raw('(order_custom_bouquet.quantity * (custom_bouquets.total_price / custom_bouquets.quantity)) as total'),
+                'orders.id as order_id'
+            )
+            ->get();
+
+        // Merge and sort
+        $allResults = $products->merge($customBouquets)->sortBy(function($item) {
+            return ($item->so_number ?? 'N/A') . '-' . $item->product_name;
+        });
+
+        $formattedResults = $allResults->map(function($item) {
+            // Format SO number - if null, use order ID formatted
+            $soNumber = $item->so_number;
+            if (empty($soNumber) && isset($item->order_id)) {
+                $soNumber = str_pad($item->order_id, 5, '0', STR_PAD_LEFT);
+            } else if (empty($soNumber)) {
+                $soNumber = 'N/A';
+            }
+
+            return [
+                'so_number' => $soNumber,
+                'product_name' => $item->product_name,
+                'quantity' => intval($item->quantity),
+                'discount' => floatval($item->discount ?? 0),
+                'price' => floatval($item->price ?? 0),
+                'total' => floatval($item->total ?? 0)
+            ];
+        })->values();
+
+        return response()->json($formattedResults);
     }
 
     public function generateSalesReport(Request $request)

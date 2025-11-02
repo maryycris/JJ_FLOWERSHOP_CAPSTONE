@@ -29,13 +29,50 @@ class ClerkController extends Controller
         $lowStockAlerts = $inventoryService->checkLowStock();
         $restockRecommendations = $inventoryService->getRestockRecommendations();
         
+        // Most popular products (all-time by quantity sold)
+        $popularProducts = \DB::table('order_product')
+            ->join('products', 'order_product.product_id', '=', 'products.id')
+            ->select('products.id', 'products.name', \DB::raw('SUM(order_product.quantity) as total_quantity'))
+            ->groupBy('products.id', 'products.name')
+            ->orderByDesc('total_quantity')
+            ->limit(5)
+            ->get();
+
+        // Top selling products this month
+        $topProductsThisMonth = \DB::table('order_product')
+            ->join('products', 'order_product.product_id', '=', 'products.id')
+            ->join('orders', 'order_product.order_id', '=', 'orders.id')
+            ->whereMonth('orders.created_at', \Carbon\Carbon::now()->month)
+            ->whereYear('orders.created_at', \Carbon\Carbon::now()->year)
+            ->whereIn('orders.order_status', ['completed', 'delivered', 'paid'])
+            ->select('products.name', \DB::raw('SUM(order_product.quantity) as total_sold'), \DB::raw('SUM(order_product.quantity * products.price) as total_revenue'))
+            ->groupBy('products.name')
+            ->orderByDesc('total_sold')
+            ->limit(5)
+            ->get();
+
+        // Order type distribution
+        $onlineOrdersCount = Order::where('type', 'online')->count();
+        $walkinOrdersCount = Order::where('type', 'walkin')->count();
+
+        // Recent activity (inventory movements)
+        $recentMovements = \App\Models\InventoryMovement::with(['product', 'user', 'order'])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+        
         return view('clerk.dashboard', [
             'pendingOrdersCount' => $orderCounts['pending'],
             'approvedOrdersCount' => $orderCounts['approved'],
             'onDeliveryCount' => $orderCounts['on_delivery'],
             'completedTodayCount' => $orderCounts['completed_today'],
             'restockProducts' => $restockRecommendations,
-            'lowStockAlerts' => $lowStockAlerts
+            'lowStockAlerts' => $lowStockAlerts,
+            'popularProducts' => $popularProducts,
+            'topProductsThisMonth' => $topProductsThisMonth,
+            'onlineOrdersCount' => $onlineOrdersCount,
+            'walkinOrdersCount' => $walkinOrdersCount,
+            'recentMovements' => $recentMovements,
         ]);
     }
 
@@ -213,6 +250,9 @@ class ClerkController extends Controller
         return redirect()->route('clerk.inventory.index')->with('success', 'Product updated successfully!');
     }
     public function orders(Request $request) {
+        // Handle tab selection
+        $activeTab = $request->get('tab', 'online');
+        $search = $request->get('search');
         $status = $request->input('status', 'pending');
         $todayOnly = (bool) $request->boolean('today');
 
@@ -233,22 +273,102 @@ class ClerkController extends Controller
             }
         };
 
-        $onlineOrders = Order::with('user')
+        // Get online orders with search
+        $onlineOrdersQuery = Order::with('user')
             ->where('type', 'online')
             ->tap($applyStatusFilter)
-            ->tap($applyTodayFilter)
-            ->latest()->get();
+            ->tap($applyTodayFilter);
+        
+        if ($search) {
+            $onlineOrdersQuery->where(function($q) use ($search) {
+                $q->whereHas('user', function($uq) use ($search) {
+                    $uq->where('name', 'like', "%$search%");
+                })
+                ->orWhere('id', 'like', "%$search%");
+            });
+        }
+        
+        $onlineOrders = $onlineOrdersQuery->latest()->get();
 
-        $walkInOrders = Order::with('user')
+        // Get walk-in orders with search
+        $walkInOrdersQuery = Order::with('user')
             ->where('type', 'walk-in')
             ->tap($applyStatusFilter)
-            ->tap($applyTodayFilter)
-            ->latest()->get();
+            ->tap($applyTodayFilter);
+            
+        if ($search) {
+            $walkInOrdersQuery->where(function($q) use ($search) {
+                $q->whereHas('user', function($uq) use ($search) {
+                    $uq->where('name', 'like', "%$search%");
+                })
+                ->orWhere('id', 'like', "%$search%");
+            });
+        }
+        
+        $walkInOrders = $walkInOrdersQuery->latest()->get();
 
-        return view('clerk.orders.index', compact('onlineOrders', 'walkInOrders', 'status'));
+        // Get completed orders for history with pagination
+        $completedOrdersQuery = Order::where(function($q) {
+                $q->whereIn('order_status', ['completed', 'delivered'])
+                  ->orWhere(function($sub) {
+                      $sub->whereNull('order_status')->where('status', 'completed');
+                  });
+            })
+            ->with(['user', 'assignedDriver', 'delivery.driver', 'products']);
+        
+        // Search functionality for completed orders
+        if ($search) {
+            $completedOrdersQuery->where(function($q) use ($search) {
+                $q->whereHas('user', function($uq) use ($search) {
+                    $uq->where('name', 'like', "%$search%");
+                })
+                ->orWhere('id', 'like', "%$search%");
+            });
+        }
+        
+        $completedOrders = $completedOrdersQuery->orderBy('updated_at', 'desc')->paginate(5);
+
+        return view('clerk.orders.index', compact(
+            'onlineOrders', 
+            'walkInOrders', 
+            'completedOrders',
+            'activeTab',
+            'search',
+            'status'
+        ));
     }
     public function notifications(Request $request) {
         $query = auth()->user()->notifications();
+        
+        // Exclude notifications that are not for clerk
+        // - driver_assigned_order: Only for drivers
+        // - order_approved: Only for customers
+        // Filter by both notification class type and data->type
+        $query->where(function($q) {
+            $q->where(function($subQ) {
+                // Exclude by data->type
+                $subQ->where(function($sq) {
+                    $sq->whereJsonDoesntContain('data->type', 'driver_assigned_order')
+                       ->whereJsonDoesntContain('data->type', 'order_approved');
+                });
+            })
+            // Also exclude by notification class type
+            ->where('type', '!=', 'App\\Notifications\\DriverAssignedOrderNotification')
+            ->where('type', '!=', 'App\\Notifications\\OrderApprovedNotification');
+        });
+        
+        // Simple search functionality
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function($q) use ($searchTerm) {
+                // Search in notification data (message, type, title)
+                $q->where('data->message', 'like', "%{$searchTerm}%")
+                  ->orWhere('data->type', 'like', "%{$searchTerm}%")
+                  ->orWhere('data->title', 'like', "%{$searchTerm}%")
+                  // Search by date
+                  ->orWhereDate('created_at', 'like', "%{$searchTerm}%");
+            });
+        }
         
         // Filter by status (read/unread)
         if ($request->has('status') && $request->status !== '') {
@@ -277,6 +397,13 @@ class ClerkController extends Controller
         $notifications = $query->orderBy('created_at', 'desc')->get();
         
         return view('clerk.notifications.index', compact('notifications'));
+    }
+
+    public function markNotificationAsRead(Request $request, $notificationId) {
+        $notification = auth()->user()->notifications()->findOrFail($notificationId);
+        $notification->markAsRead();
+
+        return response()->json(['success' => true]);
     }
 
     public function deleteAllNotifications() {
@@ -472,7 +599,7 @@ class ClerkController extends Controller
         }
 
         // Create pending change request
-        PendingProductChange::create([
+        $pendingChange = PendingProductChange::create([
             'product_id' => $product->id,
             'requested_by' => auth()->id(),
             'action' => 'edit',
@@ -480,6 +607,17 @@ class ClerkController extends Controller
             'reason' => $validated['reason'],
             'status' => 'pending',
         ]);
+
+        // Notify all admins about the product change request
+        try {
+            $adminUsers = \App\Models\User::where('role', 'admin')->get();
+            $clerk = auth()->user();
+            foreach ($adminUsers as $admin) {
+                $admin->notify(new \App\Notifications\ProductChangeRequestNotification($pendingChange, $product, $clerk));
+            }
+        } catch (\Throwable $e) {
+            \Log::error("Failed to send product change request notification: {$e->getMessage()}");
+        }
 
         return redirect()->route('clerk.product_catalog.index')->with('success', 'Product change request submitted for admin approval!');
     }
@@ -490,8 +628,16 @@ class ClerkController extends Controller
     public function getProductDetails($productId)
     {
         try {
-            $product = CatalogProduct::with(['compositions'])
+            $product = CatalogProduct::with(['compositions.componentProduct'])
                 ->findOrFail($productId);
+
+            // Add category to each composition from component product
+            $product->compositions->transform(function($composition) {
+                if ($composition->componentProduct) {
+                    $composition->category = $composition->componentProduct->category;
+                }
+                return $composition;
+            });
 
             return response()->json([
                 'success' => true,
@@ -511,12 +657,20 @@ class ClerkController extends Controller
     public function getProductCompositions($productId)
     {
         try {
-            $product = CatalogProduct::with(['compositions'])
+            $product = CatalogProduct::with(['compositions.componentProduct'])
                 ->findOrFail($productId);
+
+            // Add category to each composition from component product
+            $compositions = $product->compositions->map(function($composition) {
+                if ($composition->componentProduct) {
+                    $composition->category = $composition->componentProduct->category;
+                }
+                return $composition;
+            });
 
             return response()->json([
                 'success' => true,
-                'compositions' => $product->compositions
+                'compositions' => $compositions
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -531,7 +685,7 @@ class ClerkController extends Controller
         $product = CatalogProduct::findOrFail($id);
         
         // Create pending change request for deletion
-        PendingProductChange::create([
+        $pendingChange = PendingProductChange::create([
             'product_id' => $product->id,
             'requested_by' => auth()->id(),
             'action' => 'delete',
@@ -539,6 +693,17 @@ class ClerkController extends Controller
             'reason' => request('reason', 'Product deletion requested'),
             'status' => 'pending',
         ]);
+
+        // Notify all admins about the product change request
+        try {
+            $adminUsers = \App\Models\User::where('role', 'admin')->get();
+            $clerk = auth()->user();
+            foreach ($adminUsers as $admin) {
+                $admin->notify(new \App\Notifications\ProductChangeRequestNotification($pendingChange, $product, $clerk));
+            }
+        } catch (\Throwable $e) {
+            \Log::error("Failed to send product change request notification: {$e->getMessage()}");
+        }
 
         return redirect()->route('clerk.product_catalog.index')->with('success', 'Product deletion request submitted for admin approval!');
     }

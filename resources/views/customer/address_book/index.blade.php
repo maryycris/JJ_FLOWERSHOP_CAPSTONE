@@ -1,6 +1,7 @@
 @extends('layouts.customer_app')
 
 @section('content')
+@include('components.customer.alt_nav', ['active' => 'profile'])
 <style>
     .text-capitalize {
         text-transform: capitalize;
@@ -42,14 +43,42 @@
     #addAddressModal .modal-body::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
     #addAddressModal .modal-body::-webkit-scrollbar-thumb { background: #7bb47b; border-radius: 3px; }
     #addAddressModal .modal-body::-webkit-scrollbar-thumb:hover { background: #5aa65a; }
+    /* Mobile page label top-right */
+    @media (max-width: 767.98px) {
+        .page-label-mobile {
+            position: absolute;
+            top: 6px;
+            left: 30px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #4a9448;
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            letter-spacing: .2px;
+        }
+    }
+    @media (max-width: 767.98px) {
+        .main-content-with-sidebar { margin-left: 0 !important; max-width: 100% !important; }
+        /* Add breathing room so the label doesn't collide with the first box */
+        #addressBookContent { margin-top: 25px; }
+        /* Ensure mobile navbars stay sticky on this page */
+        .alt-topbar { position: fixed !important; }
+        .mobile-bottom-nav { position: fixed !important; }
+        /* Center and size address modals on mobile */
+        .modal-dialog { width: 85vw !important; max-width: 85vw !important; margin: 5vh auto !important; }
+        .modal { z-index: 6000 !important; }
+        .modal-backdrop { z-index: 5990 !important; }
+    }
 </style>
-<div class="container-fluid">
+<div class="container-fluid position-relative">
     <div class="row justify-content-center">
-        <div class="col-md-3 col-lg-3">
+        <div class="d-md-none page-label-mobile">Address Book</div>
+        <div class="col-md-3 col-lg-3 d-none d-md-block">
             @include('customer.sidebar')
         </div>
-        <div class="col-md-9 col-lg-8 main-content-with-sidebar" style="margin-left: 25%; max-width: calc(75% - 30px);">
-            <div class="py-4 px-3">
+        <div class="col-12 col-md-9 col-lg-8 main-content-with-sidebar" style="margin-left: 25%; max-width: calc(75% - 30px);">
+            <div id="addressBookContent" class="py-3 px-3">
                 <!-- Location-Based Recommendations Box -->
                 <div class="mb-4">
                     <div class="bg-white rounded-4 p-3 shadow-sm" id="locationCard" style="display: none;">
@@ -67,7 +96,7 @@
                     </div>
                 </div>
 
-                
+                <!-- Toolbar Add Button removed as requested -->
 
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -101,7 +130,7 @@
                                         @endif
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
-                                        <button type="button" class="set-address-btn btn btn-sm" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                                        <button type="button" class="set-address-btn btn btn-sm" data-bs-toggle="modal" data-bs-target="#editAddressModal{{ $address->id }}">
                                             <i class="fas fa-plus me-1"></i> Set Address
                                         </button>
                                         <div class="dropdown">
@@ -162,82 +191,72 @@
 
                         <!-- Edit Address Modal -->
                         <div class="modal fade" id="editAddressModal{{ $address->id }}" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Edit Address</h5>
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content" style="border-radius: 12px;">
+                                    <div class="modal-header" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
+                                        <h5 class="modal-title fw-bold">Edit Address</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <form action="{{ route('customer.address_book.update', $address) }}" method="POST">
                                         @csrf
                                         @method('PUT')
-                                        <div class="modal-body">
+                                        <div class="modal-body" style="padding: 20px;">
+                                            <!-- Hide personal info fields; they are not editable here -->
+                                            <input type="hidden" name="first_name" value="{{ $address->first_name }}">
+                                            <input type="hidden" name="last_name" value="{{ $address->last_name }}">
+                                            <input type="hidden" name="email" value="{{ $address->email ?? Auth::user()->email }}">
+                                            <input type="hidden" name="company" value="{{ $address->company }}">
+
                                             <div class="mb-3">
-                                                <label for="label{{ $address->id }}" class="form-label">Label (Optional)</label>
-                                                <input type="text" class="form-control text-capitalize" id="label{{ $address->id }}" name="label" value="{{ $address->label }}">
+                                                <label for="street_address{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">Street Address *</label>
+                                                <input type="text" class="form-control text-capitalize" id="street_address{{ $address->id }}" name="street_address" value="{{ $address->street_address }}" required style="border-radius: 8px; padding: 10px;">
                                             </div>
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="first_name{{ $address->id }}" class="form-label">First Name</label>
-                                                    <input type="text" class="form-control text-capitalize" id="first_name{{ $address->id }}" name="first_name" value="{{ $address->first_name }}" required>
+
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="zip_code{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">Postal Code *</label>
+                                                    <input type="text" class="form-control" id="zip_code{{ $address->id }}" name="zip_code" value="{{ $address->zip_code }}" required style="border-radius: 8px; padding: 10px;">
                                                 </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="last_name{{ $address->id }}" class="form-label">Last Name</label>
-                                                    <input type="text" class="form-control text-capitalize" id="last_name{{ $address->id }}" name="last_name" value="{{ $address->last_name }}" required>
+                                                <div class="col-md-6">
+                                                    <label for="city{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">City *</label>
+                                                    <select class="form-select text-capitalize" id="city{{ $address->id }}" name="city" required style="border-radius: 8px; padding: 10px;">
+                                                        <option value="">Select City</option>
+                                                        <option value="Cebu City" {{ $address->city == 'Cebu City' ? 'selected' : '' }}>Cebu City</option>
+                                                        <option value="Mandaue City" {{ $address->city == 'Mandaue City' ? 'selected' : '' }}>Mandaue City</option>
+                                                        <option value="Lapu-Lapu City" {{ $address->city == 'Lapu-Lapu City' ? 'selected' : '' }}>Lapu-Lapu City</option>
+                                                        <option value="Talisay City" {{ $address->city == 'Talisay City' ? 'selected' : '' }}>Talisay City</option>
+                                                        <option value="Toledo City" {{ $address->city == 'Toledo City' ? 'selected' : '' }}>Toledo City</option>
+                                                        <option value="Danao City" {{ $address->city == 'Danao City' ? 'selected' : '' }}>Danao City</option>
+                                                        <option value="Bogo City" {{ $address->city == 'Bogo City' ? 'selected' : '' }}>Bogo City</option>
+                                                        <option value="Naga City" {{ $address->city == 'Naga City' ? 'selected' : '' }}>Naga City</option>
+                                                        <option value="Carcar City" {{ $address->city == 'Carcar City' ? 'selected' : '' }}>Carcar City</option>
+                                                    </select>
                                                 </div>
                                             </div>
+
                                             <div class="mb-3">
-                                                <label for="company{{ $address->id }}" class="form-label">Company (Optional)</label>
-                                                <input type="text" class="form-control text-capitalize" id="company{{ $address->id }}" name="company" value="{{ $address->company }}">
+                                                <label for="region{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">Region / State *</label>
+                                                <input type="text" class="form-control" id="region{{ $address->id }}" name="region" value="{{ $address->region ?? 'Region VII - Central Visayas' }}" required style="border-radius: 8px; padding: 10px;">
                                             </div>
+
+                                            <input type="hidden" name="country" value="Philippines">
+                                            <input type="hidden" name="phone_number" value="{{ $address->phone_number ?? Auth::user()->contact_number }}">
+
                                             <div class="mb-3">
-                                                <label for="street_address{{ $address->id }}" class="form-label">Street Address</label>
-                                                <input type="text" class="form-control text-capitalize" id="street_address{{ $address->id }}" name="street_address" value="{{ $address->street_address }}" required>
+                                                <label for="barangay{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">Barangay *</label>
+                                                <input type="text" class="form-control text-capitalize" id="barangay{{ $address->id }}" name="barangay" value="{{ $address->barangay }}" required style="border-radius: 8px; padding: 10px;">
                                             </div>
+
                                             <div class="mb-3">
-                                                <label for="barangay{{ $address->id }}" class="form-label">Barangay</label>
-                                                <input type="text" class="form-control text-capitalize" id="barangay{{ $address->id }}" name="barangay" value="{{ $address->barangay }}" required>
+                                                <label for="landmark{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">Landmark</label>
+                                                <input type="text" class="form-control text-capitalize" id="landmark{{ $address->id }}" name="landmark" value="{{ $address->landmark }}" style="border-radius: 8px; padding: 10px;">
                                             </div>
-                                            <div class="mb-3">
-                                                <label for="municipality{{ $address->id }}" class="form-label">Municipality</label>
-                                                <input type="text" class="form-control text-capitalize" id="municipality{{ $address->id }}" name="municipality" value="{{ $address->municipality }}">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="city{{ $address->id }}" class="form-label">City</label>
-                                                <input type="text" class="form-control text-capitalize" id="city{{ $address->id }}" name="city" value="{{ $address->city }}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="province{{ $address->id }}" class="form-label">Province (Optional)</label>
-                                                <input type="text" class="form-control text-capitalize" id="province{{ $address->id }}" name="province" value="{{ $address->province }}">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="region{{ $address->id }}" class="form-label">Region</label>
-                                                <input type="text" class="form-control text-capitalize" id="region{{ $address->id }}" name="region" value="{{ $address->region }}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="zip_code{{ $address->id }}" class="form-label">ZIP Code</label>
-                                                <input type="text" class="form-control text-capitalize" id="zip_code{{ $address->id }}" name="zip_code" value="{{ $address->zip_code }}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="phone_number{{ $address->id }}" class="form-label">Phone Number</label>
-                                                <input type="text" class="form-control text-capitalize" id="phone_number{{ $address->id }}" name="phone_number" value="{{ $address->phone_number }}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="landmark{{ $address->id }}" class="form-label">Landmark (Optional)</label>
-                                                <input type="text" class="form-control text-capitalize" id="landmark{{ $address->id }}" name="landmark" value="{{ $address->landmark }}">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="special_instructions{{ $address->id }}" class="form-label">Special Instructions (Optional)</label>
-                                                <textarea class="form-control text-capitalize" id="special_instructions{{ $address->id }}" name="special_instructions">{{ $address->special_instructions }}</textarea>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input" id="is_default{{ $address->id }}" name="is_default" value="1" {{ $address->is_default ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="is_default{{ $address->id }}">Set as default address</label>
-                                            </div>
+
+                                            <input type="hidden" name="municipality" value="{{ $address->municipality }}">
+                                            <input type="hidden" name="province" value="Cebu">
                                         </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        <div class="modal-footer" style="border-top: 1px solid #e0e0e0; padding: 15px 20px;">
+                                            <button type="submit" class="btn w-100 fw-bold" style="background-color: #7bb47b; color: white; border-radius: 8px; padding: 12px;">Save</button>
                                         </div>
                                     </form>
                                 </div>
@@ -245,8 +264,13 @@
                         </div>
                     @empty
                         <div class="col-12">
-                            <div class="alert" style="background-color: #e8f5e8; border-color: #7bb47b; color: #2d5a2d;">
-                                You haven't added any addresses yet. Click the "Add New Address" button to add your first address.
+                            <div class="alert d-flex align-items-center justify-content-between" style="background-color: #e8f5e8; border-color: #7bb47b; color: #2d5a2d;">
+                                <div>
+                                    You haven't added any addresses yet. Click the "Add New Address" button to add your first address.
+                                </div>
+                                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                                    <i class="fas fa-plus me-1"></i> Add New Address
+                                </button>
                             </div>
                         </div>
                     @endforelse
@@ -258,86 +282,73 @@
 
 <!-- Add Address Modal -->
 <div class="modal fade" id="addAddressModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Address</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 12px;">
+            <div class="modal-header" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
+                <h5 class="modal-title fw-bold">Add New Address</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ route('customer.address_book.store') }}" method="POST">
                 @csrf
-                <div class="modal-body">
+                <div class="modal-body" style="padding: 20px;">
+                    <!-- Hidden personal fields auto-filled from profile -->
+                    <input type="hidden" name="first_name" value="{{ Auth::user()->first_name }}">
+                    <input type="hidden" name="last_name" value="{{ Auth::user()->last_name }}">
+                    <input type="hidden" name="email" value="{{ Auth::user()->email }}">
+                    <input type="hidden" name="company" value="">
+
                     <div class="mb-3">
-                        <label for="label" class="form-label">Label (Optional)</label>
-                        <input type="text" class="form-control text-capitalize" id="label" name="label">
+                        <label for="street_address" class="form-label fw-semibold" style="font-size: 14px;">Street Address *</label>
+                        <input type="text" class="form-control text-capitalize" id="street_address" name="street_address" required style="border-radius: 8px; padding: 10px;">
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="first_name" class="form-label">First Name</label>
-                            <input type="text" class="form-control text-capitalize" id="first_name" name="first_name" value="{{ Auth::user()->first_name }}" required>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="zip_code" class="form-label fw-semibold" style="font-size: 14px;">Postal Code *</label>
+                            <input type="text" class="form-control" id="zip_code" name="zip_code" required style="border-radius: 8px; padding: 10px;">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="last_name" class="form-label">Last Name</label>
-                            <input type="text" class="form-control text-capitalize" id="last_name" name="last_name" value="{{ Auth::user()->last_name }}" required>
+                        <div class="col-md-6">
+                            <label for="city" class="form-label fw-semibold" style="font-size: 14px;">City *</label>
+                            <select class="form-select text-capitalize" id="city" name="city" required style="border-radius: 8px; padding: 10px;">
+                                <option value="">Select City</option>
+                                <option value="Cebu City">Cebu City</option>
+                                <option value="Mandaue City">Mandaue City</option>
+                                <option value="Lapu-Lapu City">Lapu-Lapu City</option>
+                                <option value="Talisay City">Talisay City</option>
+                                <option value="Toledo City">Toledo City</option>
+                                <option value="Danao City">Danao City</option>
+                                <option value="Bogo City">Bogo City</option>
+                                <option value="Naga City">Naga City</option>
+                                <option value="Carcar City">Carcar City</option>
+                            </select>
                         </div>
                     </div>
+
                     <div class="mb-3">
-                        <label for="company" class="form-label">Company (Optional)</label>
-                        <input type="text" class="form-control text-capitalize" id="company" name="company">
+                        <label for="region" class="form-label fw-semibold" style="font-size: 14px;">Region / State *</label>
+                        <input type="text" class="form-control" id="region" name="region" value="Region VII - Central Visayas" required style="border-radius: 8px; padding: 10px;">
                     </div>
+
+                    <input type="hidden" name="country" value="Philippines">
+                    <input type="hidden" name="phone_number" value="{{ Auth::user()->contact_number }}">
+
                     <div class="mb-3">
-                        <label for="street_address" class="form-label">Street Address</label>
-                        <input type="text" class="form-control text-capitalize" id="street_address" name="street_address" required>
+                        <label for="barangay" class="form-label fw-semibold" style="font-size: 14px;">Barangay *</label>
+                        <input type="text" class="form-control text-capitalize" id="barangay" name="barangay" required style="border-radius: 8px; padding: 10px;">
                     </div>
+
                     <div class="mb-3">
-                        <label for="barangay" class="form-label">Barangay</label>
-                        <input type="text" class="form-control text-capitalize" id="barangay" name="barangay" required>
+                        <label for="landmark" class="form-label fw-semibold" style="font-size: 14px;">Landmark</label>
+                        <input type="text" class="form-control text-capitalize" id="landmark" name="landmark" style="border-radius: 8px; padding: 10px;">
                     </div>
-                    <div class="mb-3">
-                        <label for="municipality" class="form-label">Municipality</label>
-                        <input type="text" class="form-control text-capitalize" id="municipality" name="municipality">
-                    </div>
-                    <div class="mb-3">
-                        <label for="city" class="form-label">City</label>
-                        <input type="text" class="form-control text-capitalize" id="city" name="city" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="province" class="form-label">Province (Optional)</label>
-                        <input type="text" class="form-control text-capitalize" id="province" name="province">
-                    </div>
-                    <div class="mb-3">
-                        <label for="region" class="form-label">Region</label>
-                        <input type="text" class="form-control text-capitalize" id="region" name="region" value="Region VII" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="zip_code" class="form-label">ZIP Code</label>
-                        <input type="text" class="form-control text-capitalize" id="zip_code" name="zip_code" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="phone_number" class="form-label">Phone Number</label>
-                        <input type="text" class="form-control text-capitalize" id="phone_number" name="phone_number" value="{{ Auth::user()->contact_number }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="landmark" class="form-label">Landmark (Optional)</label>
-                        <input type="text" class="form-control text-capitalize" id="landmark" name="landmark" value="{{ old('landmark') }}">
-                    </div>
-                    <div class="mb-3">
-                        <label for="special_instructions" class="form-label">Special Instructions (Optional)</label>
-                        <textarea class="form-control text-capitalize" id="special_instructions" name="special_instructions">{{ old('special_instructions') }}</textarea>
-                    </div>
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="is_default" name="is_default" value="1">
-                        <label class="form-check-label" for="is_default">Set as default address</label>
-                    </div>
+
+                    <input type="hidden" name="municipality" id="municipality" value="">
+                    <input type="hidden" name="province" value="Cebu">
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Address</button>
+                <div class="modal-footer" style="border-top: 1px solid #e0e0e0; padding: 15px 20px;">
+                    <button type="submit" class="btn w-100 fw-bold" style="background-color: #7bb47b; color: white; border-radius: 8px; padding: 12px;">Save</button>
                 </div>
             </form>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -347,7 +358,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize location detection
     initializeLocationDetection();
-    
+
     // Prevent leading spaces and ensure proper case
     function preventLeadingSpaces(input) {
         input.addEventListener('input', function(e) {
@@ -355,14 +366,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.target.value = e.target.value.trim();
             }
         });
-        
+
         input.addEventListener('keydown', function(e) {
             if (e.key === ' ' && e.target.selectionStart === 0) {
                 e.preventDefault();
             }
         });
     }
-    
+
     // Apply to all text inputs and textareas
     document.querySelectorAll('input[type="text"], textarea').forEach(preventLeadingSpaces);
 });
@@ -370,14 +381,14 @@ document.addEventListener('DOMContentLoaded', function() {
 // Location Detection Functions
 function initializeLocationDetection() {
     console.log('Initializing location detection for address book...');
-    
+
     // Check if geolocation is supported
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             function(position) {
                 const latitude = position.coords.latitude;
                 const longitude = position.coords.longitude;
-                
+
                 // Update location via API
                 updateLocationData(latitude, longitude);
             },
@@ -395,7 +406,7 @@ function initializeLocationDetection() {
 
 function updateLocationData(latitude, longitude, city) {
     console.log('Updating location data:', { latitude, longitude, city });
-    
+
     fetch('{{ route("geo.location.update") }}', {
         method: 'POST',
         headers: {
@@ -437,7 +448,7 @@ function updateLocationData(latitude, longitude, city) {
 function showLocationCard(location) {
     const locationCard = document.getElementById('locationCard');
     const locationText = document.getElementById('locationText');
-    
+
     if (locationCard && locationText) {
         locationText.textContent = `Showing recommendations for ${location.city}`;
         locationCard.style.display = 'block';
@@ -446,14 +457,14 @@ function showLocationCard(location) {
 
 function updateLocation() {
     console.log('Update location clicked');
-    
+
     // Show loading state
     const updateBtn = document.querySelector('button[onclick="updateLocation()"]');
     if (updateBtn) {
         updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Updating...';
         updateBtn.disabled = true;
     }
-    
+
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             function(position) {
@@ -480,7 +491,7 @@ function updateLocation() {
                         break;
                 }
                 alert(errorMessage);
-                
+
                 // Reset button
                 if (updateBtn) {
                     updateBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>Update';
@@ -509,4 +520,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
-@endsection 
+@endsection

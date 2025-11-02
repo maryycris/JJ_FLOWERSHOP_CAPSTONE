@@ -1,28 +1,160 @@
 @extends('layouts.admin_app')
 
 @section('admin_content')
-<div class="container-fluid">
+<style>
+    /* Font and Icon Hierarchy - matching invoice cleanliness */
+    .card-title {
+        font-size: 1.1rem !important;
+        font-weight: 600;
+    }
+
+    .card-header h5 {
+        font-size: 0.95rem !important;
+        font-weight: 600;
+    }
+
+    .card-body p {
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-body strong {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    /* Table styling */
+    .table {
+        font-size: 0.85rem;
+    }
+
+    .table thead th {
+        font-size: 0.8rem !important;
+        font-weight: 600;
+        background-color: #e6f4ea;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .table tbody td {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    /* Section headers */
+    h6 {
+        font-size: 0.9rem !important;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+
+    /* Button sizing */
+    .btn {
+        font-size: 0.85rem;
+    }
+
+    .btn i {
+        font-size: 0.85rem;
+    }
+
+    /* Badge sizing */
+    .badge {
+        font-size: 0.8rem;
+    }
+
+    /* Clean success message */
+    .success-message {
+        background-color: #e8f5e8;
+        border-left: 3px solid #7bb47b;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .success-message i {
+        color: #5aa65a;
+        font-size: 1rem;
+    }
+
+    .success-message .message-content {
+        flex: 1;
+    }
+
+    .success-message .message-content strong {
+        color: #2d5a2d;
+        font-size: 0.9rem;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .success-message .message-content span {
+        color: #5a7a5a;
+        font-size: 0.85rem;
+    }
+
+    /* Warning message */
+    .warning-message {
+        background-color: #fff3cd;
+        border-left: 3px solid #ffc107;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .warning-message i {
+        color: #ff9800;
+        font-size: 1rem;
+    }
+
+    .warning-message .message-content {
+        flex: 1;
+    }
+
+    .warning-message .message-content strong {
+        color: #856404;
+        font-size: 0.9rem;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+</style>
+<div class="container-fluid" style="margin-top: 0.5rem; padding-top: 0.1rem;">
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <!-- Success Alert -->
-            <div class="alert alert-success d-flex align-items-center mb-4">
-                <i class="fas fa-check-circle me-3"></i>
-                <div>
-                    <h5 class="mb-1">Order Validated Successfully!</h5>
-                    <p class="mb-0">Order #{{ $order->id }} has been validated, invoice generated, and driver assigned for delivery.</p>
-                </div>
-            </div>
-
-            <!-- Invoice Summary Card -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-file-invoice me-2"></i>
-                        Generated Invoice Summary
-                    </h5>
+            <!-- Consolidated Card: Everything in One Box -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice me-2"></i>
+                            Generated Invoice Summary
+                        </h5>
+                        <div>
+                            <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-primary me-2">
+                                <i class="fas fa-eye me-1"></i>View Full Invoice
+                            </a>
+                            <button class="btn btn-sm btn-success" onclick="window.print()">
+                                <i class="fas fa-print me-1"></i>Print
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <div class="row">
+                    <!-- Success Message -->
+                    <div class="success-message">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="message-content">
+                            <strong>Order Validated Successfully!</strong>
+                            <span>Order #{{ $order->id }} has been validated, invoice generated, and driver assigned for delivery.</span>
+                        </div>
+                    </div>
+
+                    <!-- Invoice and Client Information -->
+                    <div class="row mb-4">
                         <div class="col-md-6">
                             <h6>Invoice Details</h6>
                             <p><strong>Invoice Number:</strong> {{ $invoiceData['invoice_number'] ?? 'INV-' . str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</p>
@@ -41,10 +173,11 @@
                         </div>
                     </div>
                     
-                    <div class="mt-3">
+                    <!-- Products Table -->
+                    <div class="mb-4" style="border-top: 1px solid #e0e0e0; padding-top: 1rem;">
                         <h6>Products to be Delivered ({{ $order->products->count() }} items)</h6>
                         <div class="table-responsive">
-                            <table class="table table-sm">
+                            <table class="table table-sm table-bordered">
                                 <thead>
                                     <tr>
                                         <th>Product</th>
@@ -66,98 +199,82 @@
                             </table>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Driver Assignment Card -->
-            @php
-                $drivers = \App\Models\Driver::with('user')->where('is_active', true)->get()->filter(function($driver) {
-                    return $driver->user !== null;
-                });
-            @endphp
-            @if($order->assigned_driver_id)
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-truck me-2"></i>
-                        Driver Assignment
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6>Assigned Driver</h6>
-                            @if($order->assignedDriver)
-                                <p><strong>Name:</strong> {{ $order->assignedDriver->name ?? 'N/A' }}</p>
-                                <p><strong>Contact:</strong> {{ $order->assignedDriver->contact_number ?? 'N/A' }}</p>
-                                @if($order->assignedDriver->driver)
-                                    <p><strong>Vehicle:</strong> {{ $order->assignedDriver->driver->vehicle_type ?? 'N/A' }} ({{ $order->assignedDriver->driver->vehicle_plate ?? 'N/A' }})</p>
-                                    <p><strong>License:</strong> {{ $order->assignedDriver->driver->license_number ?? 'N/A' }}</p>
-                                @endif
-                            @else
-                                <p class="text-muted">Driver information not available</p>
-                            @endif
-                            <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#assignDriverModal">
-                                <i class="fas fa-exchange-alt me-1"></i> Change Driver
-                            </button>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Delivery Status</h6>
-                            <p><strong>Status:</strong> 
-                                @if($order->order_status === 'on_delivery')
-                                    <span class="badge bg-info">On Delivery</span>
-                                @elseif($order->order_status === 'approved')
-                                    <span class="badge bg-warning">Ready for Delivery</span>
+                    <!-- Driver Assignment Section -->
+                    @php
+                        $drivers = \App\Models\Driver::with('user')->where('is_active', true)->get()->filter(function($driver) {
+                            return $driver->user !== null;
+                        });
+                    @endphp
+                    @if($order->assigned_driver_id)
+                    <div style="border-top: 1px solid #e0e0e0; padding-top: 1rem;">
+                        <h6>Driver Assignment</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Assigned Driver:</strong></p>
+                                @if($order->assignedDriver)
+                                    <p><strong>Name:</strong> {{ $order->assignedDriver->name ?? 'N/A' }}</p>
+                                    <p><strong>Contact:</strong> {{ $order->assignedDriver->contact_number ?? 'N/A' }}</p>
+                                    @if($order->assignedDriver->driver)
+                                        <p><strong>Vehicle:</strong> {{ $order->assignedDriver->driver->vehicle_type ?? 'N/A' }} ({{ $order->assignedDriver->driver->vehicle_plate ?? 'N/A' }})</p>
+                                        <p><strong>License:</strong> {{ $order->assignedDriver->driver->license_number ?? 'N/A' }}</p>
+                                    @endif
                                 @else
-                                    <span class="badge bg-secondary">{{ ucfirst($order->order_status) }}</span>
+                                    <p class="text-muted">Driver information not available</p>
                                 @endif
-                            </p>
-                            <p><strong>Assigned:</strong> {{ $order->on_delivery_at ? \Carbon\Carbon::parse($order->on_delivery_at)->format('M d, Y g:i A') : 'Not assigned yet' }}</p>
-                            @if($order->assignedDriver && $order->assignedDriver->driver)
-                                <p><strong>Driver Status:</strong> 
-                                    <span class="badge {{ $order->assignedDriver->driver->getAvailabilityBadgeClass() }}">
-                                        {{ $order->assignedDriver->driver->getAvailabilityText() }}
-                                    </span>
+                                <button class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#assignDriverModal">
+                                    <i class="fas fa-exchange-alt me-1"></i> Change Driver
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Delivery Status:</strong></p>
+                                <p><strong>Status:</strong> 
+                                    @if($order->order_status === 'on_delivery')
+                                        <span class="badge bg-info">On Delivery</span>
+                                    @elseif($order->order_status === 'approved')
+                                        <span class="badge bg-warning">Ready for Delivery</span>
+                                    @else
+                                        <span class="badge bg-secondary">{{ ucfirst($order->order_status) }}</span>
+                                    @endif
                                 </p>
-                            @endif
+                                <p><strong>Assigned:</strong> {{ $order->on_delivery_at ? \Carbon\Carbon::parse($order->on_delivery_at)->format('M d, Y g:i A') : 'Not assigned yet' }}</p>
+                                @if($order->assignedDriver && $order->assignedDriver->driver)
+                                    <p><strong>Driver Status:</strong> 
+                                        <span class="badge {{ $order->assignedDriver->driver->getAvailabilityBadgeClass() }}">
+                                            {{ $order->assignedDriver->driver->getAvailabilityText() }}
+                                        </span>
+                                    </p>
+                                @endif
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            @else
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Driver Assignment Required
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-2">No driver has been assigned yet. Please select an available driver for delivery.</p>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignDriverModal">
-                        <i class="fas fa-plus me-1"></i> Assign Driver
-                    </button>
-                </div>
-            </div>
-            @endif
+                    @else
+                    <div style="border-top: 1px solid #e0e0e0; padding-top: 1rem;">
+                        <div class="warning-message mb-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div class="message-content">
+                                <strong>Driver Assignment Required</strong>
+                                <span>No driver has been assigned yet. Please select an available driver for delivery.</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignDriverModal">
+                            <i class="fas fa-plus me-1"></i> Assign Driver
+                        </button>
+                    </div>
+                    @endif
 
-            <!-- Action Buttons -->
-            <div class="d-flex justify-content-between">
-                <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>Back to Orders
-                </a>
-                <div>
-                    <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-primary me-2">
-                        <i class="fas fa-eye me-2"></i>View Full Invoice
-                    </a>
-                    <button class="btn btn-success" onclick="window.print()">
-                        <i class="fas fa-print me-2"></i>Print Invoice
-                    </button>
+                    <!-- Action Buttons -->
+                    <div class="mt-4 pt-3" style="border-top: 1px solid #e0e0e0;">
+                        <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Orders
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 <!-- Assign Driver Modal -->
 <div class="modal fade" id="assignDriverModal" tabindex="-1" aria-labelledby="assignDriverModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">

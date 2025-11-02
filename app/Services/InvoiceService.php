@@ -24,11 +24,13 @@ class InvoiceService
             return $product->pivot->quantity * $product->price;
         });
 
-        $shippingFee = $order->delivery ? $order->delivery->shipping_fee : 0;
+        $shippingFee = $order->delivery ? ($order->delivery->shipping_fee ?? 0) : 0;
         $totalAmount = $subtotal + $shippingFee;
 
         // Determine payment type and initial status
-        $paymentType = $order->payment_method === 'cod' ? 'cod' : 'online';
+        $method = strtolower((string) $order->payment_method);
+        $isCod = in_array($method, ['cod', 'cash', 'cash_on_delivery', 'cod_cash', 'walk-in', 'walkin']);
+        $paymentType = $isCod ? 'cod' : 'online';
         $status = $paymentType === 'online' ? 'paid' : 'ready';
 
         // Generate invoice number

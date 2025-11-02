@@ -127,6 +127,35 @@ class AdminInventoryController extends Controller
             
             DB::commit();
             
+            // Notify clerks about approved inventory changes
+            // Group changes by submitted_by to send one notification per clerk
+            $clerkChanges = [];
+            $allChanges = \App\Models\PendingInventoryChange::whereIn('product_id', array_merge($deletedProducts, array_keys($stagedEdits)))
+                ->where('status', 'approved')
+                ->where('reviewed_at', '>=', now()->subSeconds(5)) // Recently approved in this batch
+                ->get();
+            
+            foreach ($allChanges as $change) {
+                if ($change->submitted_by) {
+                    if (!isset($clerkChanges[$change->submitted_by])) {
+                        $clerkChanges[$change->submitted_by] = 0;
+                    }
+                    $clerkChanges[$change->submitted_by]++;
+                }
+            }
+            
+            // Send notifications to clerks
+            foreach ($clerkChanges as $clerkId => $changesCount) {
+                try {
+                    $clerk = \App\Models\User::find($clerkId);
+                    if ($clerk && $clerk->role === 'clerk') {
+                        $clerk->notify(new \App\Notifications\InventoryChangesApprovedNotification($changesCount));
+                    }
+                } catch (\Throwable $e) {
+                    \Log::error("Failed to send inventory approval notification to clerk {$clerkId}: {$e->getMessage()}");
+                }
+            }
+            
             return response()->json([
                 'success' => true,
                 'message' => 'All changes have been approved and saved successfully!',
@@ -188,6 +217,18 @@ class AdminInventoryController extends Controller
                 $product = \App\Models\Product::find($change->product_id);
                 if ($product) {
                     $product->delete();
+                }
+            }
+            
+            // Notify the clerk who submitted the change
+            if ($change->submitted_by) {
+                try {
+                    $clerk = \App\Models\User::find($change->submitted_by);
+                    if ($clerk && $clerk->role === 'clerk') {
+                        $clerk->notify(new \App\Notifications\InventoryChangesApprovedNotification(1));
+                    }
+                } catch (\Throwable $e) {
+                    \Log::error("Failed to send inventory approval notification to clerk: {$e->getMessage()}");
                 }
             }
             

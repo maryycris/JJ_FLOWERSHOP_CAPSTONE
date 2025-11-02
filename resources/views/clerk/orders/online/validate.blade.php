@@ -120,6 +120,28 @@
                                                 </td>
                                             </tr>
                                         @endforeach
+                                        
+                                        @foreach($order->customBouquets as $bouquet)
+                                            @php
+                                                $demand = (int) ($bouquet->pivot->quantity ?? 0);
+                                            @endphp
+                                            <tr>
+                                                <td><strong>Custom Bouquet</strong></td>
+                                                <td>{{ $demand }}</td>
+                                                <td>
+                                                    <span class="text-success">
+                                                        {{ $demand }}
+                                                        <small class="text-success">(Custom assembly required)</small>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                        
+                                        @if($order->products->isEmpty() && $order->customBouquets->isEmpty())
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted">No items in this order.</td>
+                                            </tr>
+                                        @endif
                                     </tbody>
                                 </table>
                             </div>
@@ -208,6 +230,135 @@
                                                 @endif
                                             </div>
                                         @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Custom Bouquet Composition Breakdown (Exclusive for Custom Bouquets) -->
+                        @if($order->customBouquets->isNotEmpty())
+                            <div class="mt-4">
+                                <div class="px-3 py-2 fw-semibold" style="display:inline-block;background:#fff3cd;border:1px solid #ffc107;border-bottom:0;border-top-left-radius:4px;border-top-right-radius:4px;">Custom Bouquet Composition Breakdown</div>
+                                <div class="table-responsive" style="border:1px solid #ffc107;">
+                                    @foreach($order->customBouquets as $bouquet)
+                                        @php
+                                            $orderQty = $bouquet->pivot->quantity ?? 1;
+                                            $customData = $bouquet->customization_data ?? [];
+                                            $freshFlowerQty = $customData['freshFlowerQuantity'] ?? 1;
+                                            $artificialFlowerQty = $customData['artificialFlowerQuantity'] ?? 1;
+                                            
+                                            // Collect all components with their quantities
+                                            $components = [];
+                                            
+                                            // Wrapper
+                                            if ($bouquet->wrapper) {
+                                                $components[] = [
+                                                    'name' => $bouquet->wrapper,
+                                                    'category' => 'Wrapper',
+                                                    'quantity' => $orderQty,
+                                                    'unit' => 'pcs'
+                                                ];
+                                            }
+                                            
+                                            // Fresh Flowers
+                                            $freshFlowers = [];
+                                            if ($bouquet->focal_flower_1) {
+                                                $freshFlowers[] = $bouquet->focal_flower_1;
+                                            }
+                                            if ($bouquet->focal_flower_2) {
+                                                $freshFlowers[] = $bouquet->focal_flower_2;
+                                            }
+                                            if ($bouquet->focal_flower_3) {
+                                                $freshFlowers[] = $bouquet->focal_flower_3;
+                                            }
+                                            if (!empty($freshFlowers)) {
+                                                $totalFreshQty = $freshFlowerQty * $orderQty;
+                                                $components[] = [
+                                                    'name' => implode(', ', $freshFlowers),
+                                                    'category' => 'Fresh Flowers',
+                                                    'quantity' => $totalFreshQty,
+                                                    'unit' => 'pcs'
+                                                ];
+                                            }
+                                            
+                                            // Greenery
+                                            if ($bouquet->greenery) {
+                                                $components[] = [
+                                                    'name' => $bouquet->greenery,
+                                                    'category' => 'Greenery',
+                                                    'quantity' => $orderQty,
+                                                    'unit' => 'pcs'
+                                                ];
+                                            }
+                                            
+                                            // Artificial Flowers (Filler)
+                                            if ($bouquet->filler) {
+                                                $totalArtificialQty = $artificialFlowerQty * $orderQty;
+                                                $components[] = [
+                                                    'name' => $bouquet->filler,
+                                                    'category' => 'Artificial Flowers',
+                                                    'quantity' => $totalArtificialQty,
+                                                    'unit' => 'pcs'
+                                                ];
+                                            }
+                                            
+                                            // Ribbon
+                                            if ($bouquet->ribbon) {
+                                                $components[] = [
+                                                    'name' => $bouquet->ribbon,
+                                                    'category' => 'Ribbon',
+                                                    'quantity' => $orderQty,
+                                                    'unit' => 'pcs'
+                                                ];
+                                            }
+                                        @endphp
+                                        <div class="p-3 border-bottom">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6 class="mb-0">Custom Bouquet (Qty: {{ $orderQty }})</h6>
+                                                <span class="badge bg-warning text-dark">
+                                                    Custom Assembly Required
+                                                </span>
+                                            </div>
+                                            
+                                            @if(!empty($components))
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm mb-0">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>Component Category</th>
+                                                                        <th>Component Name</th>
+                                                                        <th>Quantity Required</th>
+                                                                        <th>Unit</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach($components as $component)
+                                                                        <tr>
+                                                                            <td><strong>{{ $component['category'] }}</strong></td>
+                                                                            <td>{{ $component['name'] }}</td>
+                                                                            <td>{{ $component['quantity'] }}</td>
+                                                                            <td>{{ $component['unit'] }}</td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="mt-2">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-info-circle"></i> Total Components: {{ count($components) }} | Order Quantity: {{ $orderQty }} bouquet(s)
+                                                    </small>
+                                                </div>
+                                            @else
+                                                <div class="text-muted">
+                                                    <i class="fas fa-info-circle"></i> No component data available for this custom bouquet.
+                                                </div>
+                                            @endif
+                                        </div>
                                     @endforeach
                                 </div>
                             </div>

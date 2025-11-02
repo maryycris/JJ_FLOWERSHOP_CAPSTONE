@@ -72,6 +72,66 @@
                                                 <td>₱{{ number_format($product->price, 2) }}</td>
                                             </tr>
                                         @endforeach
+                                        @foreach($order->customBouquets as $bouquet)
+                                            @php
+                                                $orderQty = $bouquet->pivot->quantity;
+                                                $customData = $bouquet->customization_data ?? [];
+                                                $freshFlowerQty = $customData['freshFlowerQuantity'] ?? 1;
+                                                $artificialFlowerQty = $customData['artificialFlowerQuantity'] ?? 1;
+                                                
+                                                $components = [];
+                                                
+                                                // Wrapper
+                                                if ($bouquet->wrapper) {
+                                                    $components[] = "Wrapper: {$bouquet->wrapper} (x{$orderQty})";
+                                                }
+                                                
+                                                // Fresh Flowers
+                                                $freshFlowers = [];
+                                                if ($bouquet->focal_flower_1) {
+                                                    $freshFlowers[] = $bouquet->focal_flower_1;
+                                                }
+                                                if ($bouquet->focal_flower_2) {
+                                                    $freshFlowers[] = $bouquet->focal_flower_2;
+                                                }
+                                                if ($bouquet->focal_flower_3) {
+                                                    $freshFlowers[] = $bouquet->focal_flower_3;
+                                                }
+                                                if (!empty($freshFlowers)) {
+                                                    $totalFreshQty = $freshFlowerQty * $orderQty;
+                                                    $components[] = "Fresh Flowers: " . implode(', ', $freshFlowers) . " (x{$totalFreshQty})";
+                                                }
+                                                
+                                                // Greenery
+                                                if ($bouquet->greenery) {
+                                                    $components[] = "Greenery: {$bouquet->greenery} (x{$orderQty})";
+                                                }
+                                                
+                                                // Artificial Flowers (Filler)
+                                                if ($bouquet->filler) {
+                                                    $totalArtificialQty = $artificialFlowerQty * $orderQty;
+                                                    $components[] = "Artificial Flowers: {$bouquet->filler} (x{$totalArtificialQty})";
+                                                }
+                                                
+                                                // Ribbon
+                                                if ($bouquet->ribbon) {
+                                                    $components[] = "Ribbon: {$bouquet->ribbon} (x{$orderQty})";
+                                                }
+                                                
+                                                $componentDescription = !empty($components) ? implode('<br>', $components) : '';
+                                                $unitPrice = $bouquet->unit_price ?? ($bouquet->total_price / max($orderQty, 1));
+                                            @endphp
+                                            <tr>
+                                                <td>Custom Bouquet</td>
+                                                <td>
+                                                    <div style="font-size: 0.85rem; line-height: 1.6;">
+                                                        {!! $componentDescription !!}
+                                                    </div>
+                                                </td>
+                                                <td>{{ $orderQty }}</td>
+                                                <td>₱{{ number_format($unitPrice, 2) }}</td>
+                                            </tr>
+                                        @endforeach
                                     </tbody>
                                 </table>
                             </div>
@@ -79,9 +139,16 @@
                             <!-- Order Summary with Shipping Fee Breakdown -->
                             <div class="mt-3 p-3" style="background:#f8f9fa;border:1px solid #d9ecd9;border-top:0;">
                                 @php
-                                    $subtotal = $order->products->sum(function($product) {
+                                    $productsSubtotal = $order->products->sum(function($product) {
                                         return $product->pivot->quantity * $product->price;
                                     });
+                                    
+                                    $customBouquetsSubtotal = $order->customBouquets->sum(function($bouquet) {
+                                        $unitPrice = $bouquet->unit_price ?? ($bouquet->total_price / max($bouquet->pivot->quantity, 1));
+                                        return $unitPrice * $bouquet->pivot->quantity;
+                                    });
+                                    
+                                    $subtotal = $productsSubtotal + $customBouquetsSubtotal;
                                     $shippingFee = $order->delivery->shipping_fee ?? 0;
                                     
                                     // If shipping_fee is 0 or null, calculate it from the difference between total_price and subtotal

@@ -36,6 +36,10 @@ class AddressController extends Controller
 
         $validated['user_id'] = Auth::id();
         $validated['is_default'] = $request->has('is_default') ? 1 : 0;
+        // Fallbacks for databases that require non-null municipality
+        if (empty($validated['municipality'])) {
+            $validated['municipality'] = $validated['city'];
+        }
 
         // If this is set as default, unset any existing default
         if ($validated['is_default']) {
@@ -73,6 +77,9 @@ class AddressController extends Controller
         ]);
 
         $validated['is_default'] = $request->has('is_default') ? 1 : 0;
+        if (empty($validated['municipality'])) {
+            $validated['municipality'] = $validated['city'];
+        }
 
         // If this is set as default, unset any existing default
         if ($validated['is_default']) {

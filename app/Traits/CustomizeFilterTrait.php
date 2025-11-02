@@ -15,13 +15,45 @@ trait CustomizeFilterTrait
     public function getCustomizeItems()
     {
         // Get customize items from the separate customize_items table
-        $items = CustomizeItem::where('status', true)
+        // Eager load inventory item relationship to get latest price
+        $customizeItems = CustomizeItem::where('status', true)
+            ->with('inventoryItem')
             ->orderBy('category')
             ->orderBy('name')
-            ->get()
-            ->groupBy('category');
+            ->get();
+
+        // Compute display price: prefer linked inventory price; fallback to own price;
+        // if still empty or zero, try to match Product by name and use its price
+        foreach ($customizeItems as $ci) {
+            $price = null;
+            if ($ci->inventoryItem) {
+                $price = $ci->inventoryItem->price;
+            }
+            if ($price === null || $price == 0) {
+                $price = $ci->price;
+            }
+            if (($price === null || $price == 0) && !empty($ci->name)) {
+                $matched = Product::where('name', $ci->name)->orderBy('id', 'desc')->first();
+                if ($matched) {
+                    $price = $matched->price;
+                }
+            }
+            // Attach a non-persistent attribute for views
+            $ci->computed_price = $price ?? 0;
+        }
             
-        return $items;
+        // If customize_items table is empty, fallback to products table
+        if ($customizeItems->isEmpty()) {
+            $categories = ['Fresh Flowers', 'Greenery', 'Artificial Flowers', 'Ribbon', 'Wrappers'];
+            $customizeItems = Product::whereIn('category', $categories)
+                ->where('status', true)
+                ->where('is_approved', true)
+                ->orderBy('category')
+                ->orderBy('name')
+                ->get();
+        }
+        
+        return $customizeItems->groupBy('category');
     }
     
     /**
@@ -34,18 +66,40 @@ trait CustomizeFilterTrait
     
     /**
      * Get filtered items for price calculation (same filtering as display)
+     * Uses CustomizeItem table first, then falls back to Product table
      */
     public function getCustomizeItemsForPricing()
     {
-        $categories = $this->getCustomizeCategories();
+        // First, get customize items with inventory relationships
+        $customizeItems = CustomizeItem::where('status', true)
+            ->with('inventoryItem')
+            ->get();
         
-        // Filter out finished products
+        // Build a map by item name, prioritizing inventory price
+        $itemsMap = [];
+        foreach ($customizeItems as $item) {
+            $key = strtolower(trim($item->name));
+            $price = $item->inventoryItem ? $item->inventoryItem->price : ($item->price ?? 0);
+            // Create a simple object with price for calculation
+            $itemsMap[$key] = (object)[
+                'name' => $item->name,
+                'price' => $price,
+                'category' => $item->category
+            ];
+        }
+        
+        // If customize items exist, return the map
+        if (!empty($itemsMap)) {
+            return collect($itemsMap);
+        }
+        
+        // Fallback to Product table if no customize items
+        $categories = $this->getCustomizeCategories();
         $excludeKeywords = ['bouquet', 'arrangement', 'basket', 'vase', 'harmony', 'bundle', 'set', 'collection'];
         
         $products = Product::whereIn('category', $categories)
             ->get();
 
-        // Keep wrappers and ribbons even if they contain keywords like "bouquet"
         $safeCategories = ['Wrappers', 'Ribbon'];
         $products = $products->filter(function ($product) use ($excludeKeywords, $safeCategories) {
             if (in_array($product->category, $safeCategories, true)) {
@@ -60,20 +114,24 @@ trait CustomizeFilterTrait
             return true;
         });
 
-        // Normalizer to avoid undefined variable and ensure consistency
         $normalize = function ($value) {
             $v = trim($value ?? '');
             $v = preg_replace('/\s+/', ' ', $v);
             return mb_strtolower($v);
         };
 
-        // Remove duplicates by normalized category + name
         $products = $products->unique(function ($product) use ($normalize) {
             return $normalize($product->category) . '|' . $normalize($product->name);
         })->sortBy(function ($p) use ($normalize) {
             return $normalize($p->category) . '|' . $normalize($p->name);
         })->values();
 
-        return $products->keyBy('name');
+        // Return products keyed by normalized name
+        $result = [];
+        foreach ($products as $product) {
+            $key = strtolower(trim($product->name));
+            $result[$key] = $product;
+        }
+        return collect($result);
     }
 }

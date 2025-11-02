@@ -229,6 +229,11 @@ class AuthController extends Controller
                 $user->last_name = $nameParts[1] ?? $user->last_name;
             }
             
+            // Update profile picture if user doesn't have one or if it's from social login
+            if (empty($user->profile_picture) || !filter_var($user->profile_picture, FILTER_VALIDATE_URL)) {
+                $user->profile_picture = $socialUser->getAvatar();
+            }
+            
             // Note: Social providers don't provide phone numbers by default
             // Users will need to add their phone number manually in their profile
             
@@ -443,11 +448,17 @@ class AuthController extends Controller
                 $user->save();
                 \Log::info('New user created via Facebook login', ['email' => $email]);
             } else {
-                // Update existing user with Facebook ID
+                // Update existing user with Facebook ID and profile picture
                 if (!$user->facebook_id) {
                     $user->facebook_id = $facebookUser['id'];
-                    $user->save();
                 }
+                
+                // Update profile picture if user doesn't have one or if it's from social login
+                if (empty($user->profile_picture) || !filter_var($user->profile_picture, FILTER_VALIDATE_URL)) {
+                    $user->profile_picture = $facebookUser['picture']['data']['url'] ?? null;
+                }
+                
+                $user->save();
             }
 
             // Log in the user
