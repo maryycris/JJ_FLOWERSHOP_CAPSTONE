@@ -1,5 +1,7 @@
 
 
+<?php echo $__env->make('components.customer.alt_nav', ['active' => 'home'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
 <?php $__env->startSection('content'); ?>
 <div class="container py-4 cart-container" style="background: #f4faf4; min-height: 100vh;">
     <div class="row justify-content-center">

@@ -16,12 +16,12 @@
 </div>
 @else
 <div class="row">
-    @foreach($completedDeliveries as $delivery)
+    @foreach($completedDeliveries as $order)
     <div class="col-12 mb-3">
         <div class="card shadow-sm border-success">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="card-title mb-0">Order #{{ $delivery->order->id }}</h6>
+                    <h6 class="card-title mb-0">Order #{{ $order->id }}</h6>
                     <span class="badge bg-success">
                         <i class="bi bi-check-circle me-1"></i>Completed
                     </span>
@@ -30,47 +30,44 @@
                 <div class="row mb-2">
                     <div class="col-6">
                         <small class="text-muted">Customer:</small><br>
-                        <strong>{{ $delivery->order->user->name }}</strong>
+                        <strong>{{ $order->user->name ?? 'N/A' }}</strong>
                     </div>
                     <div class="col-6">
                         <small class="text-muted">Completed:</small><br>
-                        <strong>{{ $delivery->updated_at->format('M d, Y g:i A') }}</strong>
+                        <strong>{{ $order->updated_at->format('M d, Y g:i A') }}</strong>
                     </div>
                 </div>
                 <div class="row mb-2">
                     <div class="col-6">
                         <small class="text-muted">Phone:</small><br>
-                        <strong>{{ $delivery->order->user->contact_number ?? 'N/A' }}</strong>
+                        <strong>{{ $order->user->contact_number ?? 'N/A' }}</strong>
                     </div>
                     <div class="col-6">
                         <small class="text-muted">Email:</small><br>
-                        <strong>{{ $delivery->order->user->email ?? 'N/A' }}</strong>
+                        <strong>{{ $order->user->email ?? 'N/A' }}</strong>
                     </div>
                 </div>
                 
                 <div class="mb-2">
                     <small class="text-muted">Delivery Address:</small><br>
-                    <strong>{{ $delivery->delivery_address ?? 'Address not specified' }}</strong>
+                    <strong>{{ optional($order->delivery)->delivery_address ?? 'Address not specified' }}</strong>
                 </div>
                 
                 <div class="row mb-3">
                     <div class="col-6">
                         <small class="text-muted">Scheduled Date:</small><br>
-                        <strong>{{ \Carbon\Carbon::parse($delivery->delivery_date)->format('M d, Y') }}</strong>
+                        <strong>{{ optional($order->delivery) && $order->delivery->delivery_date ? \Carbon\Carbon::parse($order->delivery->delivery_date)->format('M d, Y') : '—' }}</strong>
                     </div>
                     <div class="col-6">
                         <small class="text-muted">Scheduled Time:</small><br>
-                        <strong>{{ $delivery->delivery_time ?? 'Not specified' }}</strong>
+                        <strong>{{ optional($order->delivery)->delivery_time ?? 'Not specified' }}</strong>
                     </div>
                 </div>
                 
                 <div class="d-flex gap-2">
-                    <a href="{{ route('driver.history.show', $delivery->id) }}" class="btn btn-outline-primary btn-sm flex-fill">
+                    <a href="{{ route('driver.orders.show', $order->id) }}" class="btn btn-outline-primary btn-sm flex-fill">
                         <i class="bi bi-eye me-1"></i>View Details
                     </a>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="showDeliveryNotes({{ $delivery->id }})">
-                        <i class="bi bi-chat me-1"></i>Notes
-                    </button>
                 </div>
             </div>
         </div>

@@ -44,8 +44,9 @@ class DriverController extends Controller
         $driver = Auth::user();
         
         // Get orders that are assigned (pending acceptance) and on delivery (accepted)
+        // Exclude completed orders - they should be in delivery history
         $orders = \App\Models\Order::where('assigned_driver_id', $driver->id)
-            ->whereIn('order_status', ['assigned', 'on_delivery', 'completed'])
+            ->whereIn('order_status', ['assigned', 'on_delivery'])
             ->with(['user', 'products', 'delivery'])
             ->latest()
             ->get();
@@ -72,16 +73,16 @@ class DriverController extends Controller
     {
         $driver = Auth::user();
         
-        // Get completed deliveries for list (with customer and address details)
-        $completedDeliveries = $driver->deliveries()
-            ->where('status', 'completed')
-            ->with(['order.user', 'order.delivery'])
+        // Get completed orders assigned to this driver (based on order_status, not delivery status)
+        $completedDeliveries = \App\Models\Order::where('assigned_driver_id', $driver->id)
+            ->where('order_status', 'completed')
+            ->with(['user', 'products', 'delivery'])
             ->latest()
             ->paginate(10);
 
         // Get total count of completed deliveries (not just current page)
-        $completedTotal = $driver->deliveries()
-            ->where('status', 'completed')
+        $completedTotal = \App\Models\Order::where('assigned_driver_id', $driver->id)
+            ->where('order_status', 'completed')
             ->count();
 
         // Return view without any return section (feature removed)

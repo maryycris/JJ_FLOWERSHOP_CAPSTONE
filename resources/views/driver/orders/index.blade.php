@@ -240,46 +240,115 @@
 </div>
 
 <script>
+// Function to show custom alerts (matching admin product add alert design)
+function showAlert(message, type = 'success') {
+    // Remove existing alerts
+    const existingAlerts = document.querySelectorAll('.clean-alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    // Determine alert styling
+    const isSuccess = type === 'success' || type === 'Success';
+    const icon = isSuccess ? 'check-circle' : 'exclamation-triangle';
+    const bgColor = isSuccess ? '#d4edda' : '#f8d7da';
+    const borderColor = isSuccess ? '#c3e6cb' : '#f5c6cb';
+    const textColor = isSuccess ? '#155724' : '#721c24';
+    
+    // Create new alert with cleaner styling
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'clean-alert';
+    alertDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 320px;
+        max-width: 450px;
+        background: ${bgColor};
+        border: 1px solid ${borderColor};
+        border-radius: 8px;
+        padding: 14px 18px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideInRight 0.3s ease-out;
+    `;
+    
+    alertDiv.innerHTML = `
+        <i class="fas fa-${icon}" style="color: ${textColor}; font-size: 18px; flex-shrink: 0;"></i>
+        <span style="color: ${textColor}; font-weight: 500; flex: 1; font-size: 14px;">${message}</span>
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()" aria-label="Close" style="flex-shrink: 0; opacity: 0.7;"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto remove after 4 seconds with fade out
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 300);
+        }
+    }, 4000);
+}
+
+// Add CSS animations if not already present
+if (!document.getElementById('clean-alert-styles')) {
+    const style = document.createElement('style');
+    style.id = 'clean-alert-styles';
+    style.textContent = `
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 let currentOrderId = null;
 
 function acceptOrder(orderId) {
-    if (confirm('Are you sure you want to accept this order?')) {
-        fetch(`/driver/orders/${orderId}/accept`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Order Accepted!',
-                    text: data.message,
-                    timer: 2000,
-                    showConfirmButton: false
-                }).then(() => {
-                    location.reload();
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'An error occurred while accepting the order'
-            });
-        });
-    }
+    fetch(`/driver/orders/${orderId}/accept`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Order accepted successfully!', 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showAlert(data.message || 'Failed to accept order', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Something went wrong. Please try again.', 'error');
+    });
 }
 
 function declineOrder(orderId) {
@@ -434,12 +503,9 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             console.log('Complete Delivery clicked!');
-            alert('Complete Delivery button clicked!');
             
-            // Simple test first
-            if (confirm('Do you want to complete this delivery?')) {
-                handleCompleteDelivery();
-            }
+            // Proceed directly with delivery completion
+            handleCompleteDelivery();
         };
         
         console.log('Complete Delivery button setup complete');
@@ -473,7 +539,7 @@ function handleCompleteDelivery() {
     // Check if photo is selected
     const proofOfDelivery = document.getElementById('proofOfDelivery').files[0];
     if (!proofOfDelivery) {
-        alert('Please select a photo as proof of delivery!');
+        showAlert('Please select a photo as proof of delivery!', 'error');
         return;
     }
     
@@ -483,8 +549,12 @@ function handleCompleteDelivery() {
     
     console.log('Submitting form with order ID:', completeOrderId);
     
-    // Show loading
-    alert('Completing delivery... Please wait...');
+    // Disable button to prevent double submission
+    const completeBtn = document.getElementById('completeDeliveryBtn');
+    if (completeBtn) {
+        completeBtn.disabled = true;
+        completeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Completing...';
+    }
     
     // Submit the form
     fetch(`/driver/orders/${completeOrderId}/complete`, {
@@ -498,15 +568,38 @@ function handleCompleteDelivery() {
     .then(data => {
         console.log('Response:', data);
         if (data.success) {
-            alert('✅ Delivery completed successfully!');
-            location.reload();
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('completeModal'));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Show success message
+            showAlert('Delivery completed successfully!', 'success');
+            
+            // Reload after a short delay
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
         } else {
-            alert('❌ Error: ' + (data.message || 'Failed to complete delivery'));
+            showAlert(data.message || 'Failed to complete delivery', 'error');
+            
+            // Re-enable button on error
+            if (completeBtn) {
+                completeBtn.disabled = false;
+                completeBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Complete Delivery';
+            }
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('❌ Error: Something went wrong');
+        showAlert('Something went wrong. Please try again.', 'error');
+        
+        // Re-enable button on error
+        if (completeBtn) {
+            completeBtn.disabled = false;
+            completeBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Complete Delivery';
+        }
     });
 }
 

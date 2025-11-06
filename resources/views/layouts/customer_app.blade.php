@@ -417,6 +417,7 @@
                 'customer.orders.show',
                 'customer.trackOrders.page',
                 'customer.checkout.*',
+                'customer.cart.index',
                 'customer.store-credit.history',
             ];
         @endphp

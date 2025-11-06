@@ -1,5 +1,7 @@
 @extends('layouts.customer_app')
 
+@include('components.customer.alt_nav', ['active' => 'home'])
+
 @section('content')
 <div class="container py-4 cart-container" style="background: #f4faf4; min-height: 100vh;">
     <div class="row justify-content-center">

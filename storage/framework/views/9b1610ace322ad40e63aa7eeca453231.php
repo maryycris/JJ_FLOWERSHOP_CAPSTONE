@@ -149,6 +149,14 @@
         .profile-divider { margin: 8px 0 16px; }
         .row > .col-md-6 { margin-bottom: 12px; }
         .btn-green { width: 100% !important; }
+        /* Make profile image unclickable on mobile */
+        .profile-image-mobile {
+            cursor: default !important;
+            pointer-events: none !important;
+        }
+        .profile-image-mobile + .small {
+            display: none !important;
+        }
         /* Responsive modal sizing/positioning */
         #editDetailsModal .modal-dialog,
         #editImageModal .modal-dialog {
@@ -188,8 +196,13 @@
                                         ? (\Illuminate\Support\Str::startsWith($user->profile_picture, 'http')
                                             ? $user->profile_picture
                                             : asset('storage/' . $user->profile_picture))
-                                        : 'https://via.placeholder.com/100'); ?>" alt="Profile" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover; cursor:pointer;" data-bs-toggle="modal" data-bs-target="#editImageModal">
-                                <div class="small text-muted">Click image to change</div>
+                                        : 'https://via.placeholder.com/100'); ?>" alt="Profile" class="rounded-circle profile-image-mobile d-md-none" style="width: 100px; height: 100px; object-fit: cover; cursor:pointer;" data-bs-toggle="modal" data-bs-target="#editImageModal">
+                                <img src="<?php echo e($user->profile_picture
+                                        ? (\Illuminate\Support\Str::startsWith($user->profile_picture, 'http')
+                                            ? $user->profile_picture
+                                            : asset('storage/' . $user->profile_picture))
+                                        : 'https://via.placeholder.com/100'); ?>" alt="Profile" class="rounded-circle d-none d-md-inline-block" style="width: 100px; height: 100px; object-fit: cover; cursor:pointer;" data-bs-toggle="modal" data-bs-target="#editImageModal">
+                                <div class="small text-muted d-none d-md-block">Click image to change</div>
                             </div>
                             <hr class="profile-divider">
                             <div class="profile-section" style="margin-bottom: 16px;"><span class="profile-label">First Name:</span> <span class="profile-value"><?php echo e(Auth::user()->first_name ?? 'N/A'); ?></span></div>
@@ -268,6 +281,22 @@
                 <?php echo csrf_field(); ?>
                 <?php echo method_field('POST'); ?>
             <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                    <!-- Profile Picture Upload Section - Mobile Only -->
+                    <div class="d-md-none mb-4 text-center">
+                        <label class="form-label d-block mb-2">Profile Picture</label>
+                        <input type="file" name="profile_picture" accept="image/*" id="profilePicInputEditModal" style="display:none;">
+                        <label for="profilePicInputEditModal" id="uploadImageLabelEditModal" style="cursor:pointer;">
+                            <div class="d-flex flex-column align-items-center justify-content-center" style="background: #eafbe6; border-radius: 8px; padding: 20px 32px; border: 2px dashed #4CAF50;">
+                                <i class="bi bi-cloud-upload" style="font-size: 1.5rem; color: #4CAF50;"></i>
+                                <span style="font-size: 0.9rem; color: #4CAF50; font-weight: 600; margin-top: 0.5rem;">Upload image</span>
+                            </div>
+                        </label>
+                        <img id="imagePreviewEditModal" src="<?php echo e($user->profile_picture
+                                ? (\Illuminate\Support\Str::startsWith($user->profile_picture, 'http')
+                                    ? $user->profile_picture
+                                    : asset('storage/' . $user->profile_picture))
+                                : 'https://via.placeholder.com/100'); ?>" style="margin-top: 12px; max-width: 100px; border-radius: 50%;" />
+                    </div>
                     <div class="row mb-3">
                         <div class="col">
                             <label class="form-label">First Name *</label>
@@ -289,7 +318,6 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-green" style="width: 100px;">Save</button>
                 </div>
             </form>
@@ -323,7 +351,7 @@
     </div>
 </div>
 <script>
-    // Modal image preview and save button logic
+    // Modal image preview and save button logic for separate image modal (desktop)
     document.getElementById('profilePicInputModal')?.addEventListener('change', function(event) {
         const [file] = event.target.files;
         if (file) {
@@ -331,6 +359,18 @@
             preview.src = URL.createObjectURL(file);
             preview.style.display = 'block';
             document.getElementById('savePicBtnModal').style.display = 'inline-block';
+        }
+    });
+
+    // Image preview logic for Edit Details Modal (mobile)
+    document.getElementById('profilePicInputEditModal')?.addEventListener('change', function(event) {
+        const [file] = event.target.files;
+        if (file) {
+            const preview = document.getElementById('imagePreviewEditModal');
+            if (preview) {
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = 'block';
+            }
         }
     });
 </script>

@@ -9,16 +9,21 @@
     .alt-topbar .brand .text small { display: block; font-weight: 500; font-size: .75rem; letter-spacing: .2px; }
     .alt-topbar .icons { display: flex; align-items: center; gap: 20px; flex-shrink: 0;  margin-right: 67px; }
     .alt-topbar .icons a { color: #fff; font-size: 1.3rem; display: inline-flex; align-items: center; }
+    .alt-topbar .icons a.active { color: #fff; opacity: 1; }
 
     .alt-bottom-nav { position: fixed !important; bottom: 0; left: 0; right: 0; width: 100vw; height: 56px; background: #8ACB88; z-index: 4000; display: flex; align-items: stretch; justify-content: space-around; box-shadow: 0 -2px 8px rgba(0,0,0,0.08); pointer-events: auto; }
     .alt-bottom-nav a { flex: 1 1 0; color: #fff; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; }
     .alt-bottom-nav a i { font-size: 20px; margin-bottom: 2px; }
     .alt-bottom-nav a.active { background: rgba(255,255,255,0.18); }
+    .alt-bottom-nav .profile-dropdown-wrapper.active { background: rgba(255,255,255,0.18); }
     
     /* Profile Dropdown Menu Styles for Alt Navbar */
     .alt-bottom-nav .profile-dropdown-wrapper {
         flex: 1 1 0;
         position: relative;
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
     }
     .alt-bottom-nav .profile-trigger {
         display: flex !important;
@@ -28,6 +33,18 @@
         color: #fff !important;
         text-decoration: none !important;
         cursor: pointer;
+        width: 100%;
+        gap: 2px;
+    }
+    .alt-bottom-nav .profile-trigger i {
+        font-size: 20px;
+        margin-bottom: 2px;
+        display: block;
+    }
+    .alt-bottom-nav .profile-trigger span {
+        font-size: 11px;
+        display: block;
+        text-align: center;
     }
     .alt-bottom-nav .profile-dropdown-menu {
         position: absolute;
@@ -131,7 +148,7 @@ if (typeof window.profileMenuListenerAttached === 'undefined') {
     </a>
     <div class="icons">
         <a href="<?php echo e(route('customer.favorites')); ?>" title="Favorites"><i class="bi bi-heart"></i></a>
-        <a href="<?php echo e(route('customer.cart.index')); ?>" title="Cart"><i class="bi bi-cart"></i></a>
+        <a href="<?php echo e(route('customer.cart.index')); ?>" title="Cart" class="<?php echo e(request()->routeIs('customer.cart.index') ? 'active' : ''); ?>"><i class="bi bi-cart<?php echo e(request()->routeIs('customer.cart.index') ? '-fill' : ''); ?>"></i></a>
     </div>
 </div>
 
@@ -139,9 +156,9 @@ if (typeof window.profileMenuListenerAttached === 'undefined') {
     <a href="<?php echo e(route('customer.dashboard')); ?>"><i class="bi bi-house-door"></i><span>Home</span></a>
     <a href="<?php echo e(route('customer.products.bouquet-customize')); ?>" class="<?php echo e($active==='customize' ? 'active' : ''); ?>"><i class="bi bi-brush"></i><span>Customize</span></a>
     <a href="<?php echo e(route('customer.notifications.index')); ?>" class="<?php echo e($active==='notifications' ? 'active' : ''); ?>"><i class="bi bi-bell"></i><span>Notifications</span></a>
-    <div class="profile-dropdown-wrapper <?php echo e(request()->routeIs('customer.account.index') || request()->routeIs('customer.address_book.*') || request()->routeIs('customer.orders.*') || request()->routeIs('customer.trackOrders.*') ? 'active' : ''); ?>" style="position: relative;">
+    <div class="profile-dropdown-wrapper <?php echo e(request()->routeIs('customer.account.*') || request()->routeIs('customer.address_book.*') || request()->routeIs('customer.orders.*') || request()->routeIs('customer.trackOrders.*') ? 'active' : ''); ?>" style="position: relative;">
         <a href="#" class="profile-trigger" onclick="event.preventDefault(); toggleProfileMenu(event);" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: inherit;">
-            <i class="bi bi-person"></i>
+            <i class="bi bi-person<?php echo e(request()->routeIs('customer.account.*') || request()->routeIs('customer.address_book.*') || request()->routeIs('customer.orders.*') || request()->routeIs('customer.trackOrders.*') ? '-fill' : ''); ?>"></i>
             <span>My Profile</span>
         </a>
         <div class="profile-dropdown-menu" id="profileDropdownAlt" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 10px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 180px; z-index: 1200; display: none; padding: 8px 0;">

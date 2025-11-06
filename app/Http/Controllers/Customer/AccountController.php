@@ -34,12 +34,20 @@ class AccountController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
+            'profile_picture' => 'nullable|image|max:2048',
         ]);
 
         $user = Auth::user();
         $user->first_name = $request->first_name;
         $user->last_name = $request->last_name;
         $user->contact_number = $request->contact_number;
+        
+        // Handle profile picture if provided
+        if ($request->hasFile('profile_picture')) {
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $user->profile_picture = $path;
+        }
+        
         // Address lines are managed by Address Book; do not override here
         $user->save();
 
