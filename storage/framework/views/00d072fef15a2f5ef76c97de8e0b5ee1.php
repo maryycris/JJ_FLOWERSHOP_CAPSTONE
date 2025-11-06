@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Google Fonts for script font -->
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/loginstyle.css') }}">
+    <link rel="stylesheet" href="<?php echo e(asset('css/loginstyle.css')); ?>">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <!-- Font Awesome CDN for Google icon -->
@@ -68,63 +68,63 @@
             J & J FLOWER SHOP <span>Est. 2023</span>
         </a>
         <div class="navbar-icons ms-auto">
-            <a href="{{ route('customer.login') }}" title="View Cart (Login Required)"><i class="bi bi-cart3"></i></a>
+            <a href="<?php echo e(route('customer.login')); ?>" title="View Cart (Login Required)"><i class="bi bi-cart3"></i></a>
             <div class="dropdown d-inline-block">
                 <a href="#" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Login / Profile" style="padding:0; border:none; background:none;">
                     <i class="bi bi-person-circle"></i>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                    <li><a class="dropdown-item" href="{{ route('customer.login') }}">Customer Login</a></li>
-                    <li><a class="dropdown-item" href="{{ route('staff.login') }}">Staff Login</a></li>
+                    <li><a class="dropdown-item" href="<?php echo e(route('customer.login')); ?>">Customer Login</a></li>
+                    <li><a class="dropdown-item" href="<?php echo e(route('staff.login')); ?>">Staff Login</a></li>
                 </ul>
             </div>
         </div>
     </div>
 </nav>
-@if(session('error'))
+<?php if(session('error')): ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        @if(str_contains(session('error'), 'already have an account'))
+        <?php if(str_contains(session('error'), 'already have an account')): ?>
             Swal.fire({
                 icon: 'warning',
                 title: 'Account Already Exists!',
-                text: "{{ session('error') }}",
+                text: "<?php echo e(session('error')); ?>",
                 confirmButtonColor: '#4CAF50',
                 confirmButtonText: 'Go to Login',
                 timer: 3000,
                 timerProgressBar: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = "{{ route('customer.login') }}";
+                    window.location.href = "<?php echo e(route('customer.login')); ?>";
                 }
             });
-        @else
+        <?php else: ?>
             Swal.fire({
                 icon: 'info',
                 title: 'Registration Required!',
-                text: "{{ session('error') }}",
+                text: "<?php echo e(session('error')); ?>",
                 confirmButtonColor: '#4CAF50',
                 confirmButtonText: 'Register Now',
                 timer: 3000,
                 timerProgressBar: true
             });
-        @endif
+        <?php endif; ?>
     </script>
-@endif
-@if(session('success'))
+<?php endif; ?>
+<?php if(session('success')): ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         Swal.fire({
             icon: 'success',
             title: 'Success!',
-            text: "{{ session('success') }}",
+            text: "<?php echo e(session('success')); ?>",
             confirmButtonColor: '#4CAF50',
             confirmButtonText: 'OK',
             timer: 3000,
             timerProgressBar: true
         });
     </script>
-@endif
+<?php endif; ?>
 <div class="register-main-wrapper">
     <div class="register-card">
         <h2 class="text-center text-success mb-2" style="font-weight: 700;">JJ Flowershop</h2>
@@ -133,35 +133,63 @@
             <strong>Create your account:</strong><br>
             Fill out the form below to get started
         </div>
-        <form method="POST" action="{{ url('/register') }}">
-            @csrf
+        <form method="POST" action="<?php echo e(url('/register')); ?>">
+            <?php echo csrf_field(); ?>
             <div class="mb-2">
                 <label for="first_name" class="form-label visually-hidden">First Name</label>
-                <input type="text" name="first_name" id="first_name" class="form-control form-control-sm" placeholder="First Name" value="{{ old('first_name') }}" required autofocus style="text-transform: capitalize;">
-                @error('first_name')
-                    <span class="text-danger" role="alert">{{ $message }}</span>
-                @enderror
+                <input type="text" name="first_name" id="first_name" class="form-control form-control-sm" placeholder="First Name" value="<?php echo e(old('first_name')); ?>" required autofocus style="text-transform: capitalize;">
+                <?php $__errorArgs = ['first_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                    <span class="text-danger" role="alert"><?php echo e($message); ?></span>
+                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
             </div>
             <div class="mb-2">
                 <label for="last_name" class="form-label visually-hidden">Last Name</label>
-                <input type="text" name="last_name" id="last_name" class="form-control form-control-sm" placeholder="Last Name" value="{{ old('last_name') }}" required style="text-transform: capitalize;">
-                @error('last_name')
-                    <span class="text-danger" role="alert">{{ $message }}</span>
-                @enderror
+                <input type="text" name="last_name" id="last_name" class="form-control form-control-sm" placeholder="Last Name" value="<?php echo e(old('last_name')); ?>" required style="text-transform: capitalize;">
+                <?php $__errorArgs = ['last_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                    <span class="text-danger" role="alert"><?php echo e($message); ?></span>
+                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
             </div>
             <div class="mb-2">
                 <label for="email" class="form-label visually-hidden">Email</label>
-                <input type="email" name="email" id="email" class="form-control form-control-sm" placeholder="Email (Gmail)" value="{{ old('email') }}">
-                @error('email')
-                    <span class="text-danger" role="alert">{{ $message }}</span>
-                @enderror
+                <input type="email" name="email" id="email" class="form-control form-control-sm" placeholder="Email (Gmail)" value="<?php echo e(old('email')); ?>">
+                <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                    <span class="text-danger" role="alert"><?php echo e($message); ?></span>
+                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
             </div>
             <div class="mb-2">
                 <label for="password" class="form-label visually-hidden">Password</label>
                 <input type="password" name="password" id="password" class="form-control form-control-sm" placeholder="Password" required>
-                @error('password')
-                    <span class="text-danger" role="alert">{{ $message }}</span>
-                @enderror
+                <?php $__errorArgs = ['password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                    <span class="text-danger" role="alert"><?php echo e($message); ?></span>
+                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
             </div>
             <div class="mb-2">
                 <label for="password_confirmation" class="form-label visually-hidden">Confirm Password</label>
@@ -171,7 +199,7 @@
                 <button type="submit" class="btn btn-success btn-sm">Sign Up</button>
             </div>
             <div class="text-center">
-                <p class="mb-0" style="font-size: 0.95rem;">Already have an account? <a href="{{ route('login') }}" class="text-decoration-none text-success">Login here</a></p>
+                <p class="mb-0" style="font-size: 0.95rem;">Already have an account? <a href="<?php echo e(route('login')); ?>" class="text-decoration-none text-success">Login here</a></p>
             </div>
         </form>
     </div>
@@ -222,3 +250,4 @@ window.addEventListener('DOMContentLoaded', function() {
 </style>
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\JJ_Flowershop_Capstone\resources\views/auth/register.blade.php ENDPATH**/ ?>

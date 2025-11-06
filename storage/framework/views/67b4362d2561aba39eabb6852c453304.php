@@ -1,32 +1,30 @@
-@extends('layouts.customer_app')
-
-@section('content')
-@include('components.customer.alt_nav', ['active' => 'home'])
+<?php $__env->startSection('content'); ?>
+<?php echo $__env->make('components.customer.alt_nav', ['active' => 'home'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <div class="pt-0 checkout-container" style="background: #f4faf4; min-height: 100vh;">
     <div class="container" style="max-width: 1400px;">
-    <form action="{{ route('customer.checkout.payment_method') }}" method="GET" id="checkoutForm">
-        @csrf
+    <form action="<?php echo e(route('customer.checkout.payment_method')); ?>" method="GET" id="checkoutForm">
+        <?php echo csrf_field(); ?>
         <input type="hidden" name="recipient_type" id="recipientType" value="someone">
         <input type="hidden" name="delivery_address" id="deliveryAddressHidden" value="">
-        <input type="hidden" name="loyalty_discount" id="loyaltyDiscountHidden" value="{{ $loyaltyDiscount ?? 0 }}">
+        <input type="hidden" name="loyalty_discount" id="loyaltyDiscountHidden" value="<?php echo e($loyaltyDiscount ?? 0); ?>">
         <input type="hidden" name="shipping_fee" id="shippingFeeInput" value="0">
-        @if(request('product_id'))
-            <input type="hidden" name="product_id" value="{{ request('product_id') }}">
-            <input type="hidden" name="quantity" value="{{ request('quantity', 1) }}">
-        @endif
-        @if(request('catalog_product_id'))
-            <input type="hidden" name="catalog_product_id" value="{{ request('catalog_product_id') }}">
-            <input type="hidden" name="quantity" value="{{ request('quantity', 1) }}">
-        @endif
-        @if(request('custom_bouquet_id'))
-            <input type="hidden" name="custom_bouquet_id" value="{{ request('custom_bouquet_id') }}">
-            <input type="hidden" name="quantity" value="{{ request('quantity', 1) }}">
-        @endif
-        @if(request('selected_items'))
-            @foreach(request('selected_items') as $itemId)
-                <input type="hidden" name="selected_items[]" value="{{ $itemId }}">
-            @endforeach
-        @endif
+        <?php if(request('product_id')): ?>
+            <input type="hidden" name="product_id" value="<?php echo e(request('product_id')); ?>">
+            <input type="hidden" name="quantity" value="<?php echo e(request('quantity', 1)); ?>">
+        <?php endif; ?>
+        <?php if(request('catalog_product_id')): ?>
+            <input type="hidden" name="catalog_product_id" value="<?php echo e(request('catalog_product_id')); ?>">
+            <input type="hidden" name="quantity" value="<?php echo e(request('quantity', 1)); ?>">
+        <?php endif; ?>
+        <?php if(request('custom_bouquet_id')): ?>
+            <input type="hidden" name="custom_bouquet_id" value="<?php echo e(request('custom_bouquet_id')); ?>">
+            <input type="hidden" name="quantity" value="<?php echo e(request('quantity', 1)); ?>">
+        <?php endif; ?>
+        <?php if(request('selected_items')): ?>
+            <?php $__currentLoopData = request('selected_items'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $itemId): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <input type="hidden" name="selected_items[]" value="<?php echo e($itemId); ?>">
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        <?php endif; ?>
         <div class="row justify-content-center mt-2">
             <div class="col-12 col-lg-8 col-xl-6 order-1 order-lg-1 checkout-form-section">
                 <div class="bg-white rounded-3 p-3 p-md-4 mb-3 mb-lg-4 scrollable-content" style="box-shadow: none; overflow-y: auto;">
@@ -37,19 +35,19 @@
                     <div class="row mb-3">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Email</label>
-                            <input type="email" class="form-control" value="{{ Auth::user()->email }}" readonly>
+                            <input type="email" class="form-control" value="<?php echo e(Auth::user()->email); ?>" readonly>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Phone Number</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->contact_number }}" readonly>
+                            <input type="text" class="form-control" value="<?php echo e(Auth::user()->contact_number); ?>" readonly>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">First Name</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->first_name }}" readonly>
+                            <input type="text" class="form-control" value="<?php echo e(Auth::user()->first_name); ?>" readonly>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Last Name</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->last_name }}" readonly>
+                            <input type="text" class="form-control" value="<?php echo e(Auth::user()->last_name); ?>" readonly>
                         </div>
                     </div>
                     <div class="mb-3 d-flex gap-3">
@@ -58,13 +56,21 @@
                     </div>
                     
                     <!-- Error Alert for Phone Number -->
-                    @error('recipient_phone')
+                    <?php $__errorArgs = ['recipient_phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Phone Number Required!</strong> {{ $message }}
+                            <strong>Phone Number Required!</strong> <?php echo e($message); ?>
+
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
-                    @enderror
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     <div id="recipientFields" class="mb-3" style="display: block;">
                         <h6 class="fw-bold text-success mb-3">
                             <i class="fas fa-user me-2"></i>Recipient Information
@@ -77,10 +83,24 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Recipient Contact Number <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('recipient_phone') is-invalid @enderror" name="recipient_phone" id="recipientPhone" placeholder="09XXXXXXXXX" required pattern="^09\d{9}$" maxlength="11" value="{{ old('recipient_phone') }}">
-                                @error('recipient_phone')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <input type="text" class="form-control <?php $__errorArgs = ['recipient_phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="recipient_phone" id="recipientPhone" placeholder="09XXXXXXXXX" required pattern="^09\d{9}$" maxlength="11" value="<?php echo e(old('recipient_phone')); ?>">
+                                <?php $__errorArgs = ['recipient_phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 <small class="text-muted">Mobile number for delivery updates</small>
                             </div>
                         </div>
@@ -116,10 +136,24 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Your Contact Number <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('recipient_phone') is-invalid @enderror" name="recipient_phone" id="selfPhone" placeholder="09XXXXXXXXX" required pattern="^09\d{9}$" maxlength="11" value="{{ old('recipient_phone', Auth::user()->contact_number) }}">
-                                @error('recipient_phone')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <input type="text" class="form-control <?php $__errorArgs = ['recipient_phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="recipient_phone" id="selfPhone" placeholder="09XXXXXXXXX" required pattern="^09\d{9}$" maxlength="11" value="<?php echo e(old('recipient_phone', Auth::user()->contact_number)); ?>">
+                                <?php $__errorArgs = ['recipient_phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 <small class="text-muted">Mobile number for delivery updates</small>
                             </div>
                         </div>
@@ -127,8 +161,8 @@
                     <div class="mb-3">
                         <label class="form-label">Shipping Addresses</label>
                         <select class="form-select" name="address_id" id="addressSelect" style="min-height: 120px;">
-                            @forelse(($addresses ?? []) as $addr)
-                                @php
+                            <?php $__empty_1 = true; $__currentLoopData = ($addresses ?? []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $addr): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                <?php
                                     // Construct a geocoding-friendly full address string
                                     $fullAddress = trim(collect([
                                         $addr->street_address,
@@ -136,25 +170,51 @@
                                         $addr->municipality ?: $addr->city,
                                         'Cebu, Philippines'
                                     ])->filter()->implode(', '));
-                                @endphp
-                                <option value="{{ $addr->id }}" data-address="{{ $fullAddress }}" @selected(optional($deliveryAddress)->id === $addr->id)>
-                                    {{ $addr->street_address }}, {{ $addr->barangay }}, {{ $addr->municipality ?? $addr->city }}
+                                ?>
+                                <option value="<?php echo e($addr->id); ?>" data-address="<?php echo e($fullAddress); ?>" <?php if(optional($deliveryAddress)->id === $addr->id): echo 'selected'; endif; ?>>
+                                    <?php echo e($addr->street_address); ?>, <?php echo e($addr->barangay); ?>, <?php echo e($addr->municipality ?? $addr->city); ?>
+
                                 </option>
-                            @empty
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                 <option disabled>No saved addresses. Add one in Address Book.</option>
-                            @endforelse
+                            <?php endif; ?>
                         </select>
                     </div>
 
-                    {{-- Delivery Map Component --}}
+                    
                     <div class="mb-4">
-                        <x-delivery-map :selectedAddress="optional($deliveryAddress) ? 
+                        <?php if (isset($component)) { $__componentOriginal23e59b8adbf9ce8ebc878feefa2c4ada = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal23e59b8adbf9ce8ebc878feefa2c4ada = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.delivery-map','data' => ['selectedAddress' => optional($deliveryAddress) ? 
                             trim(collect([
                                 optional($deliveryAddress)->street_address,
                                 optional($deliveryAddress)->barangay,
                                 optional($deliveryAddress)->municipality ?: optional($deliveryAddress)->city,
                                 'Cebu, Philippines'
-                            ])->filter()->implode(', ')) : ''" />
+                            ])->filter()->implode(', ')) : '']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('delivery-map'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['selectedAddress' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(optional($deliveryAddress) ? 
+                            trim(collect([
+                                optional($deliveryAddress)->street_address,
+                                optional($deliveryAddress)->barangay,
+                                optional($deliveryAddress)->municipality ?: optional($deliveryAddress)->city,
+                                'Cebu, Philippines'
+                            ])->filter()->implode(', ')) : '')]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal23e59b8adbf9ce8ebc878feefa2c4ada)): ?>
+<?php $attributes = $__attributesOriginal23e59b8adbf9ce8ebc878feefa2c4ada; ?>
+<?php unset($__attributesOriginal23e59b8adbf9ce8ebc878feefa2c4ada); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal23e59b8adbf9ce8ebc878feefa2c4ada)): ?>
+<?php $component = $__componentOriginal23e59b8adbf9ce8ebc878feefa2c4ada; ?>
+<?php unset($__componentOriginal23e59b8adbf9ce8ebc878feefa2c4ada); ?>
+<?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -164,40 +224,40 @@
                     <!-- Purchase Summary Header -->
                     <div class="purchase-summary-header mb-3">
                         <div class="mb-3" style="font-weight: 600; font-size: 1.1rem;">Purchase Summary</div>
-                        @foreach($cartItems as $item)
+                        <?php $__currentLoopData = $cartItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="d-flex align-items-center mb-3">
-                            @if($item->item_type === 'custom_bouquet')
+                            <?php if($item->item_type === 'custom_bouquet'): ?>
                                 <!-- Custom Bouquet Display -->
                                 <div class="flex-grow-1 ms-2">
-                                    @php
+                                    <?php
                                         $modalId = $item->customBouquet ? $item->customBouquet->id : (isset($item->custom_bouquet_id) ? $item->custom_bouquet_id : 'temp');
-                                    @endphp
-                                    <button type="button" class="btn btn-link p-0 text-decoration-none text-start" data-bs-toggle="modal" data-bs-target="#customBouquetModal{{ $modalId }}" style="font-weight: 500; color: #7bb47b; font-size: 1rem;">
+                                    ?>
+                                    <button type="button" class="btn btn-link p-0 text-decoration-none text-start" data-bs-toggle="modal" data-bs-target="#customBouquetModal<?php echo e($modalId); ?>" style="font-weight: 500; color: #7bb47b; font-size: 1rem;">
                                         Custom Bouquet
                                     </button>
                                 </div>
                                 <div class="d-flex align-items-center">
-                                    <span class="badge bg-success" style="font-size: 0.9rem; padding: 8px 12px;">{{ $item->quantity }}</span>
+                                    <span class="badge bg-success" style="font-size: 0.9rem; padding: 8px 12px;"><?php echo e($item->quantity); ?></span>
                                 </div>
-                                <div class="ms-3" style="font-weight: 500; font-size: 1.08rem;">₱{{ number_format($item->quantity * ($item->customBouquet ? ($item->customBouquet->unit_price ?? ($item->customBouquet->total_price / max($item->customBouquet->quantity, 1))) : 0), 2) }}</div>
-                            @else
+                                <div class="ms-3" style="font-weight: 500; font-size: 1.08rem;">₱<?php echo e(number_format($item->quantity * ($item->customBouquet ? ($item->customBouquet->unit_price ?? ($item->customBouquet->total_price / max($item->customBouquet->quantity, 1))) : 0), 2)); ?></div>
+                            <?php else: ?>
                                 <!-- Regular Product Display -->
-                                <img src="{{ asset('storage/' . $item->product->image) }}" style="width: 54px; height: 54px; object-fit: cover; border-radius: 8px;">
+                                <img src="<?php echo e(asset('storage/' . $item->product->image)); ?>" style="width: 54px; height: 54px; object-fit: cover; border-radius: 8px;">
                                 <div class="flex-grow-1 ms-2">
-                                    <div style="font-weight: 500;">{{ $item->product->name }}</div>
+                                    <div style="font-weight: 500;"><?php echo e($item->product->name); ?></div>
                                 </div>
                                 <div class="d-flex align-items-center">
-                                    <span class="badge bg-success" style="font-size: 0.9rem; padding: 8px 12px;">{{ $item->quantity }}</span>
+                                    <span class="badge bg-success" style="font-size: 0.9rem; padding: 8px 12px;"><?php echo e($item->quantity); ?></span>
                                 </div>
-                                <div class="ms-3" style="font-weight: 500; font-size: 1.08rem;">₱{{ number_format($item->quantity * ($item->product ? $item->product->price : 0), 2) }}</div>
-                            @endif
+                                <div class="ms-3" style="font-weight: 500; font-size: 1.08rem;">₱<?php echo e(number_format($item->quantity * ($item->product ? $item->product->price : 0), 2)); ?></div>
+                            <?php endif; ?>
                         </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                     
                     <!-- Scrollable Content Area -->
                     <div class="scrollable-right-content purchase-summary-content" style="flex: 1; overflow-y: auto;">
-                    {{-- Loyalty Stamps Section --}}
+                    
                     <div class="mb-3 mt-3">
                         <div class="card" style="border: 2px solid #e8f5e8; background: linear-gradient(135deg, #f8f9fa, #e8f5e8);">
                             <div class="card-body p-3">
@@ -205,14 +265,14 @@
                                     <h6 class="mb-0 text-success fw-bold">
                                         <i class="fas fa-star me-2"></i>Loyalty Stamps
                                     </h6>
-                                    @if($loyaltyCard)
-                                        <span class="badge bg-success fs-6">{{ $loyaltyCard->stamps_count }}/5</span>
-                                    @else
+                                    <?php if($loyaltyCard): ?>
+                                        <span class="badge bg-success fs-6"><?php echo e($loyaltyCard->stamps_count); ?>/5</span>
+                                    <?php else: ?>
                                         <span class="badge bg-secondary fs-6">0/5</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                                 
-                                @if($loyaltyCard && $loyaltyCard->stamps_count >= 5)
+                                <?php if($loyaltyCard && $loyaltyCard->stamps_count >= 5): ?>
                                     <div class="text-center">
                                         <div class="mb-2">
                                             <i class="fas fa-gift text-success" style="font-size: 2rem;"></i>
@@ -222,42 +282,42 @@
                                             <i class="fas fa-gift me-1"></i>Redeem Discount
                                         </button>
                                     </div>
-                                @elseif($loyaltyCard && $loyaltyCard->stamps_count > 0)
+                                <?php elseif($loyaltyCard && $loyaltyCard->stamps_count > 0): ?>
                                     <div class="text-center">
-                                        <p class="text-muted mb-2">You need {{ 5 - $loyaltyCard->stamps_count }} more stamp(s) to redeem a discount</p>
+                                        <p class="text-muted mb-2">You need <?php echo e(5 - $loyaltyCard->stamps_count); ?> more stamp(s) to redeem a discount</p>
                                         <div class="progress" style="height: 8px;">
-                                            <div class="progress-bar bg-success" style="width: {{ ($loyaltyCard->stamps_count / 5) * 100 }}%"></div>
+                                            <div class="progress-bar bg-success" style="width: <?php echo e(($loyaltyCard->stamps_count / 5) * 100); ?>%"></div>
                                         </div>
                                     </div>
-                                @else
+                                <?php else: ?>
                                     <div class="text-center">
                                         <p class="text-muted mb-2">Start earning stamps with your first order!</p>
                                         <div class="progress" style="height: 8px;">
                                             <div class="progress-bar bg-secondary" style="width: 0%"></div>
                                         </div>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
                     <div id="loyaltyFeedback" class="mb-2" style="font-size: 0.98rem;"></div>
                     <div class="d-flex justify-content-between mb-2 mt-4">
-                        <span style="color: #888;">Subtotal ({{ count($cartItems) }} Item{{ count($cartItems) == 1 ? '' : 's' }})</span>
-                        <span style="color: #222;">₱<span id="cartSubtotal">{{ number_format($subtotal, 2) }}</span></span>
+                        <span style="color: #888;">Subtotal (<?php echo e(count($cartItems)); ?> Item<?php echo e(count($cartItems) == 1 ? '' : 's'); ?>)</span>
+                        <span style="color: #222;">₱<span id="cartSubtotal"><?php echo e(number_format($subtotal, 2)); ?></span></span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span style="color: #888;">Shipping Fee</span>
-                        <span style="color: #222;">₱<span id="shippingFeeDisplay">{{ number_format($shippingFee ?? 0, 2) }}</span></span>
+                        <span style="color: #222;">₱<span id="shippingFeeDisplay"><?php echo e(number_format($shippingFee ?? 0, 2)); ?></span></span>
                     </div>
-                    @if($loyaltyDiscount > 0)
+                    <?php if($loyaltyDiscount > 0): ?>
                     <div class="d-flex justify-content-between mb-2">
                         <span style="color: #28a745;">Loyalty Discount</span>
-                        <span style="color: #28a745; font-weight: 600;">-₱<span id="loyaltyDiscountDisplay">{{ number_format($loyaltyDiscount, 2) }}</span></span>
+                        <span style="color: #28a745; font-weight: 600;">-₱<span id="loyaltyDiscountDisplay"><?php echo e(number_format($loyaltyDiscount, 2)); ?></span></span>
                     </div>
-                    @endif
+                    <?php endif; ?>
                     
                     <!-- Store Credit Section -->
-                    @if($storeCreditBalance > 0)
+                    <?php if($storeCreditBalance > 0): ?>
                     <div class="mb-3 mt-3">
                         <div class="card" style="border: 2px solid #e8f5e8; background: linear-gradient(135deg, #f8f9fa, #e8f5e8);">
                             <div class="card-body p-3">
@@ -266,7 +326,7 @@
                                         <i class="fas fa-wallet me-2" style="color: #28a745; font-size: 1.2rem;"></i>
                                         <span style="font-weight: 600; color: #2c3e50;">Store Credit Available</span>
                                     </div>
-                                    <span style="color: #28a745; font-weight: bold; font-size: 1.1rem;">₱{{ number_format($storeCreditBalance, 2) }}</span>
+                                    <span style="color: #28a745; font-weight: bold; font-size: 1.1rem;">₱<?php echo e(number_format($storeCreditBalance, 2)); ?></span>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="useStoreCredit" name="use_store_credit" value="1">
@@ -275,14 +335,14 @@
                                     </label>
                                 </div>
                                 <div class="mt-2" id="storeCreditAmountDiv" style="display: none;">
-                                    <label for="storeCreditAmount" class="form-label" style="font-size: 0.9rem; color: #666;">Amount to use (max ₱{{ number_format($storeCreditBalance, 2) }}):</label>
+                                    <label for="storeCreditAmount" class="form-label" style="font-size: 0.9rem; color: #666;">Amount to use (max ₱<?php echo e(number_format($storeCreditBalance, 2)); ?>):</label>
                                     <div class="input-group">
                                         <span class="input-group-text">₱</span>
                                         <input type="number" class="form-control" id="storeCreditAmount" name="store_credit_amount" 
-                                               min="0" max="{{ $storeCreditBalance }}" step="0.01" 
+                                               min="0" max="<?php echo e($storeCreditBalance); ?>" step="0.01" 
                                                placeholder="0.00" style="font-weight: 500;">
                                     </div>
-                                    <small class="text-muted">You can use up to ₱{{ number_format($storeCreditBalance, 2) }} of your store credit.</small>
+                                    <small class="text-muted">You can use up to ₱<?php echo e(number_format($storeCreditBalance, 2)); ?> of your store credit.</small>
                                 </div>
                             </div>
                         </div>
@@ -291,12 +351,12 @@
                         <span style="color: #28a745;">Store Credit Used</span>
                         <span style="color: #28a745; font-weight: 600;">-₱<span id="storeCreditDiscountDisplay">0.00</span></span>
                     </div>
-                    @endif
+                    <?php endif; ?>
                     
                     <hr>
                     <div class="d-flex justify-content-between mb-3">
                         <span style="font-weight: 600;">Total</span>
-                        <span style="color: #7bb47b; font-weight: 600; font-size: 1.15rem;">₱<span id="cartTotalFinal">{{ number_format($subtotal - ($loyaltyDiscount ?? 0) + ($shippingFee ?? 0), 2) }}</span></span>
+                        <span style="color: #7bb47b; font-weight: 600; font-size: 1.15rem;">₱<span id="cartTotalFinal"><?php echo e(number_format($subtotal - ($loyaltyDiscount ?? 0) + ($shippingFee ?? 0), 2)); ?></span></span>
                     </div>
                     
                     <!-- Delivery Schedule Section -->
@@ -319,8 +379,8 @@
                                            class="form-control" 
                                            id="delivery_date" 
                                            name="delivery_date" 
-                                           min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                                           max="{{ date('Y-m-d', strtotime('+30 days')) }}"
+                                           min="<?php echo e(date('Y-m-d', strtotime('+1 day'))); ?>"
+                                           max="<?php echo e(date('Y-m-d', strtotime('+30 days'))); ?>"
                                            required>
                                     <small class="text-muted">Select a date at least 1 day from now</small>
                                 </div>
@@ -357,7 +417,7 @@
         </div>
     </form>
 </div>
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <style>
     body { background: #f4faf4; }
     .bg-white { box-shadow: none !important; }
@@ -423,9 +483,9 @@
         box-shadow: 0 0 0 2px #cbe7cb;
     }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 // Auto-populate delivery address with default address only for "I will receive the order"
 function populateDefaultAddress() {
@@ -502,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (window.history.length > 1) {
                 window.history.back();
             } else {
-                window.location.href = '{{ url('/cart') }}';
+                window.location.href = '<?php echo e(url('/cart')); ?>';
             }
         });
     }
@@ -804,7 +864,11 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = false;
     }
     
-    @error('recipient_phone')
+    <?php $__errorArgs = ['recipient_phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
         // Scroll to the phone number field
         setTimeout(() => {
             const phoneField = document.getElementById('recipientPhone') || document.getElementById('selfPhone');
@@ -814,7 +878,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 phoneField.classList.add('is-invalid');
             }
         }, 500);
-    @enderror
+    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
 });
 
 // Add loading state to submit button
@@ -952,7 +1019,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
 
 <style>
 /* Custom scrollbar styling for the left content area */
@@ -1184,9 +1251,9 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- Custom Bouquet Detail Modal -->
-@foreach($cartItems as $item)
-    @if($item->item_type === 'custom_bouquet')
-        @php
+<?php $__currentLoopData = $cartItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+    <?php if($item->item_type === 'custom_bouquet'): ?>
+        <?php
             $bouquet = $item->customBouquet ?? null;
             if (!$bouquet && isset($item->custom_bouquet_id)) {
                 $bouquet = \App\Models\CustomBouquet::find($item->custom_bouquet_id);
@@ -1278,19 +1345,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 'quantity' => 1,
                 'price' => $assemblyFee
             ];
-        @endphp
+        ?>
         
-        <div class="modal fade custom-bouquet-modal" id="customBouquetModal{{ $modalId }}" tabindex="-1" aria-labelledby="customBouquetModalLabel{{ $modalId }}" aria-hidden="true">
+        <div class="modal fade custom-bouquet-modal" id="customBouquetModal<?php echo e($modalId); ?>" tabindex="-1" aria-labelledby="customBouquetModalLabel<?php echo e($modalId); ?>" aria-hidden="true">
             <div class="modal-dialog modal-md modal-dialog-centered">
                 <div class="modal-content" style="border-radius: 12px;">
                     <div class="modal-header" style="border-bottom: 1px solid #e9ecef;">
-                        <h6 class="modal-title" id="customBouquetModalLabel{{ $modalId }}" style="font-weight: 600; color: #222; font-size: 1rem;">Custom Bouquet Details</h6>
+                        <h6 class="modal-title" id="customBouquetModalLabel<?php echo e($modalId); ?>" style="font-weight: 600; color: #222; font-size: 1rem;">Custom Bouquet Details</h6>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body" style="max-height: 65vh; overflow-y: auto;">
                         <!-- Bouquet Preview Image -->
                         <div class="text-center mb-3">
-                            @php
+                            <?php
                                 // Get raw preview_image value from database (not accessor)
                                 $rawPreviewPath = $bouquet->getAttributes()['preview_image'] ?? null;
                                 $isComposite = $rawPreviewPath && (strpos($rawPreviewPath, 'custom_bouquets/') === 0 || strpos($rawPreviewPath, 'custom_bouquet_') !== false);
@@ -1377,24 +1444,24 @@ document.addEventListener('DOMContentLoaded', function() {
                                         ];
                                     }
                                 }
-                            @endphp
+                            ?>
                             
-                            @if($isComposite && $rawPreviewPath && file_exists(storage_path('app/public/' . $rawPreviewPath)))
+                            <?php if($isComposite && $rawPreviewPath && file_exists(storage_path('app/public/' . $rawPreviewPath))): ?>
                                 <!-- Composite image (GD generated) -->
-                                <img src="{{ $bouquet->preview_image }}" alt="Custom Bouquet Preview" style="max-width: 100%; max-height: 250px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                            @elseif(count($componentImages) > 0)
+                                <img src="<?php echo e($bouquet->preview_image); ?>" alt="Custom Bouquet Preview" style="max-width: 100%; max-height: 250px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <?php elseif(count($componentImages) > 0): ?>
                                 <!-- CSS-based component layering (fallback when GD not available) -->
                                 <div class="component-preview-container" style="position: relative; width: 250px; height: 250px; margin: 0 auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; background: #fff;">
-                                    @foreach($componentImages as $comp)
-                                        <img src="{{ $comp['image'] }}" 
-                                             alt="Component {{ $comp['type'] }}" 
-                                             style="position: absolute; z-index: {{ $comp['z'] }}; {{ $comp['style'] }}">
-                                    @endforeach
+                                    <?php $__currentLoopData = $componentImages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $comp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <img src="<?php echo e($comp['image']); ?>" 
+                                             alt="Component <?php echo e($comp['type']); ?>" 
+                                             style="position: absolute; z-index: <?php echo e($comp['z']); ?>; <?php echo e($comp['style']); ?>">
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
-                            @else
+                            <?php else: ?>
                                 <!-- Fallback: generic image -->
-                                <img src="{{ asset('images/landingpage_bouquet/bokk.png') }}" alt="Custom Bouquet Preview" style="max-width: 100%; max-height: 250px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                            @endif
+                                <img src="<?php echo e(asset('images/landingpage_bouquet/bokk.png')); ?>" alt="Custom Bouquet Preview" style="max-width: 100%; max-height: 250px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <?php endif; ?>
                         </div>
                         
                         <!-- Price Breakdown -->
@@ -1412,27 +1479,27 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($components as $component)
+                                        <?php $__currentLoopData = $components; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $component): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <tr>
-                                            <td style="font-size: 0.8rem; color: #666;">{{ $component['category'] }}</td>
-                                            <td style="font-size: 0.8rem; color: #222; font-weight: 500;">{{ $component['name'] }}</td>
-                                            <td style="font-size: 0.8rem; color: #666; text-align: center;">{{ $component['quantity'] }}</td>
-                                            <td style="font-size: 0.8rem; color: #222; text-align: right; font-weight: 500;">₱{{ number_format($component['price'], 2) }}</td>
+                                            <td style="font-size: 0.8rem; color: #666;"><?php echo e($component['category']); ?></td>
+                                            <td style="font-size: 0.8rem; color: #222; font-weight: 500;"><?php echo e($component['name']); ?></td>
+                                            <td style="font-size: 0.8rem; color: #666; text-align: center;"><?php echo e($component['quantity']); ?></td>
+                                            <td style="font-size: 0.8rem; color: #222; text-align: right; font-weight: 500;">₱<?php echo e(number_format($component['price'], 2)); ?></td>
                                         </tr>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </tbody>
                                     <tfoot style="border-top: 2px solid #dee2e6;">
                                         <tr>
                                             <td colspan="3" style="font-size: 0.85rem; font-weight: 600; color: #222; padding-top: 10px;">Total Price:</td>
-                                            <td style="font-size: 0.9rem; font-weight: 600; color: #7bb47b; text-align: right; padding-top: 10px;">₱{{ number_format($totalPrice, 2) }}</td>
+                                            <td style="font-size: 0.9rem; font-weight: 600; color: #7bb47b; text-align: right; padding-top: 10px;">₱<?php echo e(number_format($totalPrice, 2)); ?></td>
                                         </tr>
                                         <tr>
                                             <td colspan="3" style="font-size: 0.8rem; color: #666; padding-top: 6px;">Quantity:</td>
-                                            <td style="font-size: 0.8rem; color: #222; text-align: right; padding-top: 6px; font-weight: 500;">{{ $item->quantity }}</td>
+                                            <td style="font-size: 0.8rem; color: #222; text-align: right; padding-top: 6px; font-weight: 500;"><?php echo e($item->quantity); ?></td>
                                         </tr>
                                         <tr>
                                             <td colspan="3" style="font-size: 0.85rem; font-weight: 600; color: #222; padding-top: 6px;">Subtotal:</td>
-                                            <td style="font-size: 0.9rem; font-weight: 600; color: #7bb47b; text-align: right; padding-top: 6px;">₱{{ number_format($totalPrice * $item->quantity, 2) }}</td>
+                                            <td style="font-size: 0.9rem; font-weight: 600; color: #7bb47b; text-align: right; padding-top: 6px;">₱<?php echo e(number_format($totalPrice * $item->quantity, 2)); ?></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -1445,7 +1512,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
         </div>
-    @endif
-@endforeach
+    <?php endif; ?>
+<?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-@endsection 
+<?php $__env->stopSection(); ?> 
+<?php echo $__env->make('layouts.customer_app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\JJ_Flowershop_Capstone\resources\views/customer/checkout/index.blade.php ENDPATH**/ ?>

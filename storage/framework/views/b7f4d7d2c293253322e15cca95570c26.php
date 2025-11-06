@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <title>{{ config('app.name', 'JJ Flowershop') }}</title>
+    <title><?php echo e(config('app.name', 'JJ Flowershop')); ?></title>
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -269,33 +269,34 @@
         }
     </style>
 
-    @stack('styles')
+    <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
 <body>
     <div id="app">
-        @if(session('success'))
+        <?php if(session('success')): ?>
             <div class="custom-success-alert-global" role="alert" id="successAlert">
                 <div class="alert-icon">
                     <i class="fas fa-check"></i>
                 </div>
-                <div class="alert-message">{{ session('success') }}</div>
+                <div class="alert-message"><?php echo e(session('success')); ?></div>
                 <button type="button" class="alert-close" onclick="dismissAlert()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-        @endif
-        @if(session('error'))
+        <?php endif; ?>
+        <?php if(session('error')): ?>
             <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
-                {{ session('error') }}
+                <?php echo e(session('error')); ?>
+
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        @endif
+        <?php endif; ?>
         <!-- New Top Navigation Bar for Customer (standardized for all customer pages) -->
         <nav class="customer-top-navbar" style="background: #8ACB88; color: #fff; padding: 0 6.0vw; width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);">
             <div class="container-fluid px-4" style="padding-top: 4px; padding-bottom: 6px;">
                 <div class="d-flex justify-content-between" style="align-items: flex-start;">
                     <!-- Brand - full navbar height -->
-                    <a href="{{ route('customer.dashboard') }}" class="d-flex align-items-center customer-brand" style="gap: .6rem; padding-top: 1px; text-decoration:none; color:inherit;">
+                    <a href="<?php echo e(route('customer.dashboard')); ?>" class="d-flex align-items-center customer-brand" style="gap: .6rem; padding-top: 1px; text-decoration:none; color:inherit;">
                         <img src="/images/logo.png" alt="JJ Flower Shop" style="height: 64px; background: transparent;" class="me-1">
                         <div class="brand-inclusive" style="font-size: 1.8rem; line-height: 1; letter-spacing: .5px;">
                             J ' J FLOWER
@@ -308,17 +309,17 @@
                     <div class="d-flex flex-column flex-grow-1" style="max-width: 1000px; margin: 0 20px;">
                         <!-- Desktop Nav Links (Hidden on Mobile) -->
                         <div class="d-flex align-items-center justify-content-center customer-nav-links d-none d-lg-flex" style="gap: 2.2rem; padding-top: 0;">
-                        <a href="{{ route('customer.dashboard') }}" class="nav-link text-white d-flex align-items-center gap-2 @if(request()->routeIs('customer.dashboard')) active @endif" style="font-size: 0.95rem;"><i class="bi @if(request()->routeIs('customer.dashboard')) bi-house-fill @else bi-house-door @endif"></i> Home</a>
-                        <a href="{{ route('customer.products.bouquet-customize') }}" class="nav-link text-white d-flex align-items-center gap-2 @if(request()->routeIs('customer.products.bouquet-customize')) active @endif" style="font-size: 0.95rem;"><i class="bi @if(request()->routeIs('customer.products.bouquet-customize')) bi-brush-fill @else bi-brush @endif"></i> Customize</a>
-                        <a href="{{ route('customer.notifications.index') }}" class="nav-link text-white d-flex align-items-center gap-2 position-relative @if(request()->routeIs('customer.notifications.index')) active @endif" style="font-size: 0.95rem;">
-                            <i class="bi @if(request()->routeIs('customer.notifications.index')) bi-bell-fill @else bi-bell @endif"></i> Notifications
-                                @if(isset($unreadCount) && $unreadCount > 0)
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem;">{{ $unreadCount }}</span>
-                                @endif
+                        <a href="<?php echo e(route('customer.dashboard')); ?>" class="nav-link text-white d-flex align-items-center gap-2 <?php if(request()->routeIs('customer.dashboard')): ?> active <?php endif; ?>" style="font-size: 0.95rem;"><i class="bi <?php if(request()->routeIs('customer.dashboard')): ?> bi-house-fill <?php else: ?> bi-house-door <?php endif; ?>"></i> Home</a>
+                        <a href="<?php echo e(route('customer.products.bouquet-customize')); ?>" class="nav-link text-white d-flex align-items-center gap-2 <?php if(request()->routeIs('customer.products.bouquet-customize')): ?> active <?php endif; ?>" style="font-size: 0.95rem;"><i class="bi <?php if(request()->routeIs('customer.products.bouquet-customize')): ?> bi-brush-fill <?php else: ?> bi-brush <?php endif; ?>"></i> Customize</a>
+                        <a href="<?php echo e(route('customer.notifications.index')); ?>" class="nav-link text-white d-flex align-items-center gap-2 position-relative <?php if(request()->routeIs('customer.notifications.index')): ?> active <?php endif; ?>" style="font-size: 0.95rem;">
+                            <i class="bi <?php if(request()->routeIs('customer.notifications.index')): ?> bi-bell-fill <?php else: ?> bi-bell <?php endif; ?>"></i> Notifications
+                                <?php if(isset($unreadCount) && $unreadCount > 0): ?>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem;"><?php echo e($unreadCount); ?></span>
+                                <?php endif; ?>
                             </a>
                             <div class="dropdown">
                                 <button class="nav-link text-white d-flex align-items-center gap-2 btn btn-link p-0" type="button" id="customerUserDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.95rem; background: none; border: none;">
-                                    @php
+                                    <?php
                                         $profileSrc = null;
                                         if (Auth::check()) {
                                             $pp = Auth::user()->profile_picture ?? null;
@@ -332,15 +333,16 @@
                                             }
                                         }
                                         if (!$profileSrc) { $profileSrc = asset('images/default-avatar.png'); }
-                                    @endphp
-                                    <img src="{{ $profileSrc }}" alt="Profile" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,.6); background:#fff;" onerror="this.onerror=null;this.src='{{ asset('images/default-avatar.png') }}';"> {{ Auth::user()->name ?? "customer's name" }}
+                                    ?>
+                                    <img src="<?php echo e($profileSrc); ?>" alt="Profile" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,.6); background:#fff;" onerror="this.onerror=null;this.src='<?php echo e(asset('images/default-avatar.png')); ?>';"> <?php echo e(Auth::user()->name ?? "customer's name"); ?>
+
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end smooth-dropdown" aria-labelledby="customerUserDropdown">
-                                    <li><a class="dropdown-item" href="{{ route('customer.account.index') }}"><i class="bi bi-person"></i> MY ACCOUNT</a></li>
+                                    <li><a class="dropdown-item" href="<?php echo e(route('customer.account.index')); ?>"><i class="bi bi-person"></i> MY ACCOUNT</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <form method="POST" action="{{ route('logout') }}">
-                                            @csrf
+                                        <form method="POST" action="<?php echo e(route('logout')); ?>">
+                                            <?php echo csrf_field(); ?>
                                             <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right"></i> LOGOUT</button>
                                         </form>
                                     </li>
@@ -348,8 +350,8 @@
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-end gap-4 customer-right-icons">
-                            <a href="{{ route('customer.favorites') }}" class="icon-btn text-white position-relative @if(request()->routeIs('customer.favorites')) active @endif" title="Favorites" style="font-size: 1.35rem;"><i class="bi @if(request()->routeIs('customer.favorites')) bi-heart-fill @else bi-heart @endif"></i></a>
-                            <a href="{{ route('customer.cart.index') }}" class="icon-btn text-white position-relative @if(request()->routeIs('customer.cart.index')) active @endif" title="Cart"><i class="bi @if(request()->routeIs('customer.cart.index')) bi-cart-fill @else bi-cart @endif" style="font-size: 1.35rem;"></i></a>
+                            <a href="<?php echo e(route('customer.favorites')); ?>" class="icon-btn text-white position-relative <?php if(request()->routeIs('customer.favorites')): ?> active <?php endif; ?>" title="Favorites" style="font-size: 1.35rem;"><i class="bi <?php if(request()->routeIs('customer.favorites')): ?> bi-heart-fill <?php else: ?> bi-heart <?php endif; ?>"></i></a>
+                            <a href="<?php echo e(route('customer.cart.index')); ?>" class="icon-btn text-white position-relative <?php if(request()->routeIs('customer.cart.index')): ?> active <?php endif; ?>" title="Cart"><i class="bi <?php if(request()->routeIs('customer.cart.index')): ?> bi-cart-fill <?php else: ?> bi-cart <?php endif; ?>" style="font-size: 1.35rem;"></i></a>
                         </div>
                     </div>
                 </div>
@@ -357,46 +359,46 @@
         </nav>
         <main class="py-2 flex-grow-1">
             <div class="container-fluid">
-                @auth
-                @yield('content')
-                @endauth
+                <?php if(auth()->guard()->check()): ?>
+                <?php echo $__env->yieldContent('content'); ?>
+                <?php endif; ?>
             </div>
         </main>
 
         <!-- Global Mobile Bottom Navigation (<=480px) -->
         <div class="mobile-bottom-nav d-lg-none">
-            <a href="{{ route('customer.dashboard') }}" class="nav-item @if(request()->routeIs('customer.dashboard')) active @endif">
-                <i class="bi @if(request()->routeIs('customer.dashboard')) bi-house-fill @else bi-house-door @endif"></i>
+            <a href="<?php echo e(route('customer.dashboard')); ?>" class="nav-item <?php if(request()->routeIs('customer.dashboard')): ?> active <?php endif; ?>">
+                <i class="bi <?php if(request()->routeIs('customer.dashboard')): ?> bi-house-fill <?php else: ?> bi-house-door <?php endif; ?>"></i>
                 <span>Home</span>
             </a>
-            <a href="{{ route('customer.products.bouquet-customize') }}" class="nav-item @if(request()->routeIs('customer.products.bouquet-customize')) active @endif">
-                <i class="bi @if(request()->routeIs('customer.products.bouquet-customize')) bi-brush-fill @else bi-brush @endif"></i>
+            <a href="<?php echo e(route('customer.products.bouquet-customize')); ?>" class="nav-item <?php if(request()->routeIs('customer.products.bouquet-customize')): ?> active <?php endif; ?>">
+                <i class="bi <?php if(request()->routeIs('customer.products.bouquet-customize')): ?> bi-brush-fill <?php else: ?> bi-brush <?php endif; ?>"></i>
                 <span>Customize</span>
             </a>
-            <a href="{{ route('customer.notifications.index') }}" class="nav-item @if(request()->routeIs('customer.notifications.index')) active @endif">
-                <i class="bi @if(request()->routeIs('customer.notifications.index')) bi-bell-fill @else bi-bell @endif"></i>
+            <a href="<?php echo e(route('customer.notifications.index')); ?>" class="nav-item <?php if(request()->routeIs('customer.notifications.index')): ?> active <?php endif; ?>">
+                <i class="bi <?php if(request()->routeIs('customer.notifications.index')): ?> bi-bell-fill <?php else: ?> bi-bell <?php endif; ?>"></i>
                 <span>Notifications</span>
             </a>
-            <div class="nav-item profile-dropdown-wrapper @if(request()->routeIs('customer.account.index') || request()->routeIs('customer.address_book.*') || request()->routeIs('customer.orders.*') || request()->routeIs('customer.trackOrders.*')) active @endif" style="position: relative;">
+            <div class="nav-item profile-dropdown-wrapper <?php if(request()->routeIs('customer.account.index') || request()->routeIs('customer.address_book.*') || request()->routeIs('customer.orders.*') || request()->routeIs('customer.trackOrders.*')): ?> active <?php endif; ?>" style="position: relative;">
                 <a href="#" class="profile-trigger" onclick="event.preventDefault(); toggleProfileMenu(event);" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: inherit;">
                     <i class="bi bi-person"></i>
                     <span>My Profile</span>
                 </a>
                 <div class="profile-dropdown-menu" id="profileDropdown" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 10px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 180px; z-index: 1200; display: none; padding: 8px 0;">
-                    <a href="{{ route('customer.account.index') }}" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
+                    <a href="<?php echo e(route('customer.account.index')); ?>" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
                         <i class="bi bi-person me-2"></i>Profile
                     </a>
-                    <a href="{{ route('customer.address_book.index') }}" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
+                    <a href="<?php echo e(route('customer.address_book.index')); ?>" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
                         <i class="bi bi-book me-2"></i>Address Book
                     </a>
-                    <a href="{{ route('customer.orders.index') }}" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
+                    <a href="<?php echo e(route('customer.orders.index')); ?>" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
                         <i class="bi bi-bag me-2"></i>My Purchase
                     </a>
-                    <a href="{{ route('customer.trackOrders.page') }}" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
+                    <a href="<?php echo e(route('customer.trackOrders.page')); ?>" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
                         <i class="bi bi-truck me-2"></i>Track Order
                     </a>
-                    <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
-                        @csrf
+                    <form method="POST" action="<?php echo e(route('logout')); ?>" style="margin: 0;">
+                        <?php echo csrf_field(); ?>
                         <button type="submit" class="dropdown-item" style="width: 100%; padding: 10px 16px; display: block; color: #dc3545; text-decoration: none; font-size: 0.9rem; border: none; background: none; text-align: left; cursor: pointer;">
                             <i class="bi bi-box-arrow-right me-2"></i>Log Out
                         </button>
@@ -406,9 +408,9 @@
         </div>
         
         <!-- Alert Component -->
-        @include('components.alert')
+        <?php echo $__env->make('components.alert', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         
-        @php
+        <?php
             $hideFooterOnRoutes = [
                 'customer.account.index',
                 'customer.address_book.index',
@@ -419,16 +421,16 @@
                 'customer.checkout.*',
                 'customer.store-credit.history',
             ];
-        @endphp
-        @unless (request()->routeIs($hideFooterOnRoutes))
+        ?>
+        <?php if (! (request()->routeIs($hideFooterOnRoutes))): ?>
         <footer class="footer mt-4">
             <div class="container">
                 <div class="row align-items-center">
                     <div class="col-12 col-md-6 mb-2 mb-md-0">
-                        <div class="small">© {{ date('Y') }} J' J Flower Shop · All rights reserved</div>
+                        <div class="small">© <?php echo e(date('Y')); ?> J' J Flower Shop · All rights reserved</div>
                     </div>
                     <div class="col-12 col-md-6 text-md-end">
-                        <a href="{{ route('faq') }}" class="me-0"><i class="bi bi-question-circle me-1"></i>FAQ</a>
+                        <a href="<?php echo e(route('faq')); ?>" class="me-0"><i class="bi bi-question-circle me-1"></i>FAQ</a>
                     </div>
                 </div>
                 <div class="row mt-2">
@@ -623,7 +625,7 @@
                 </div>
             </div>
         </footer>
-        @endunless
+        <?php endif; ?>
     </div>
 
     <!-- Bootstrap JS -->
@@ -631,7 +633,7 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    @stack('scripts')
+    <?php echo $__env->yieldPushContent('scripts'); ?>
 
     <script>
         // Toggle Profile Dropdown Menu
@@ -670,16 +672,16 @@
     <script>
         // Check authentication status on page load and back button
         function checkAuthStatus() {
-            fetch('{{ route("customer.dashboard") }}', {
+            fetch('<?php echo e(route("customer.dashboard")); ?>', {
                 method: 'HEAD',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
                 }
             })
             .then(response => {
                 if (response.status === 401 || response.status === 403) {
-                    window.location.href = '{{ route("login") }}';
+                    window.location.href = '<?php echo e(route("login")); ?>';
                 }
             })
             .catch(error => {
@@ -815,7 +817,7 @@
     </script>
     
     <!-- Auto Capitalization Script -->
-    <script src="{{ asset('js/auto-capitalization.js') }}"></script>
-    @yield('scripts')
+    <script src="<?php echo e(asset('js/auto-capitalization.js')); ?>"></script>
+    <?php echo $__env->yieldContent('scripts'); ?>
 </body>
-</html> 
+</html> <?php /**PATH C:\xampp\htdocs\JJ_Flowershop_Capstone\resources\views/layouts/customer_app.blade.php ENDPATH**/ ?>

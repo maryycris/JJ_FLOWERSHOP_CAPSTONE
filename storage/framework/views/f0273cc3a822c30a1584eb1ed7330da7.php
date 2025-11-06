@@ -165,11 +165,11 @@
             }
         }
         .main-section {
-            min-height: 80vh;
+            min-height: auto;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 0 0 0;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 0;
         }
         /* Hero with carousel background */
         .hero-row { position: relative; min-height: 580px; height: 80vh; overflow: hidden; }
@@ -268,13 +268,17 @@
             }
             #about .mb-3 ul {
                 font-size: 0.95rem !important;
-                padding-left: 16px !important;
+                padding-left: 0 !important;
+            }
+            #about .mb-3 ul li i {
+                font-size: 1.2rem !important;
+                margin-right: 9px !important;
             }
             #about .mb-3 ul li {
                 margin-bottom: 4px;
             }
             #bestSellerCarousel {
-                max-width: 100% !important;
+                max-width: 85% !important;
             }
             #bestSellerCarousel .carousel-item img {
                 height: 280px !important;
@@ -292,7 +296,14 @@
             }
             #about .mb-3 ul {
                 font-size: 0.9rem !important;
-                padding-left: 14px !important;
+                padding-left: 0 !important;
+            }
+            #about .mb-3 ul li i {
+                font-size: 1.1rem !important;
+                margin-right: 8px !important;
+            }
+            #bestSellerCarousel {
+                max-width: 85% !important;
             }
             #bestSellerCarousel .carousel-item img {
                 height: 250px !important;
@@ -391,22 +402,53 @@
         @media (max-width: 991px) {
             .main-section {
                 flex-direction: column;
-                padding: 20px 0;
+                padding: 0;
             }
             .hero-row {
                 flex-direction: column;
+                min-height: auto;
+                height: auto;
+            }
+            .hero-carousel {
+                position: relative;
+                width: 100%;
+                height: 60vh;
+                min-height: 400px;
+            }
+            .hero-carousel .carousel-item img {
+                height: 100%;
+                object-fit: cover;
             }
             .hero-content {
                 position: relative;
                 z-index: 2;
-                padding: 20px;
+                padding: 0 20px 10px 20px;
+                width: 100%;
+                margin-top: -90px;
             }
             .content-box {
-                margin-top: 30px;
-                margin-left: 0;
-                min-width: 90%;
-                max-width: 90%;
-                padding: 36px 24px 30px 24px;
+                background: transparent !important;
+                color: #000 !important;
+                margin-top: 0 !important;
+                margin-left: 0 !important;
+                min-width: 100% !important;
+                max-width: 100% !important;
+                padding: 5px 20px 10px 20px !important;
+                box-shadow: none !important;
+            }
+            .content-box h1,
+            .content-box h2,
+            .content-box .subtitle,
+            .content-box p {
+                color: #000 !important;
+            }
+            .btn-shop {
+                background: #8ACB88 !important;
+                color: #fff !important;
+            }
+            .btn-shop:hover {
+                background: #7ab678 !important;
+                color: #fff !important;
             }
             .content-box h1 {
                 font-size: 2.3rem;
@@ -425,11 +467,36 @@
             }
         }
         @media (max-width: 768px) {
+            .hero-carousel {
+                height: 50vh;
+                min-height: 350px;
+            }
+            .hero-content {
+                margin-top: -90px;
+                padding: 0 10px 10px 20px;
+            }
             .content-box {
-                margin-top: 20px;
-                padding: 32px 20px 28px 20px;
-                min-width: 95%;
-                max-width: 95%;
+                background: transparent !important;
+                color: #000 !important;
+                margin-top: 0 !important;
+                padding: 5px 20px 10px 20px !important;
+                min-width: 100% !important;
+                max-width: 100% !important;
+                box-shadow: none !important;
+            }
+            .content-box h1,
+            .content-box h2,
+            .content-box .subtitle,
+            .content-box p {
+                color: #000 !important;
+            }
+            .btn-shop {
+                background: #8ACB88 !important;
+                color: #fff !important;
+            }
+            .btn-shop:hover {
+                background: #7ab678 !important;
+                color: #fff !important;
             }
             .content-box h1 {
                 font-size: 2rem;
@@ -450,11 +517,36 @@
             }
         }
         @media (max-width: 576px) {
+            .hero-carousel {
+                height: 45vh;
+                min-height: 300px;
+            }
+            .hero-content {
+                margin-top: -90px;
+                padding: 0 15px 10px 15px;
+            }
             .content-box {
-                padding: 28px 15px 24px 15px;
-                min-width: 100%;
-                max-width: 100%;
-                margin-top: 15px;
+                background: transparent !important;
+                color: #000 !important;
+                padding: 1px 15px 10px 15px !important;
+                min-width: 100% !important;
+                max-width: 100% !important;
+                margin-top: 0 !important;
+                box-shadow: none !important;
+            }
+            .content-box h1,
+            .content-box h2,
+            .content-box .subtitle,
+            .content-box p {
+                color: #000 !important;
+            }
+            .btn-shop {
+                background: #8ACB88 !important;
+                color: #fff !important;
+            }
+            .btn-shop:hover {
+                background: #7ab678 !important;
+                color: #fff !important;
             }
             .content-box h1 {
                 font-size: 1.8rem;
@@ -497,26 +589,24 @@
             <img src="/images/logo.png" alt="Logo" class="logo">
             J & J FLOWER SHOP <span>Est. 2023</span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav me-auto d-none d-lg-flex">
                 <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
                 <li class="nav-item"><a class="nav-link" href="#products">Products</a></li>
                 <li class="nav-item"><a class="nav-link" href="#reviews">Review</a></li>
             </ul>
-            <div class="navbar-icons ms-3">
-                <a href="<?php echo e(route('customer.login')); ?>" title="View Cart (Login Required)"><i class="bi bi-cart3"></i></a>
-                <div class="dropdown d-inline-block">
-                    <a href="#" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Login / Profile" style="padding:0; border:none; background:none;">
-                        <i class="bi bi-person-circle"></i>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                        <li><a class="dropdown-item" href="<?php echo e(route('customer.login')); ?>">Customer Login</a></li>
-                        <li><a class="dropdown-item" href="<?php echo e(route('staff.login')); ?>">Staff Login</a></li>
-                    </ul>
+        </div>
+        <div class="navbar-icons ms-auto">
+            <a href="<?php echo e(route('customer.login')); ?>" title="View Cart (Login Required)"><i class="bi bi-cart3"></i></a>
+            <div class="dropdown d-inline-block">
+                <a href="#" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Login / Profile" style="padding:0; border:none; background:none;">
+                    <i class="bi bi-person-circle"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                    <li><a class="dropdown-item" href="<?php echo e(route('customer.login')); ?>">Customer Login</a></li>
+                    <li><a class="dropdown-item" href="<?php echo e(route('staff.login')); ?>">Staff Login</a></li>
+                </ul>
             </div>
         </div>
     </div>
@@ -594,11 +684,23 @@
                 <div class="col-lg-6 mb-3">
                     <div class="mb-3" style="background:#ADF2AB; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.04); padding:22px 22px 22px 22px;">
                         <h5 style="color:#1a8c5a; font-weight:600;">Why choose us?</h5>
-                        <ul style="padding-left:18px; color:#1a8c5a; font-size:1.08rem;">
-                            <li>Fresh flowers daily</li>
-                            <li>Same-day delivery available</li>
-                            <li>Personalized gift options</li>
-                            <li>Friendly customer support</li>
+                        <ul style="padding-left:0; list-style:none; color:#1a8c5a; font-size:1.08rem;">
+                            <li style="display:flex; align-items:center; margin-bottom:8px;">
+                                <i class="bi bi-flower1" style="color:#ff69b4; font-size:1.3rem; margin-right:10px;"></i>
+                                <span>Fresh flowers daily</span>
+                            </li>
+                            <li style="display:flex; align-items:center; margin-bottom:8px;">
+                                <i class="bi bi-truck" style="color:#ffd700; font-size:1.3rem; margin-right:10px;"></i>
+                                <span>Same-day delivery available</span>
+                            </li>
+                            <li style="display:flex; align-items:center; margin-bottom:8px;">
+                                <i class="bi bi-gift" style="color:#ff8c00; font-size:1.3rem; margin-right:10px;"></i>
+                                <span>Personalized gift options</span>
+                            </li>
+                            <li style="display:flex; align-items:center; margin-bottom:8px;">
+                                <i class="bi bi-chat-dots" style="color:#4169e1; font-size:1.3rem; margin-right:10px;"></i>
+                                <span>Friendly customer support</span>
+                            </li>
                         </ul>
                     </div>
                     <div style="background:transparent; border-radius:0; box-shadow:none; padding:16px 0 0 0; color:#000; font-size:0.98rem;">
@@ -630,7 +732,7 @@
                     <div class="text-center mb-2">
                         <span style="color:#1a8c5a; font-size:1.2rem; font-weight:500;">Best Seller Flowers</span>
                     </div>
-                    <div id="bestSellerCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3500" style="max-width: 100%; margin: 0 auto;">
+                    <div id="bestSellerCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3500" style="max-width: 85%; margin: 0 auto;">
                         <div class="carousel-inner" style="border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
                             <?php if(count($bestSellerSlides) === 0): ?>
                                 <div class="carousel-item active">
@@ -640,7 +742,7 @@
                             <?php else: ?>
                                 <?php foreach($bestSellerSlides as $idx => $slide): ?>
                                     <div class="carousel-item <?= $idx === 0 ? 'active' : '' ?>">
-                                        <img src="<?= $slide['src'] ?>" alt="<?= $slide['name'] ?>" style="width:100%; height:340px; object-fit:cover;">
+                                        <img src="<?= $slide['src'] ?>" alt="<?= $slide['name'] ?>" style="width:100%; height:340px; object-fit:cover; border-radius:8px;">
                                         <div class="text-center mt-2" style="color:#1a8c5a; font-size:1.05rem;">
                                             <?= $slide['name'] ?>
                                             <span style="color:#888;">

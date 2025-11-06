@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Google Fonts for script font -->
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/loginstyle.css') }}">
+    <link rel="stylesheet" href="<?php echo e(asset('css/loginstyle.css')); ?>">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <!-- Font Awesome CDN for Google icon -->
@@ -42,64 +42,64 @@
             J & J FLOWER SHOP <span>Est. 2023</span>
         </a>
         <div class="navbar-icons ms-auto">
-            <a href="{{ route('customer.login') }}" title="View Cart (Login Required)"><i class="bi bi-cart3"></i></a>
+            <a href="<?php echo e(route('customer.login')); ?>" title="View Cart (Login Required)"><i class="bi bi-cart3"></i></a>
             <div class="dropdown d-inline-block">
                 <a href="#" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Login / Profile" style="padding:0; border:none; background:none;">
                     <i class="bi bi-person-circle"></i>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                    <li><a class="dropdown-item" href="{{ route('customer.login') }}">Customer Login</a></li>
-                    <li><a class="dropdown-item" href="{{ route('staff.login') }}">Staff Login</a></li>
+                    <li><a class="dropdown-item" href="<?php echo e(route('customer.login')); ?>">Customer Login</a></li>
+                    <li><a class="dropdown-item" href="<?php echo e(route('staff.login')); ?>">Staff Login</a></li>
                 </ul>
             </div>
         </div>
     </div>
 </nav>
-@if(session('success'))
+<?php if(session('success')): ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         Swal.fire({
             icon: 'success',
             title: 'Success!',
-            text: "{{ session('success') }}",
+            text: "<?php echo e(session('success')); ?>",
             confirmButtonColor: '#4CAF50',
             confirmButtonText: 'OK',
             timer: 3000,
             timerProgressBar: true
         });
     </script>
-@endif
-@if($errors->any())
+<?php endif; ?>
+<?php if($errors->any()): ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        @if($errors->has('login_field'))
+        <?php if($errors->has('login_field')): ?>
             Swal.fire({
                 icon: 'error',
                 title: 'Login Failed!',
-                text: "{{ $errors->first('login_field') }}",
+                text: "<?php echo e($errors->first('login_field')); ?>",
                 confirmButtonColor: '#4CAF50',
                 confirmButtonText: 'Try Again',
                 timer: 3000,
                 timerProgressBar: true
             });
-        @elseif($errors->has('password'))
+        <?php elseif($errors->has('password')): ?>
             Swal.fire({
                 icon: 'error',
                 title: 'Incorrect Password!',
-                text: "{{ $errors->first('password') }}",
+                text: "<?php echo e($errors->first('password')); ?>",
                 confirmButtonColor: '#4CAF50',
                 confirmButtonText: 'Try Again',
                 timer: 3000,
                 timerProgressBar: true
             });
-        @endif
+        <?php endif; ?>
     </script>
-@endif
+<?php endif; ?>
 <div class="login-main-wrapper">
     <div class="login-left">
         <h4 class="login-title"><span class="login-icon">&#8594;</span> Customer Login</h4>
-        <form method="POST" action="{{ route('customer.login') }}">
-            @csrf
+        <form method="POST" action="<?php echo e(route('customer.login')); ?>">
+            <?php echo csrf_field(); ?>
             <div class="form-group">
                 <label for="login_field" class="form-label">E-Mail Address or Phone Number <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="login_field" name="login_field" required placeholder="E-Mail Address or Phone Number">
@@ -113,10 +113,10 @@
             </div>
             <button type="submit" class="btn-login">Login</button>
             <div class="forgot-password-link">
-                <a href="{{ route('password.request') }}">Forgot password?</a>
+                <a href="<?php echo e(route('password.request')); ?>">Forgot password?</a>
             </div>
-            <a href="{{ url('auth/facebook') }}" class="btn-facebook"><i class="bi bi-facebook"></i> Facebook</a>
-            <a href="{{ url('auth/google') }}" class="btn-google"><i class="bi bi-google"></i> Google</a>
+            <a href="<?php echo e(url('auth/facebook')); ?>" class="btn-facebook"><i class="bi bi-facebook"></i> Facebook</a>
+            <a href="<?php echo e(url('auth/google')); ?>" class="btn-google"><i class="bi bi-google"></i> Google</a>
         </form>
     </div>
     <div class="login-divider"></div>
@@ -124,7 +124,7 @@
         <br><br><br>
         <div class="new-customer-title">New Customer</div>
         <div class="new-customer-desc">Register now to enjoy a seamless shopping experience and bring fresh blooms to your doorstep</div>
-        <a href="{{ route('register') }}" class="btn-continue">Continue</a>
+        <a href="<?php echo e(route('register')); ?>" class="btn-continue">Continue</a>
     </div>
 </div>
 <div class="mobile-footer mt-4 p-3">
@@ -158,4 +158,4 @@ function togglePassword() {
 .footer-icons > a:last-child { margin-right: 0 !important; }
 </style>
 </body>
-</html> 
+</html> <?php /**PATH C:\xampp\htdocs\JJ_Flowershop_Capstone\resources\views/auth/customer_login.blade.php ENDPATH**/ ?>

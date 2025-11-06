@@ -1,7 +1,5 @@
-@extends('layouts.customer_app')
-
-@section('content')
-@include('components.customer.alt_nav', ['active' => 'profile'])
+<?php $__env->startSection('content'); ?>
+<?php echo $__env->make('components.customer.alt_nav', ['active' => 'profile'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <style>
     .text-capitalize {
         text-transform: capitalize;
@@ -75,7 +73,7 @@
     <div class="row justify-content-center">
         <div class="d-md-none page-label-mobile">Address Book</div>
         <div class="col-md-3 col-lg-3 d-none d-md-block">
-            @include('customer.sidebar')
+            <?php echo $__env->make('customer.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         </div>
         <div class="col-12 col-md-9 col-lg-8 main-content-with-sidebar" style="margin-left: 25%; max-width: calc(75% - 30px);">
             <div id="addressBookContent" class="py-3 px-3">
@@ -98,39 +96,41 @@
 
                 <!-- Toolbar Add Button removed as requested -->
 
-                @if(session('success'))
+                <?php if(session('success')): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('success') }}
+                        <?php echo e(session('success')); ?>
+
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                @endif
+                <?php endif; ?>
 
-                @if($errors->any())
+                <?php if($errors->any()): ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <ul class="mb-0">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
+                            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <li><?php echo e($error); ?></li>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </ul>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                @endif
+                <?php endif; ?>
 
                 <div class="row">
-                    @forelse($addresses as $address)
+                    <?php $__empty_1 = true; $__currentLoopData = $addresses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $address): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <div class="col-md-6 mb-4">
                             <div class="card h-100 address-card">
                                 <div class="card-header d-flex align-items-center justify-content-between">
                                     <div class="d-flex align-items-center gap-2">
                                         <h6 class="address-title">
-                                            {{ $address->label ?? 'Address' }}
+                                            <?php echo e($address->label ?? 'Address'); ?>
+
                                         </h6>
-                                        @if($address->is_default)
+                                        <?php if($address->is_default): ?>
                                             <span class="badge bg-success">Default</span>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
-                                        <button type="button" class="set-address-btn btn btn-sm" data-bs-toggle="modal" data-bs-target="#editAddressModal{{ $address->id }}">
+                                        <button type="button" class="set-address-btn btn btn-sm" data-bs-toggle="modal" data-bs-target="#editAddressModal<?php echo e($address->id); ?>">
                                             <i class="fas fa-plus me-1"></i> Set Address
                                         </button>
                                         <div class="dropdown">
@@ -139,24 +139,24 @@
                                             </button>
                                             <ul class="dropdown-menu">
                                                 <li>
-                                                    <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editAddressModal{{ $address->id }}">
+                                                    <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editAddressModal<?php echo e($address->id); ?>">
                                                         <i class="fas fa-edit me-2"></i> Edit
                                                     </button>
                                                 </li>
-                                                @if(!$address->is_default)
+                                                <?php if(!$address->is_default): ?>
                                                     <li>
-                                                        <form action="{{ route('customer.address_book.set-default', $address) }}" method="POST" class="d-inline">
-                                                            @csrf
+                                                        <form action="<?php echo e(route('customer.address_book.set-default', $address)); ?>" method="POST" class="d-inline">
+                                                            <?php echo csrf_field(); ?>
                                                             <button type="submit" class="dropdown-item">
                                                                 <i class="fas fa-star me-2"></i> Set as Default
                                                             </button>
                                                         </form>
                                                     </li>
-                                                @endif
+                                                <?php endif; ?>
                                                 <li>
-                                                    <form action="{{ route('customer.address_book.destroy', $address) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('DELETE')
+                                                    <form action="<?php echo e(route('customer.address_book.destroy', $address)); ?>" method="POST" class="d-inline">
+                                                        <?php echo csrf_field(); ?>
+                                                        <?php echo method_field('DELETE'); ?>
                                                         <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to delete this address?')">
                                                             <i class="fas fa-trash me-2"></i> Delete
                                                         </button>
@@ -168,91 +168,92 @@
                                 </div>
                                 <div class="card-body">
                                     <p class="card-text mb-0">
-                                        {{ $address->street_address }}<br>
-                                        {{ $address->barangay }}<br>
-                                        @if($address->municipality)
-                                            {{ $address->municipality }}<br>
-                                        @endif
-                                        {{ $address->city }}<br>
-                                        @if($address->region)
-                                            {{ $address->region }}<br>
-                                        @endif
-                                        @if($address->province && $address->province !== 'Cebu')
-                                            {{ $address->province }}<br>
-                                        @endif
-                                        @if($address->zip_code)
-                                            {{ $address->zip_code }}<br>
-                                        @endif
-                                        @if($address->landmark)
-                                            <strong>Landmark:</strong> {{ $address->landmark }}<br>
-                                        @endif
-                                        @if($address->special_instructions)
-                                            <strong>Instructions:</strong> {{ $address->special_instructions }}
-                                        @endif
+                                        <?php echo e($address->street_address); ?><br>
+                                        <?php echo e($address->barangay); ?><br>
+                                        <?php if($address->municipality): ?>
+                                            <?php echo e($address->municipality); ?><br>
+                                        <?php endif; ?>
+                                        <?php echo e($address->city); ?><br>
+                                        <?php if($address->region): ?>
+                                            <?php echo e($address->region); ?><br>
+                                        <?php endif; ?>
+                                        <?php if($address->province && $address->province !== 'Cebu'): ?>
+                                            <?php echo e($address->province); ?><br>
+                                        <?php endif; ?>
+                                        <?php if($address->zip_code): ?>
+                                            <?php echo e($address->zip_code); ?><br>
+                                        <?php endif; ?>
+                                        <?php if($address->landmark): ?>
+                                            <strong>Landmark:</strong> <?php echo e($address->landmark); ?><br>
+                                        <?php endif; ?>
+                                        <?php if($address->special_instructions): ?>
+                                            <strong>Instructions:</strong> <?php echo e($address->special_instructions); ?>
+
+                                        <?php endif; ?>
                                     </p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Edit Address Modal -->
-                        <div class="modal fade" id="editAddressModal{{ $address->id }}" tabindex="-1">
+                        <div class="modal fade" id="editAddressModal<?php echo e($address->id); ?>" tabindex="-1">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content" style="border-radius: 12px;">
                                     <div class="modal-header" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
                                         <h5 class="modal-title fw-bold">Edit Address</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <form action="{{ route('customer.address_book.update', $address) }}" method="POST">
-                                        @csrf
-                                        @method('PUT')
+                                    <form action="<?php echo e(route('customer.address_book.update', $address)); ?>" method="POST">
+                                        <?php echo csrf_field(); ?>
+                                        <?php echo method_field('PUT'); ?>
                                         <div class="modal-body" style="padding: 20px;">
                                             <!-- Hide personal info fields; they are not editable here -->
-                                            <input type="hidden" name="first_name" value="{{ $address->first_name }}">
-                                            <input type="hidden" name="last_name" value="{{ $address->last_name }}">
-                                            <input type="hidden" name="email" value="{{ $address->email ?? Auth::user()->email }}">
-                                            <input type="hidden" name="company" value="{{ $address->company }}">
+                                            <input type="hidden" name="first_name" value="<?php echo e($address->first_name); ?>">
+                                            <input type="hidden" name="last_name" value="<?php echo e($address->last_name); ?>">
+                                            <input type="hidden" name="email" value="<?php echo e($address->email ?? Auth::user()->email); ?>">
+                                            <input type="hidden" name="company" value="<?php echo e($address->company); ?>">
 
                                             <div class="mb-3">
-                                                <label for="street_address{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">Street Address *</label>
-                                                <input type="text" class="form-control text-capitalize" id="street_address{{ $address->id }}" name="street_address" value="{{ $address->street_address }}" required style="border-radius: 8px; padding: 10px;">
+                                                <label for="street_address<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">Street Address *</label>
+                                                <input type="text" class="form-control text-capitalize" id="street_address<?php echo e($address->id); ?>" name="street_address" value="<?php echo e($address->street_address); ?>" required style="border-radius: 8px; padding: 10px;">
                                             </div>
 
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
-                                                    <label for="zip_code{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">Postal Code *</label>
-                                                    <input type="text" class="form-control" id="zip_code{{ $address->id }}" name="zip_code" value="{{ $address->zip_code }}" required style="border-radius: 8px; padding: 10px;">
+                                                    <label for="zip_code<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">Postal Code *</label>
+                                                    <input type="text" class="form-control" id="zip_code<?php echo e($address->id); ?>" name="zip_code" value="<?php echo e($address->zip_code); ?>" required style="border-radius: 8px; padding: 10px;">
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label for="city{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">City *</label>
-                                                    <select class="form-select text-capitalize" id="city{{ $address->id }}" name="city" required style="border-radius: 8px; padding: 10px;">
-                                                        <option value="Cebu City" {{ $address->city == 'Cebu City' ? 'selected' : '' }}>Cebu City</option>
-                                                        <option value="Mandaue City" {{ $address->city == 'Mandaue City' ? 'selected' : '' }}>Mandaue City</option>
-                                                        <option value="Lapu-Lapu City" {{ $address->city == 'Lapu-Lapu City' ? 'selected' : '' }}>Lapu-Lapu City</option>
+                                                    <label for="city<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">City *</label>
+                                                    <select class="form-select text-capitalize" id="city<?php echo e($address->id); ?>" name="city" required style="border-radius: 8px; padding: 10px;">
+                                                        <option value="Cebu City" <?php echo e($address->city == 'Cebu City' ? 'selected' : ''); ?>>Cebu City</option>
+                                                        <option value="Mandaue City" <?php echo e($address->city == 'Mandaue City' ? 'selected' : ''); ?>>Mandaue City</option>
+                                                        <option value="Lapu-Lapu City" <?php echo e($address->city == 'Lapu-Lapu City' ? 'selected' : ''); ?>>Lapu-Lapu City</option>
                                                     </select>
                                                 </div>
                                             </div>
 
                                             <div class="mb-3">
-                                                <label for="municipality{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">Municipality</label>
-                                                <input type="text" class="form-control text-capitalize" id="municipality{{ $address->id }}" name="municipality" value="{{ $address->municipality }}" placeholder="Enter municipality" style="border-radius: 8px; padding: 10px;">
+                                                <label for="municipality<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">Municipality</label>
+                                                <input type="text" class="form-control text-capitalize" id="municipality<?php echo e($address->id); ?>" name="municipality" value="<?php echo e($address->municipality); ?>" placeholder="Enter municipality" style="border-radius: 8px; padding: 10px;">
                                             </div>
 
                                             <div class="mb-3">
-                                                <label for="region{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">Region / State *</label>
-                                                <input type="text" class="form-control" id="region{{ $address->id }}" name="region" value="{{ $address->region ?? 'Region VII - Central Visayas' }}" required style="border-radius: 8px; padding: 10px;">
+                                                <label for="region<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">Region / State *</label>
+                                                <input type="text" class="form-control" id="region<?php echo e($address->id); ?>" name="region" value="<?php echo e($address->region ?? 'Region VII - Central Visayas'); ?>" required style="border-radius: 8px; padding: 10px;">
                                             </div>
 
                                             <input type="hidden" name="country" value="Philippines">
-                                            <input type="hidden" name="phone_number" value="{{ $address->phone_number ?? Auth::user()->contact_number }}">
+                                            <input type="hidden" name="phone_number" value="<?php echo e($address->phone_number ?? Auth::user()->contact_number); ?>">
 
                                             <div class="mb-3">
-                                                <label for="barangay{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">Barangay *</label>
-                                                <input type="text" class="form-control text-capitalize" id="barangay{{ $address->id }}" name="barangay" value="{{ $address->barangay }}" required style="border-radius: 8px; padding: 10px;">
+                                                <label for="barangay<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">Barangay *</label>
+                                                <input type="text" class="form-control text-capitalize" id="barangay<?php echo e($address->id); ?>" name="barangay" value="<?php echo e($address->barangay); ?>" required style="border-radius: 8px; padding: 10px;">
                                             </div>
 
                                             <div class="mb-3">
-                                                <label for="landmark{{ $address->id }}" class="form-label fw-semibold" style="font-size: 14px;">Landmark</label>
-                                                <input type="text" class="form-control text-capitalize" id="landmark{{ $address->id }}" name="landmark" value="{{ $address->landmark }}" style="border-radius: 8px; padding: 10px;">
+                                                <label for="landmark<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">Landmark</label>
+                                                <input type="text" class="form-control text-capitalize" id="landmark<?php echo e($address->id); ?>" name="landmark" value="<?php echo e($address->landmark); ?>" style="border-radius: 8px; padding: 10px;">
                                             </div>
 
                                             <input type="hidden" name="province" value="Cebu">
@@ -264,7 +265,7 @@
                                 </div>
                             </div>
                         </div>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <div class="col-12">
                             <div class="alert d-flex align-items-center justify-content-between" style="background-color: #e8f5e8; border-color: #7bb47b; color: #2d5a2d;">
                                 <div>
@@ -275,7 +276,7 @@
                                 </button>
                             </div>
                         </div>
-                    @endforelse
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -290,13 +291,13 @@
                 <h5 class="modal-title fw-bold">Add New Address</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('customer.address_book.store') }}" method="POST">
-                @csrf
+            <form action="<?php echo e(route('customer.address_book.store')); ?>" method="POST">
+                <?php echo csrf_field(); ?>
                 <div class="modal-body" style="padding: 20px;">
                     <!-- Hidden personal fields auto-filled from profile -->
-                    <input type="hidden" name="first_name" value="{{ Auth::user()->first_name }}">
-                    <input type="hidden" name="last_name" value="{{ Auth::user()->last_name }}">
-                    <input type="hidden" name="email" value="{{ Auth::user()->email }}">
+                    <input type="hidden" name="first_name" value="<?php echo e(Auth::user()->first_name); ?>">
+                    <input type="hidden" name="last_name" value="<?php echo e(Auth::user()->last_name); ?>">
+                    <input type="hidden" name="email" value="<?php echo e(Auth::user()->email); ?>">
                     <input type="hidden" name="company" value="">
 
                     <div class="mb-3">
@@ -331,7 +332,7 @@
                     </div>
 
                     <input type="hidden" name="country" value="Philippines">
-                    <input type="hidden" name="phone_number" value="{{ Auth::user()->contact_number }}">
+                    <input type="hidden" name="phone_number" value="<?php echo e(Auth::user()->contact_number); ?>">
 
                     <div class="mb-3">
                         <label for="barangay" class="form-label fw-semibold" style="font-size: 14px;">Barangay *</label>
@@ -354,7 +355,7 @@
     </div>
 </div>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize location detection
@@ -408,7 +409,7 @@ function initializeLocationDetection() {
 function updateLocationData(latitude, longitude, city) {
     console.log('Updating location data:', { latitude, longitude, city });
 
-    fetch('{{ route("geo.location.update") }}', {
+    fetch('<?php echo e(route("geo.location.update")); ?>', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -520,5 +521,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeLocationDetection();
 });
 </script>
-@endpush
-@endsection
+<?php $__env->stopPush(); ?>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.customer_app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\JJ_Flowershop_Capstone\resources\views/customer/address_book/index.blade.php ENDPATH**/ ?>

@@ -1,6 +1,4 @@
-@extends('layouts.customer_app')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid py-2" style="min-height: 90vh;">
     <div class="row justify-content-center">
         <div class="col-10 col-xl-9"><div class="row justify-content-center">
@@ -70,7 +68,7 @@
 
                 <!-- Customization Form -->
                 <form id="bouquetCustomizationForm" class="flex-grow-1 d-flex flex-column" style="display: flex !important;">
-                    @csrf
+                    <?php echo csrf_field(); ?>
 
                     <!-- Bouquet Wrapper Selection -->
                     <div class="mb-4">
@@ -78,28 +76,28 @@
                             <h6 class="fw-bold text-dark mb-0">Choose Wrappers</h6>
                         </div>
                         <div class="row g-3" id="wrapperGrid">
-                            @foreach(($items['Wrappers'] ?? []) as $wrap)
+                            <?php $__currentLoopData = ($items['Wrappers'] ?? []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $wrap): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="col-3">
-                                <div class="wrapper-option" data-wrapper="{{ $wrap->name }}" data-price="{{ $wrap->price ?? 0 }}" data-image="{{ $wrap->image ? asset('storage/'.$wrap->image) : '' }}">
+                                <div class="wrapper-option" data-wrapper="<?php echo e($wrap->name); ?>" data-price="<?php echo e($wrap->price ?? 0); ?>" data-image="<?php echo e($wrap->image ? asset('storage/'.$wrap->image) : ''); ?>">
                                     <div class="wrapper-card position-relative">
                                         <div class="rounded-3" style="height: 120px; background:#f8f9fa; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-                                            @if($wrap->image)
-                                                <img src="{{ asset('storage/'.$wrap->image) }}" alt="{{ $wrap->name }}" style="max-height:120px; max-width:100%; object-fit:cover;">
-                                            @else
-                                                <span class="text-muted fw-bold" style="font-size: 8px; line-height: 1.1;">{{ $wrap->name }}</span>
-                                            @endif
+                                            <?php if($wrap->image): ?>
+                                                <img src="<?php echo e(asset('storage/'.$wrap->image)); ?>" alt="<?php echo e($wrap->name); ?>" style="max-height:120px; max-width:100%; object-fit:cover;">
+                                            <?php else: ?>
+                                                <span class="text-muted fw-bold" style="font-size: 8px; line-height: 1.1;"><?php echo e($wrap->name); ?></span>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="wrapper-check position-absolute top-0 end-0 m-1" style="display: none;">
                                             <i class="bi bi-check-circle-fill text-success fs-6"></i>
                                         </div>
                                         <div class="wrapper-info mt-2 text-center">
-                                            <small class="fw-medium text-dark" style="font-size: 10px;">{{ $wrap->name }}</small>
-                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($wrap->inventoryItem ? $wrap->inventoryItem->price : ($wrap->price ?? 0), 2) }}</div>
+                                            <small class="fw-medium text-dark" style="font-size: 10px;"><?php echo e($wrap->name); ?></small>
+                                            <div class="text-success fw-bold" style="font-size: 9px;">₱<?php echo e(number_format($wrap->inventoryItem ? $wrap->inventoryItem->price : ($wrap->price ?? 0), 2)); ?></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                         <!-- Pagination dots -->
                         <div class="d-flex justify-content-center mt-3">
@@ -117,28 +115,28 @@
                             <h6 class="fw-bold text-dark mb-0">Choose Fresh Flowers</h6>
                         </div>
                         <div class="row g-3" id="focalFlowerGrid1">
-                            @foreach(($items['Fresh Flowers'] ?? []) as $focal)
+                            <?php $__currentLoopData = ($items['Fresh Flowers'] ?? []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $focal): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="col-3">
-                                <div class="focal1-option" data-flower="{{ $focal->name }}" data-price="{{ $focal->price ?? 0 }}" data-image="{{ $focal->image ? asset('storage/'.$focal->image) : '' }}">
+                                <div class="focal1-option" data-flower="<?php echo e($focal->name); ?>" data-price="<?php echo e($focal->price ?? 0); ?>" data-image="<?php echo e($focal->image ? asset('storage/'.$focal->image) : ''); ?>">
                                     <div class="flower-card position-relative">
                                         <div class="rounded-3" style="height: 120px; background:#f8f9fa; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-                                            @if($focal->image)
-                                                <img src="{{ asset('storage/'.$focal->image) }}" alt="{{ $focal->name }}" style="max-height:120px; max-width:100%; object-fit:cover;">
-                                            @else
-                                                <span class="text-muted fw-bold" style="font-size: 8px; line-height: 1.1;">{{ $focal->name }}</span>
-                                            @endif
+                                            <?php if($focal->image): ?>
+                                                <img src="<?php echo e(asset('storage/'.$focal->image)); ?>" alt="<?php echo e($focal->name); ?>" style="max-height:120px; max-width:100%; object-fit:cover;">
+                                            <?php else: ?>
+                                                <span class="text-muted fw-bold" style="font-size: 8px; line-height: 1.1;"><?php echo e($focal->name); ?></span>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="flower-check position-absolute top-0 end-0 m-1" style="display: none;">
                                             <i class="bi bi-check-circle-fill text-success fs-5"></i>
                                         </div>
                                         <div class="flower-info mt-2 text-center">
-                                            <small class="fw-medium text-dark" style="font-size: 10px;">{{ $focal->name }}</small>
-                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($focal->inventoryItem ? $focal->inventoryItem->price : ($focal->price ?? 0), 2) }}</div>
+                                            <small class="fw-medium text-dark" style="font-size: 10px;"><?php echo e($focal->name); ?></small>
+                                            <div class="text-success fw-bold" style="font-size: 9px;">₱<?php echo e(number_format($focal->inventoryItem ? $focal->inventoryItem->price : ($focal->price ?? 0), 2)); ?></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                         <!-- Pagination dots -->
                         <div class="d-flex justify-content-center mt-3">
@@ -158,28 +156,28 @@
                             <h6 class="fw-bold text-dark mb-0">Choose Greenery</h6>
                         </div>
                         <div class="row g-3">
-                            @foreach(($items['Greenery'] ?? []) as $greenery)
+                            <?php $__currentLoopData = ($items['Greenery'] ?? []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $greenery): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="col-3">
-                                <div class="greenery-option" data-greenery="{{ $greenery->name }}" data-price="{{ $greenery->price ?? 0 }}" data-image="{{ $greenery->image ? asset('storage/'.$greenery->image) : '' }}">
+                                <div class="greenery-option" data-greenery="<?php echo e($greenery->name); ?>" data-price="<?php echo e($greenery->price ?? 0); ?>" data-image="<?php echo e($greenery->image ? asset('storage/'.$greenery->image) : ''); ?>">
                                     <div class="greenery-card position-relative">
                                         <div class="rounded-3" style="height: 120px; background:#f8f9fa; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-                                            @if($greenery->image)
-                                                <img src="{{ asset('storage/'.$greenery->image) }}" alt="{{ $greenery->name }}" style="max-height:120px; max-width:100%; object-fit:cover;">
-                                            @else
-                                                <span class="text-muted fw-bold" style="font-size: 8px; line-height: 1.1;">{{ $greenery->name }}</span>
-                                            @endif
+                                            <?php if($greenery->image): ?>
+                                                <img src="<?php echo e(asset('storage/'.$greenery->image)); ?>" alt="<?php echo e($greenery->name); ?>" style="max-height:120px; max-width:100%; object-fit:cover;">
+                                            <?php else: ?>
+                                                <span class="text-muted fw-bold" style="font-size: 8px; line-height: 1.1;"><?php echo e($greenery->name); ?></span>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="greenery-check position-absolute top-0 end-0 m-1" style="display: none;">
                                             <i class="bi bi-check-circle-fill text-success fs-6"></i>
                                         </div>
                                         <div class="greenery-info mt-2 text-center">
-                                            <small class="fw-medium text-dark" style="font-size: 10px;">{{ $greenery->name }}</small>
-                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($greenery->inventoryItem ? $greenery->inventoryItem->price : ($greenery->price ?? 0), 2) }}</div>
+                                            <small class="fw-medium text-dark" style="font-size: 10px;"><?php echo e($greenery->name); ?></small>
+                                            <div class="text-success fw-bold" style="font-size: 9px;">₱<?php echo e(number_format($greenery->inventoryItem ? $greenery->inventoryItem->price : ($greenery->price ?? 0), 2)); ?></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                         <!-- Pagination dots -->
                         <div class="d-flex justify-content-center mt-3">
@@ -197,34 +195,34 @@
                             <h6 class="fw-bold text-dark mb-0">Choose Artificial Flowers</h6>
                         </div>
                         <div class="row g-3">
-                            @if(isset($items['Artificial Flowers']) && count($items['Artificial Flowers']) > 0)
-                                @foreach($items['Artificial Flowers'] as $filler)
+                            <?php if(isset($items['Artificial Flowers']) && count($items['Artificial Flowers']) > 0): ?>
+                                <?php $__currentLoopData = $items['Artificial Flowers']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $filler): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="col-3">
-                                <div class="filler-option" data-filler="{{ $filler->name }}" data-price="{{ $filler->price ?? 0 }}" data-image="{{ $filler->image ? asset('storage/'.$filler->image) : '' }}">
+                                <div class="filler-option" data-filler="<?php echo e($filler->name); ?>" data-price="<?php echo e($filler->price ?? 0); ?>" data-image="<?php echo e($filler->image ? asset('storage/'.$filler->image) : ''); ?>">
                                     <div class="filler-card position-relative">
                                         <div class="rounded-3" style="height: 120px; background:#f8f9fa; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-                                            @if($filler->image)
-                                                <img src="{{ asset('storage/'.$filler->image) }}" alt="{{ $filler->name }}" style="max-height:120px; max-width:100%; object-fit:cover;">
-                                            @else
-                                                <span class="text-muted fw-bold" style="font-size: 8px; line-height: 1.1;">{{ $filler->name }}</span>
-                                            @endif
+                                            <?php if($filler->image): ?>
+                                                <img src="<?php echo e(asset('storage/'.$filler->image)); ?>" alt="<?php echo e($filler->name); ?>" style="max-height:120px; max-width:100%; object-fit:cover;">
+                                            <?php else: ?>
+                                                <span class="text-muted fw-bold" style="font-size: 8px; line-height: 1.1;"><?php echo e($filler->name); ?></span>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="filler-check position-absolute top-0 end-0 m-1" style="display: none;">
                                             <i class="bi bi-check-circle-fill text-success fs-6"></i>
                                         </div>
                                         <div class="filler-info mt-2 text-center">
-                                            <small class="fw-medium text-dark" style="font-size: 10px;">{{ $filler->name }}</small>
-                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($filler->inventoryItem ? $filler->inventoryItem->price : ($filler->price ?? 0), 2) }}</div>
+                                            <small class="fw-medium text-dark" style="font-size: 10px;"><?php echo e($filler->name); ?></small>
+                                            <div class="text-success fw-bold" style="font-size: 9px;">₱<?php echo e(number_format($filler->inventoryItem ? $filler->inventoryItem->price : ($filler->price ?? 0), 2)); ?></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                                @endforeach
-                            @else
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            <?php else: ?>
                                 <div class="col-12 text-center text-muted">
                                     <p>No artificial flowers available at the moment.</p>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <!-- Pagination dots -->
                         <div class="d-flex justify-content-center mt-3">
@@ -242,28 +240,28 @@
                             <h6 class="fw-bold text-dark mb-0">Choose Ribbons</h6>
                         </div>
                         <div class="row g-3">
-                            @foreach(($items['Ribbon'] ?? []) as $ribbon)
+                            <?php $__currentLoopData = ($items['Ribbon'] ?? []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ribbon): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="col-3">
-                                <div class="ribbon-option" data-ribbon="{{ $ribbon->name }}" data-price="{{ $ribbon->price ?? 0 }}" data-image="{{ $ribbon->image ? asset('storage/'.$ribbon->image) : '' }}">
+                                <div class="ribbon-option" data-ribbon="<?php echo e($ribbon->name); ?>" data-price="<?php echo e($ribbon->price ?? 0); ?>" data-image="<?php echo e($ribbon->image ? asset('storage/'.$ribbon->image) : ''); ?>">
                                     <div class="ribbon-card position-relative">
                                         <div class="rounded-3" style="height: 120px; background:#f8f9fa; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-                                            @if($ribbon->image)
-                                                <img src="{{ asset('storage/'.$ribbon->image) }}" alt="{{ $ribbon->name }}" style="max-height:120px; max-width:100%; object-fit:cover;">
-                                            @else
-                                                <span class="text-muted fw-bold" style="font-size: 8px; line-height: 1.1;">{{ $ribbon->name }}</span>
-                                            @endif
+                                            <?php if($ribbon->image): ?>
+                                                <img src="<?php echo e(asset('storage/'.$ribbon->image)); ?>" alt="<?php echo e($ribbon->name); ?>" style="max-height:120px; max-width:100%; object-fit:cover;">
+                                            <?php else: ?>
+                                                <span class="text-muted fw-bold" style="font-size: 8px; line-height: 1.1;"><?php echo e($ribbon->name); ?></span>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="ribbon-check position-absolute top-0 end-0 m-1" style="display: none;">
                                             <i class="bi bi-check-circle-fill text-success fs-6"></i>
                                         </div>
                                         <div class="ribbon-info mt-2 text-center">
-                                            <small class="fw-medium text-dark" style="font-size: 10px;">{{ $ribbon->name }}</small>
-                                            <div class="text-success fw-bold" style="font-size: 9px;">₱{{ number_format($ribbon->inventoryItem ? $ribbon->inventoryItem->price : ($ribbon->price ?? 0), 2) }}</div>
+                                            <small class="fw-medium text-dark" style="font-size: 10px;"><?php echo e($ribbon->name); ?></small>
+                                            <div class="text-success fw-bold" style="font-size: 9px;">₱<?php echo e(number_format($ribbon->inventoryItem ? $ribbon->inventoryItem->price : ($ribbon->price ?? 0), 2)); ?></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                         <!-- Pagination dots -->
                         <div class="d-flex justify-content-center mt-3">
@@ -440,9 +438,9 @@
 <input type="hidden" id="selectedMoneyAmount" name="money_amount" value="">
 <input type="hidden" id="bouquetType" name="bouquet_type" value="regular">
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <style>
 /* Notice Section Styles */
 .notice-section {
@@ -676,9 +674,9 @@
     #priceSummaryModal .modal-dialog { width: 90vw !important; max-width: 90vw !important; margin: 20vh auto !important; }
 }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 // Define updatePrice function globally BEFORE DOMContentLoaded
 window.updatePrice = function() {
@@ -882,7 +880,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.quantity = 1;
     window.bouquetType = 'regular'; // 'regular' or 'money'
 
-    window.assemblyFee = {{ $assemblingFee ?? 150 }};
+    window.assemblyFee = <?php echo e($assemblingFee ?? 150); ?>;
 
     // Initialize modal quantities
     window.freshFlowerQuantity = 1;
@@ -1676,7 +1674,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Submit to backend
-        fetch('{{ route("customer.products.bouquet-customize.store") }}', {
+        fetch('<?php echo e(route("customer.products.bouquet-customize.store")); ?>', {
             method: 'POST',
             body: formData
         })
@@ -1732,7 +1730,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Submit to backend
-        fetch('{{ route("customer.products.bouquet-customize.add-to-cart") }}', {
+        fetch('<?php echo e(route("customer.products.bouquet-customize.add-to-cart")); ?>', {
             method: 'POST',
             body: formData
         })
@@ -1794,7 +1792,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Submit to backend
-        fetch('{{ route("customer.products.bouquet-customize.buy-now") }}', {
+        fetch('<?php echo e(route("customer.products.bouquet-customize.buy-now")); ?>', {
             method: 'POST',
             body: formData
         })
@@ -2100,6 +2098,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.head.appendChild(style);
     }
     </script>
-    @endpush
+    <?php $__env->stopPush(); ?>
 
 
+
+<?php echo $__env->make('layouts.customer_app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\JJ_Flowershop_Capstone\resources\views/products/bouquet-customize.blade.php ENDPATH**/ ?>

@@ -43,6 +43,18 @@ class CustomizeController extends Controller
         try {
             DB::beginTransaction();
 
+            // Server-side restriction: require wrapper + ribbon + greenery AND at least one flower (fresh/artificial)
+            if ($request->bouquet_type === 'regular') {
+                $hasBase = $request->filled('wrapper') && $request->filled('ribbon') && $request->filled('greenery');
+                $hasAnyFlower = $request->filled('focal_flower_1') || $request->filled('focal_flower_2') || $request->filled('focal_flower_3') || $request->filled('filler');
+                if (!$hasBase || !$hasAnyFlower) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Please select a wrapper, ribbon, greenery, and at least one flower (fresh or artificial).'
+                    ], 422);
+                }
+            }
+
             // Calculate total price
             $totalPrice = $this->calculateTotalPrice($request);
 
@@ -118,6 +130,10 @@ class CustomizeController extends Controller
         if ($request->bouquet_type === 'regular') {
             $items = $this->getCustomizeItemsForPricing();
 
+            // Quantities from the UI (default to 1)
+            $freshQty = max(1, (int) $request->input('fresh_flower_qty', 1));
+            $artificialQty = max(1, (int) $request->input('artificial_flower_qty', 1));
+
             $components = [
                 'wrapper' => $request->wrapper,
                 'focal_flower_1' => $request->focal_flower_1,
@@ -128,7 +144,7 @@ class CustomizeController extends Controller
                 'ribbon' => $request->ribbon,
             ];
 
-            foreach ($components as $component) {
+            foreach ($components as $key => $component) {
                 if ($component) {
                     // Try to find by exact name match (case-insensitive)
                     $componentKey = strtolower(trim($component));
@@ -136,17 +152,23 @@ class CustomizeController extends Controller
                     // Check if items is a collection keyed by name
                     if ($items->has($componentKey)) {
                         $item = $items[$componentKey];
-                        $total += is_object($item) ? ($item->price ?? 0) : ($item['price'] ?? 0);
+                        $price = is_object($item) ? ($item->price ?? 0) : ($item['price'] ?? 0);
                     } else {
                         // Fallback: search in collection
                         $item = $items->first(function ($item) use ($componentKey) {
                             $itemName = is_object($item) ? ($item->name ?? '') : ($item['name'] ?? '');
                             return strtolower(trim($itemName)) === $componentKey;
                         });
-                        
-                        if ($item) {
-                            $total += is_object($item) ? ($item->price ?? 0) : ($item['price'] ?? 0);
-                        }
+                        $price = $item ? (is_object($item) ? ($item->price ?? 0) : ($item['price'] ?? 0)) : 0;
+                    }
+
+                    // Apply per-component quantity rules
+                    if ($key === 'focal_flower_1') {
+                        $total += $price * $freshQty;
+                    } elseif ($key === 'filler') {
+                        $total += $price * $artificialQty;
+                    } else {
+                        $total += $price;
                     }
                 }
             }
@@ -172,6 +194,17 @@ class CustomizeController extends Controller
 
         try {
             DB::beginTransaction();
+
+            if ($request->bouquet_type === 'regular') {
+                $hasBase = $request->filled('wrapper') && $request->filled('ribbon') && $request->filled('greenery');
+                $hasAnyFlower = $request->filled('focal_flower_1') || $request->filled('focal_flower_2') || $request->filled('focal_flower_3') || $request->filled('filler');
+                if (!$hasBase || !$hasAnyFlower) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Please select a wrapper, ribbon, greenery, and at least one flower (fresh or artificial).'
+                    ], 422);
+                }
+            }
 
             // Calculate total price
             $totalPrice = $this->calculateTotalPrice($request);
@@ -258,6 +291,17 @@ class CustomizeController extends Controller
 
         try {
             DB::beginTransaction();
+
+            if ($request->bouquet_type === 'regular') {
+                $hasBase = $request->filled('wrapper') && $request->filled('ribbon') && $request->filled('greenery');
+                $hasAnyFlower = $request->filled('focal_flower_1') || $request->filled('focal_flower_2') || $request->filled('focal_flower_3') || $request->filled('filler');
+                if (!$hasBase || !$hasAnyFlower) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Please select a wrapper, ribbon, greenery, and at least one flower (fresh or artificial).'
+                    ], 422);
+                }
+            }
 
             // Calculate total price
             $totalPrice = $this->calculateTotalPrice($request);

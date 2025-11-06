@@ -1,4 +1,4 @@
-@php($active = $active ?? '')
+<?php ($active = $active ?? ''); ?>
 <style>
 /* Alternative navbar that visually matches the cart navbar (mobile only) */
 @media (max-width: 650px) {
@@ -125,40 +125,40 @@ if (typeof window.profileMenuListenerAttached === 'undefined') {
 </script>
 
 <div class="alt-topbar d-lg-none">
-    <a href="{{ route('customer.dashboard') }}" class="brand" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
-        <img src="/images/logo.png" alt="JJ Flower Shop" onerror="this.onerror=null;this.src='{{ asset('images/default-avatar.png') }}';">
+    <a href="<?php echo e(route('customer.dashboard')); ?>" class="brand" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
+        <img src="/images/logo.png" alt="JJ Flower Shop" onerror="this.onerror=null;this.src='<?php echo e(asset('images/default-avatar.png')); ?>';">
         <div class="text">J ' J FLOWER<small>SHOP Est. 2023</small></div>
     </a>
     <div class="icons">
-        <a href="{{ route('customer.favorites') }}" title="Favorites"><i class="bi bi-heart"></i></a>
-        <a href="{{ route('customer.cart.index') }}" title="Cart"><i class="bi bi-cart"></i></a>
+        <a href="<?php echo e(route('customer.favorites')); ?>" title="Favorites"><i class="bi bi-heart"></i></a>
+        <a href="<?php echo e(route('customer.cart.index')); ?>" title="Cart"><i class="bi bi-cart"></i></a>
     </div>
 </div>
 
 <nav class="alt-bottom-nav d-lg-none">
-    <a href="{{ route('customer.dashboard') }}"><i class="bi bi-house-door"></i><span>Home</span></a>
-    <a href="{{ route('customer.products.bouquet-customize') }}" class="{{ $active==='customize' ? 'active' : '' }}"><i class="bi bi-brush"></i><span>Customize</span></a>
-    <a href="{{ route('customer.notifications.index') }}" class="{{ $active==='notifications' ? 'active' : '' }}"><i class="bi bi-bell"></i><span>Notifications</span></a>
-    <div class="profile-dropdown-wrapper {{ request()->routeIs('customer.account.index') || request()->routeIs('customer.address_book.*') || request()->routeIs('customer.orders.*') || request()->routeIs('customer.trackOrders.*') ? 'active' : '' }}" style="position: relative;">
+    <a href="<?php echo e(route('customer.dashboard')); ?>"><i class="bi bi-house-door"></i><span>Home</span></a>
+    <a href="<?php echo e(route('customer.products.bouquet-customize')); ?>" class="<?php echo e($active==='customize' ? 'active' : ''); ?>"><i class="bi bi-brush"></i><span>Customize</span></a>
+    <a href="<?php echo e(route('customer.notifications.index')); ?>" class="<?php echo e($active==='notifications' ? 'active' : ''); ?>"><i class="bi bi-bell"></i><span>Notifications</span></a>
+    <div class="profile-dropdown-wrapper <?php echo e(request()->routeIs('customer.account.index') || request()->routeIs('customer.address_book.*') || request()->routeIs('customer.orders.*') || request()->routeIs('customer.trackOrders.*') ? 'active' : ''); ?>" style="position: relative;">
         <a href="#" class="profile-trigger" onclick="event.preventDefault(); toggleProfileMenu(event);" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: inherit;">
             <i class="bi bi-person"></i>
             <span>My Profile</span>
         </a>
         <div class="profile-dropdown-menu" id="profileDropdownAlt" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 10px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 180px; z-index: 1200; display: none; padding: 8px 0;">
-            <a href="{{ route('customer.account.index') }}" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
+            <a href="<?php echo e(route('customer.account.index')); ?>" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
                 <i class="bi bi-person me-2"></i>Profile
             </a>
-            <a href="{{ route('customer.address_book.index') }}" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
+            <a href="<?php echo e(route('customer.address_book.index')); ?>" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
                 <i class="bi bi-book me-2"></i>Address Book
             </a>
-            <a href="{{ route('customer.orders.index') }}" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
+            <a href="<?php echo e(route('customer.orders.index')); ?>" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
                 <i class="bi bi-bag me-2"></i>My Purchase
             </a>
-            <a href="{{ route('customer.trackOrders.page') }}" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
+            <a href="<?php echo e(route('customer.trackOrders.page')); ?>" class="dropdown-item" style="padding: 10px 16px; display: block; color: #333; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #eee;">
                 <i class="bi bi-truck me-2"></i>Track Order
             </a>
-            <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
-                @csrf
+            <form method="POST" action="<?php echo e(route('logout')); ?>" style="margin: 0;">
+                <?php echo csrf_field(); ?>
                 <button type="submit" class="dropdown-item" style="width: 100%; padding: 10px 16px; display: block; color: #dc3545; text-decoration: none; font-size: 0.9rem; border: none; background: none; text-align: left; cursor: pointer;">
                     <i class="bi bi-box-arrow-right me-2"></i>Log Out
                 </button>
@@ -168,3 +168,4 @@ if (typeof window.profileMenuListenerAttached === 'undefined') {
 </nav>
 
 
+<?php /**PATH C:\xampp\htdocs\JJ_Flowershop_Capstone\resources\views/components/customer/alt_nav.blade.php ENDPATH**/ ?>
