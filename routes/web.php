@@ -164,7 +164,7 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\AdminMiddleware::class])-
     // Inventory Logs
     // Inventory Logs routes removed
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::post('/reports/sales', [ReportController::class, 'generateSalesReport'])->name('reports.sales');
+    Route::post('/reports/sales', [ReportController::class, 'generateSalesReport'])->name('reports.sales.generate');
     Route::post('/reports/order-status', [ReportController::class, 'generateOrderStatusReport'])->name('reports.orderStatus');
     Route::post('/reports/product-performance', [ReportController::class, 'generateProductPerformanceReport'])->name('reports.productPerformance');
     Route::post('/reports/user-activity', [ReportController::class, 'generateUserActivityReport'])->name('reports.userActivity');

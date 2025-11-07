@@ -221,7 +221,7 @@
 
             reportResultsDiv.innerHTML = '<p class="text-center">Generating sales report...</p>';
 
-            fetch('{{ route('admin.reports.sales') }}', {
+            fetch('{{ route('admin.reports.sales.generate') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
