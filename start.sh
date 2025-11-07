@@ -6,6 +6,8 @@ echo "PORT: $PORT" >&2
 echo "APP_KEY is set: $([ -n "$APP_KEY" ] && echo 'YES' || echo 'NO')" >&2
 echo "APP_ENV: ${APP_ENV:-not set}" >&2
 echo "DB_CONNECTION: ${DB_CONNECTION:-not set}" >&2
+echo "DB_HOST: ${DB_HOST:-not set}" >&2
+echo "DB_PORT: ${DB_PORT:-not set}" >&2
 
 # Check if PORT is set
 if [ -z "$PORT" ]; then
