@@ -52,9 +52,11 @@
         <div class="p-0">
             <div class="row g-2 align-items-end">
                 <div class="col-12">
-                    <div class="input-group">
-                        <input id="productSearchInput" type="text" class="form-control" placeholder="Search products..." aria-label="Search" value="{{ request('search', '') }}">
+                    <div class="input-group position-relative">
+                        <input id="productSearchInput" type="text" class="form-control" placeholder="Search products..." aria-label="Search" value="{{ request('search', '') }}" autocomplete="off">
                         <button id="productFilterBtn" class="btn btn-outline-success" type="button" title="Filter"><i class="bi bi-funnel"></i></button>
+                        <!-- Search Suggestions Dropdown -->
+                        <div id="searchSuggestions" class="search-suggestions-dropdown" style="display: none;"></div>
                     </div>
                 </div>
             </div>
@@ -461,6 +463,94 @@
         border-color: #27ae60;
         box-shadow: 0 0 0 0.2rem rgba(39, 174, 96, 0.25);
     }
+    
+    /* Search Suggestions Dropdown - Mobile Responsive */
+    .search-suggestions-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 2px solid #27ae60;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        margin-top: -2px;
+    }
+    
+    .search-suggestion-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #e9ecef;
+        transition: background-color 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .search-suggestion-item:last-child {
+        border-bottom: none;
+    }
+    
+    .search-suggestion-item:hover,
+    .search-suggestion-item.active {
+        background-color: #f0f8f4;
+    }
+    
+    .search-suggestion-item .suggestion-name {
+        flex: 1;
+        font-size: 0.9rem;
+        color: #2c3e50;
+        font-weight: 500;
+    }
+    
+    .search-suggestion-item .suggestion-price {
+        font-size: 0.85rem;
+        color: #27ae60;
+        font-weight: 600;
+    }
+    
+    .search-suggestion-item .suggestion-category {
+        font-size: 0.75rem;
+        color: #7f8c8d;
+        background: #ecf0f1;
+        padding: 2px 8px;
+        border-radius: 12px;
+    }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 650px) {
+        .search-suggestions-dropdown {
+            max-height: 180px;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .search-suggestion-item {
+            padding: 10px 12px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        
+        .search-suggestion-item .suggestion-name {
+            font-size: 0.85rem;
+            width: 100%;
+            word-break: break-word;
+        }
+        
+        .search-suggestion-item .suggestion-price {
+            font-size: 0.8rem;
+        }
+        
+        .search-suggestion-item .suggestion-category {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+        }
+    }
 </style>
 
 <script>
@@ -501,14 +591,185 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Search functionality - only search on Enter key press
+    // Search functionality with autocomplete suggestions
     const searchInput = document.getElementById('productSearchInput');
+    const searchSuggestions = document.getElementById('searchSuggestions');
+    let suggestionTimeout = null;
+    let selectedSuggestionIndex = -1;
+    let currentSuggestions = [];
+    
     if (searchInput) {
+        // Show suggestions as user types
+        searchInput.addEventListener('input', function(e) {
+            const query = this.value.trim();
+            
+            clearTimeout(suggestionTimeout);
+            
+            if (query.length < 2) {
+                hideSuggestions();
+                return;
+            }
+            
+            // Debounce API calls
+            suggestionTimeout = setTimeout(() => {
+                fetchSuggestions(query);
+            }, 300);
+        });
+        
+        // Handle Enter key
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                performSearch();
+                if (selectedSuggestionIndex >= 0 && currentSuggestions[selectedSuggestionIndex]) {
+                    selectSuggestion(currentSuggestions[selectedSuggestionIndex]);
+                } else {
+                    performSearch();
+                }
             }
         });
+        
+        // Handle keyboard navigation
+        searchInput.addEventListener('keydown', function(e) {
+            if (searchSuggestions.style.display === 'none') return;
+            
+            const items = searchSuggestions.querySelectorAll('.search-suggestion-item');
+            
+            switch(e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, items.length - 1);
+                    updateSelectedSuggestion();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
+                    updateSelectedSuggestion();
+                    break;
+                case 'Escape':
+                    hideSuggestions();
+                    break;
+            }
+        });
+        
+        // Show suggestions on focus if there's text
+        searchInput.addEventListener('focus', function() {
+            if (this.value.trim().length >= 2) {
+                fetchSuggestions(this.value.trim());
+            }
+        });
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+                hideSuggestions();
+            }
+        });
+    }
+    
+    function fetchSuggestions(query) {
+        fetch(`{{ route('customer.search-suggestions') }}?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.suggestions) {
+                    displaySuggestions(data.suggestions);
+                } else {
+                    hideSuggestions();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching suggestions:', error);
+                hideSuggestions();
+            });
+    }
+    
+    function displaySuggestions(suggestions) {
+        if (!suggestions || suggestions.length === 0) {
+            hideSuggestions();
+            return;
+        }
+        
+        currentSuggestions = suggestions;
+        searchSuggestions.innerHTML = '';
+        
+        suggestions.forEach((suggestion, index) => {
+            const item = document.createElement('div');
+            item.className = 'search-suggestion-item';
+            item.innerHTML = `
+                <span class="suggestion-name">${escapeHtml(suggestion.name)}</span>
+                <span class="suggestion-price">₱${parseFloat(suggestion.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                <span class="suggestion-category">${escapeHtml(suggestion.category)}</span>
+            `;
+            
+            item.addEventListener('click', () => {
+                selectSuggestion(suggestion);
+            });
+            
+            item.addEventListener('mouseenter', () => {
+                selectedSuggestionIndex = index;
+                updateSelectedSuggestion();
+            });
+            
+            item.addEventListener('touchstart', () => {
+                selectedSuggestionIndex = index;
+                updateSelectedSuggestion();
+            });
+            
+            searchSuggestions.appendChild(item);
+        });
+        
+        searchSuggestions.style.display = 'block';
+        selectedSuggestionIndex = -1;
+        
+        // On mobile, ensure dropdown is positioned correctly
+        if (window.innerWidth <= 650) {
+            const inputGroup = searchInput.closest('.input-group');
+            if (inputGroup) {
+                const rect = inputGroup.getBoundingClientRect();
+                searchSuggestions.style.position = 'fixed';
+                searchSuggestions.style.top = (rect.bottom + window.scrollY) + 'px';
+                searchSuggestions.style.left = '0';
+                searchSuggestions.style.right = '0';
+                searchSuggestions.style.width = '100%';
+            }
+        } else {
+            // Reset to relative positioning on desktop
+            searchSuggestions.style.position = '';
+            searchSuggestions.style.top = '';
+            searchSuggestions.style.left = '';
+            searchSuggestions.style.right = '';
+            searchSuggestions.style.width = '';
+        }
+    }
+    
+    function selectSuggestion(suggestion) {
+        if (searchInput) {
+            searchInput.value = suggestion.name;
+            hideSuggestions();
+            performSearch();
+        }
+    }
+    
+    function updateSelectedSuggestion() {
+        const items = searchSuggestions.querySelectorAll('.search-suggestion-item');
+        items.forEach((item, index) => {
+            if (index === selectedSuggestionIndex) {
+                item.classList.add('active');
+                item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+    
+    function hideSuggestions() {
+        searchSuggestions.style.display = 'none';
+        selectedSuggestionIndex = -1;
+        currentSuggestions = [];
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     
     // Filter functionality
@@ -518,8 +779,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterClear = document.getElementById('productFilterClear');
     
     if (filterBtn && filterPanel) {
-        filterBtn.addEventListener('click', function() {
+        filterBtn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent event from bubbling up
             filterPanel.style.display = filterPanel.style.display === 'none' ? 'block' : 'none';
+        });
+        
+        // Close filter panel when clicking outside
+        document.addEventListener('click', function(e) {
+            if (filterPanel && filterPanel.style.display === 'block') {
+                const within = filterPanel.contains(e.target) || filterBtn.contains(e.target);
+                if (!within) {
+                    filterPanel.style.display = 'none';
+                }
+            }
         });
     }
     

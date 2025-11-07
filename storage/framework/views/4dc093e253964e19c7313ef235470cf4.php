@@ -195,7 +195,7 @@
                                         <h5 class="modal-title fw-bold">Edit Address</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <form action="<?php echo e(route('customer.address_book.update', $address)); ?>" method="POST" autocomplete="off">
+                                    <form action="<?php echo e(route('customer.address_book.update', $address)); ?>" method="POST">
                                         <?php echo csrf_field(); ?>
                                         <?php echo method_field('PUT'); ?>
                                         <div class="modal-body" style="padding: 20px;">
@@ -207,17 +207,17 @@
 
                                             <div class="mb-3">
                                                 <label for="street_address<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">Street Address *</label>
-                                                <input type="text" class="form-control text-capitalize" id="street_address<?php echo e($address->id); ?>" name="street_address" value="<?php echo e($address->street_address); ?>" required autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                                                <input type="text" class="form-control text-capitalize" id="street_address<?php echo e($address->id); ?>" name="street_address" value="<?php echo e($address->street_address); ?>" required style="border-radius: 8px; padding: 10px;">
                                             </div>
 
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
                                                     <label for="zip_code<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">Postal Code *</label>
-                                                    <input type="text" class="form-control" id="zip_code<?php echo e($address->id); ?>" name="zip_code" value="<?php echo e($address->zip_code); ?>" required autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                                                    <input type="text" class="form-control" id="zip_code<?php echo e($address->id); ?>" name="zip_code" value="<?php echo e($address->zip_code); ?>" required style="border-radius: 8px; padding: 10px;">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label for="city<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">City *</label>
-                                                    <select class="form-select text-capitalize" id="city<?php echo e($address->id); ?>" name="city" required autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                                                    <select class="form-select text-capitalize" id="city<?php echo e($address->id); ?>" name="city" required style="border-radius: 8px; padding: 10px;">
                                                         <option value="Cebu City" <?php echo e($address->city == 'Cebu City' ? 'selected' : ''); ?>>Cebu City</option>
                                                         <option value="Mandaue City" <?php echo e($address->city == 'Mandaue City' ? 'selected' : ''); ?>>Mandaue City</option>
                                                         <option value="Lapu-Lapu City" <?php echo e($address->city == 'Lapu-Lapu City' ? 'selected' : ''); ?>>Lapu-Lapu City</option>
@@ -227,12 +227,12 @@
 
                                             <div class="mb-3">
                                                 <label for="municipality<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">Municipality</label>
-                                                <input type="text" class="form-control text-capitalize" id="municipality<?php echo e($address->id); ?>" name="municipality" value="<?php echo e($address->municipality); ?>" placeholder="Enter municipality" autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                                                <input type="text" class="form-control text-capitalize" id="municipality<?php echo e($address->id); ?>" name="municipality" value="<?php echo e($address->municipality); ?>" placeholder="Enter municipality" style="border-radius: 8px; padding: 10px;">
                                             </div>
 
                                             <div class="mb-3">
                                                 <label for="region<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">Region / State *</label>
-                                                <input type="text" class="form-control" id="region<?php echo e($address->id); ?>" name="region" value="<?php echo e($address->region ?? 'Region VII - Central Visayas'); ?>" required autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                                                <input type="text" class="form-control" id="region<?php echo e($address->id); ?>" name="region" value="<?php echo e($address->region ?? 'Region VII - Central Visayas'); ?>" required style="border-radius: 8px; padding: 10px;">
                                             </div>
 
                                             <input type="hidden" name="country" value="Philippines">
@@ -240,12 +240,12 @@
 
                                             <div class="mb-3">
                                                 <label for="barangay<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">Barangay *</label>
-                                                <input type="text" class="form-control text-capitalize" id="barangay<?php echo e($address->id); ?>" name="barangay" value="<?php echo e($address->barangay); ?>" required autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                                                <input type="text" class="form-control text-capitalize" id="barangay<?php echo e($address->id); ?>" name="barangay" value="<?php echo e($address->barangay); ?>" required style="border-radius: 8px; padding: 10px;">
                                             </div>
 
                                             <div class="mb-3">
                                                 <label for="landmark<?php echo e($address->id); ?>" class="form-label fw-semibold" style="font-size: 14px;">Landmark</label>
-                                                <input type="text" class="form-control text-capitalize" id="landmark<?php echo e($address->id); ?>" name="landmark" value="<?php echo e($address->landmark); ?>" autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                                                <input type="text" class="form-control text-capitalize" id="landmark<?php echo e($address->id); ?>" name="landmark" value="<?php echo e($address->landmark); ?>" style="border-radius: 8px; padding: 10px;">
                                             </div>
 
                                             <input type="hidden" name="province" value="Cebu">
@@ -283,7 +283,7 @@
                 <h5 class="modal-title fw-bold">Add New Address</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="<?php echo e(route('customer.address_book.store')); ?>" method="POST" autocomplete="off">
+            <form action="<?php echo e(route('customer.address_book.store')); ?>" method="POST">
                 <?php echo csrf_field(); ?>
                 <div class="modal-body" style="padding: 20px;">
                     <!-- Hidden personal fields auto-filled from profile -->
@@ -294,17 +294,17 @@
 
                     <div class="mb-3">
                         <label for="street_address" class="form-label fw-semibold" style="font-size: 14px;">Street Address *</label>
-                        <input type="text" class="form-control text-capitalize" id="street_address" name="street_address" required autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                        <input type="text" class="form-control text-capitalize" id="street_address" name="street_address" required style="border-radius: 8px; padding: 10px;">
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="zip_code" class="form-label fw-semibold" style="font-size: 14px;">Postal Code *</label>
-                            <input type="text" class="form-control" id="zip_code" name="zip_code" required autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                            <input type="text" class="form-control" id="zip_code" name="zip_code" required style="border-radius: 8px; padding: 10px;">
                         </div>
                         <div class="col-md-6">
                             <label for="city" class="form-label fw-semibold" style="font-size: 14px;">City *</label>
-                            <select class="form-select text-capitalize" id="city" name="city" required autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                            <select class="form-select text-capitalize" id="city" name="city" required style="border-radius: 8px; padding: 10px;">
                             
                                 <option value="Cebu City">Cebu City</option>
                                 <option value="Mandaue City">Mandaue City</option>
@@ -315,12 +315,12 @@
 
                     <div class="mb-3">
                         <label for="municipality" class="form-label fw-semibold" style="font-size: 14px;">Municipality</label>
-                        <input type="text" class="form-control text-capitalize" id="municipality" name="municipality" placeholder="Enter municipality" autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                        <input type="text" class="form-control text-capitalize" id="municipality" name="municipality" placeholder="Enter municipality" style="border-radius: 8px; padding: 10px;">
                     </div>
 
                     <div class="mb-3">
                         <label for="region" class="form-label fw-semibold" style="font-size: 14px;">Region / State *</label>
-                        <input type="text" class="form-control" id="region" name="region" value="Region VII - Central Visayas" required autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                        <input type="text" class="form-control" id="region" name="region" value="Region VII - Central Visayas" required style="border-radius: 8px; padding: 10px;">
                     </div>
 
                     <input type="hidden" name="country" value="Philippines">
@@ -328,12 +328,12 @@
 
                     <div class="mb-3">
                         <label for="barangay" class="form-label fw-semibold" style="font-size: 14px;">Barangay *</label>
-                        <input type="text" class="form-control text-capitalize" id="barangay" name="barangay" required autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                        <input type="text" class="form-control text-capitalize" id="barangay" name="barangay" required style="border-radius: 8px; padding: 10px;">
                     </div>
 
                     <div class="mb-3">
                         <label for="landmark" class="form-label fw-semibold" style="font-size: 14px;">Landmark</label>
-                        <input type="text" class="form-control text-capitalize" id="landmark" name="landmark" autocomplete="off" style="border-radius: 8px; padding: 10px;">
+                        <input type="text" class="form-control text-capitalize" id="landmark" name="landmark" style="border-radius: 8px; padding: 10px;">
                     </div>
 
                     <input type="hidden" name="municipality" id="municipality" value="">

@@ -65,6 +65,45 @@ class CustomerController extends Controller
     }
 
     /**
+     * Get product search suggestions for autocomplete
+     */
+    public function searchSuggestions(Request $request)
+    {
+        $query = $request->get('q', '');
+        
+        if (strlen($query) < 2) {
+            return response()->json([
+                'success' => false,
+                'suggestions' => []
+            ]);
+        }
+        
+        // Get product suggestions
+        $includeCategories = ['Bouquets', 'Packages', 'Gifts'];
+        $suggestions = CatalogProduct::select(['id', 'name', 'price', 'category'])
+            ->where('status', true)
+            ->where('is_approved', true)
+            ->whereIn('category', $includeCategories)
+            ->where('name', 'like', '%' . $query . '%')
+            ->orderBy('name', 'asc')
+            ->limit(8) // Limit to 8 suggestions for mobile responsiveness
+            ->get()
+            ->map(function($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->price,
+                    'category' => $product->category
+                ];
+            });
+        
+        return response()->json([
+            'success' => true,
+            'suggestions' => $suggestions
+        ]);
+    }
+
+    /**
      * Show store credit history for customer
      */
     public function storeCreditHistory()

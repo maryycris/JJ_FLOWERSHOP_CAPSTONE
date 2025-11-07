@@ -1,8 +1,8 @@
-@extends('layouts.clerk_app')
 
-@section('title', 'Invoice Details')
 
-@push('styles')
+<?php $__env->startSection('title', 'Invoice Details'); ?>
+
+<?php $__env->startPush('styles'); ?>
 <style>
 /* Invoice Details Styling - matching invoice index hierarchy */
 .card-title {
@@ -40,13 +40,13 @@
 }
 
 /* Order link styling */
-.card-body a[href*="orders"] {
+.card-body a[href*="orders"], .card-body a[href*="sales-orders"] {
     color: #7bb47b !important;
     text-decoration: none;
     transition: all 0.2s ease;
 }
 
-.card-body a[href*="orders"]:hover {
+.card-body a[href*="orders"]:hover, .card-body a[href*="sales-orders"]:hover {
     color: #5aa65a !important;
     text-decoration: underline;
 }
@@ -68,24 +68,24 @@
     margin-right: 0.25rem;
 }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
-<div class="container-fluid">
+<?php $__env->startSection('content'); ?>
+<div class="container-fluid" style="margin-top: -2rem; padding-top: 0.5rem;">
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center" style="background: #e6f4ea;">
-                    <h3 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600;">Invoice Details - {{ $invoice->invoice_number }}</h3>
+                    <h3 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 600;">Invoice Details - <?php echo e($invoice->invoice_number); ?></h3>
                     <div class="card-tools">
-                        <a href="{{ route('clerk.invoices.index') }}" class="btn btn-sm btn-secondary">
+                        <a href="<?php echo e(route('invoices.index')); ?>" class="btn btn-sm btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to Invoices
                         </a>
-                        @if($invoice->status === 'ready' && $invoice->payment_type === 'cod')
-                            <button type="button" class="btn btn-sm btn-success ms-2" data-bs-toggle="modal" data-bs-target="#paymentWizardModal">
+                        <?php if($invoice->status === 'ready' && $invoice->payment_type === 'cod'): ?>
+                            <a href="<?php echo e(route('invoices.payment', $invoice)); ?>" class="btn btn-sm btn-success ms-2">
                                 <i class="fas fa-credit-card"></i> Register Payment
-                            </button>
-                        @endif
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="card-body">
@@ -99,34 +99,58 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <p><strong>Invoice Number:</strong> {{ $invoice->invoice_number }}</p>
+                                            <p><strong>Invoice Number:</strong> <?php echo e($invoice->invoice_number); ?></p>
                                             <p><strong>Order Number:</strong> 
-                                                <a href="{{ route('clerk.orders.show', $invoice->order_id) }}">#{{ $invoice->order_id }}</a>
+                                                <a href="<?php echo e(route('admin.sales-orders.show', $invoice->order_id)); ?>">#<?php echo e($invoice->order_id); ?></a>
                                             </p>
-                                            <p><strong>Invoice Date:</strong> {{ $invoice->created_at->format('M d, Y') }}</p>
+                                            <p><strong>Invoice Date:</strong> <?php echo e($invoice->created_at->format('M d, Y')); ?></p>
                                             <p><strong>Payment Type:</strong> 
-                                                @if($invoice->payment_type === 'online')
+                                                <?php if($invoice->payment_type === 'online'): ?>
                                                     <span class="badge" style="background-color: #4caf50; color: white;">Online</span>
-                                                @else
+                                                <?php else: ?>
                                                     <span class="badge" style="background-color: #66bb6a; color: white;">COD</span>
-                                                @endif
+                                                <?php endif; ?>
                                             </p>
                                         </div>
                                         <div class="col-md-6">
                                             <p><strong>Status:</strong> 
-                                                @if($invoice->status === 'paid')
+                                                <?php if($invoice->status === 'paid'): ?>
                                                     <span class="badge" style="background-color: #28a745; color: white;">Paid</span>
-                                                @elseif($invoice->status === 'ready')
+                                                <?php elseif($invoice->status === 'ready'): ?>
                                                     <span class="badge" style="background-color: #90ee90; color: black;">Ready</span>
-                                                @elseif($invoice->status === 'draft')
+                                                <?php elseif($invoice->status === 'draft'): ?>
                                                     <span class="badge" style="background-color: #c8e6c9; color: black;">Draft</span>
-                                                @else
+                                                <?php else: ?>
                                                     <span class="badge" style="background-color: #2d5016; color: white;">Cancelled</span>
-                                                @endif
+                                                <?php endif; ?>
                                             </p>
-                                            <p><strong>Customer:</strong> {{ $invoice->order->user->name }}</p>
-                                            <p><strong>Email:</strong> {{ $invoice->order->user->email }}</p>
-                                            <p><strong>Phone:</strong> {{ $invoice->order->user->contact_number ?? 'N/A' }}</p>
+                                            <?php
+                                                $notes = $invoice->order->notes ?? '';
+                                                $billName = $invoice->order->user->name ?? 'Walk-in Customer';
+                                                $contactFromNotes = null;
+                                                $emailFromNotes = null;
+
+                                                if (!empty($notes)) {
+                                                    if (preg_match('/Customer:\s*(.*?)(?:[;,]|$)/', $notes, $m)) {
+                                                        $billName = trim($m[1]);
+                                                    }
+                                                    if (preg_match('/Contact:\s*(.*?)(?:[;,]|$)/', $notes, $m)) {
+                                                        $contactFromNotes = trim($m[1]);
+                                                    }
+                                                    if (preg_match('/Email:\s*([^;,\s]+@[^;,\s]+)/', $notes, $m)) {
+                                                        $emailFromNotes = trim($m[1]);
+                                                    }
+                                                }
+
+                                                // Prefer delivery recipient phone if available, else contact from notes, else user's contact
+                                                $phone = $invoice->order->delivery->recipient_phone ?? $contactFromNotes ?? ($invoice->order->user->contact_number ?? null);
+                                                $email = $emailFromNotes ?? ($invoice->order->user->email ?? null);
+                                            ?>
+                                            <p><strong>Customer:</strong> <?php echo e($billName); ?></p>
+                                            <?php if($email): ?>
+                                                <p><strong>Email:</strong> <?php echo e($email); ?></p>
+                                            <?php endif; ?>
+                                            <p><strong>Phone:</strong> <?php echo e($phone ?? 'N/A'); ?></p>
                                         </div>
                                     </div>
                                 </div>
@@ -149,33 +173,41 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach($invoice->order->products as $product)
+                                                <?php $__currentLoopData = $invoice->order->products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <tr>
                                                     <td>
                                                         <div class="d-flex align-items-center">
-                                                            @if($product->image)
-                                                                <img src="{{ asset('storage/' . $product->image) }}" 
-                                                                     alt="{{ $product->name }}" 
+                                                            <?php
+                                                                $productImage = $product->image ?? null;
+                                                                if ($productImage && !empty($productImage)) {
+                                                                    if (!str_starts_with($productImage, 'http') && !str_starts_with($productImage, '/')) {
+                                                                        $productImage = asset('storage/' . $productImage);
+                                                                    }
+                                                                }
+                                                            ?>
+                                                            <?php if($productImage): ?>
+                                                                <img src="<?php echo e($productImage); ?>" 
+                                                                     alt="<?php echo e($product->name); ?>" 
                                                                      class="img-thumbnail" 
-                                                                     style="width: 50px; height: 50px; object-fit: cover; margin-right: 10px;">
-                                                            @endif
+                                                                     style="width: 50px; height: 50px; object-fit: cover; margin-right: 10px; display: block;">
+                                                            <?php endif; ?>
                                                             <div>
-                                                                <strong>{{ $product->name }}</strong>
-                                                                @if($product->pivot->rating)
+                                                                <strong><?php echo e($product->name); ?></strong>
+                                                                <?php if($product->pivot->rating): ?>
                                                                     <br><small class="text-muted">
-                                                                        Rating: {{ $product->pivot->rating }}/5
+                                                                        Rating: <?php echo e($product->pivot->rating); ?>/5
                                                                     </small>
-                                                                @endif
+                                                                <?php endif; ?>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td>{{ $product->pivot->quantity }}</td>
-                                                    <td>₱{{ number_format($product->price, 2) }}</td>
-                                                    <td>₱{{ number_format($product->pivot->quantity * $product->price, 2) }}</td>
+                                                    <td><?php echo e($product->pivot->quantity); ?></td>
+                                                    <td>₱<?php echo e(number_format($product->price, 2)); ?></td>
+                                                    <td>₱<?php echo e(number_format($product->pivot->quantity * $product->price, 2)); ?></td>
                                                 </tr>
-                                                @endforeach
-                                                @foreach($invoice->order->customBouquets as $bouquet)
-                                                @php
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                <?php $__currentLoopData = $invoice->order->customBouquets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bouquet): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <?php
                                                     $orderQty = $bouquet->pivot->quantity;
                                                     $customData = $bouquet->customization_data ?? [];
                                                     $freshFlowerQty = $customData['freshFlowerQuantity'] ?? 1;
@@ -222,30 +254,24 @@
                                                     
                                                     $componentDescription = !empty($components) ? implode('<br>', $components) : '';
                                                     $unitPrice = $bouquet->unit_price ?? ($bouquet->total_price / max($orderQty, 1));
-                                                @endphp
+                                                ?>
                                                 <tr>
                                                     <td>
                                                         <div>
                                                             <strong>Custom Bouquet</strong>
-                                                            @if(!empty($componentDescription))
+                                                            <?php if(!empty($componentDescription)): ?>
                                                                 <div style="font-size: 0.8rem; color: #666; margin-top: 4px; line-height: 1.6;">
-                                                                    {!! $componentDescription !!}
+                                                                    <?php echo $componentDescription; ?>
+
                                                                 </div>
-                                                            @endif
+                                                            <?php endif; ?>
                                                         </div>
                                                     </td>
-                                                    <td>{{ $orderQty }}</td>
-                                                    <td>₱{{ number_format($unitPrice, 2) }}</td>
-                                                    <td>₱{{ number_format($unitPrice * $orderQty, 2) }}</td>
+                                                    <td><?php echo e($orderQty); ?></td>
+                                                    <td>₱<?php echo e(number_format($unitPrice, 2)); ?></td>
+                                                    <td>₱<?php echo e(number_format($unitPrice * $orderQty, 2)); ?></td>
                                                 </tr>
-                                                @endforeach
-                                                @if($invoice->order->products->isEmpty() && $invoice->order->customBouquets->isEmpty())
-                                                <tr>
-                                                    <td colspan="4" class="text-center text-muted py-3">
-                                                        No products found
-                                                    </td>
-                                                </tr>
-                                                @endif
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </tbody>
                                         </table>
                                     </div>
@@ -253,7 +279,7 @@
                             </div>
 
                             <!-- Delivery Information -->
-                            @if($invoice->order->delivery)
+                            <?php if($invoice->order->delivery): ?>
                             <div class="card mt-3">
                                 <div class="card-header" style="background: #e6f4ea;">
                                     <h5>Delivery Information</h5>
@@ -261,24 +287,24 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <p><strong>Delivery Date:</strong> {{ $invoice->order->delivery->delivery_date }}</p>
-                                            <p><strong>Delivery Time:</strong> {{ $invoice->order->delivery->delivery_time }}</p>
-                                            <p><strong>Recipient:</strong> {{ $invoice->order->delivery->recipient_name }}</p>
+                                            <p><strong>Delivery Date:</strong> <?php echo e($invoice->order->delivery->delivery_date); ?></p>
+                                            <p><strong>Delivery Time:</strong> <?php echo e($invoice->order->delivery->delivery_time); ?></p>
+                                            <p><strong>Recipient:</strong> <?php echo e($invoice->order->delivery->recipient_name); ?></p>
                                         </div>
                                         <div class="col-md-6">
-                                            <p><strong>Phone:</strong> {{ $invoice->order->delivery->recipient_phone ?? 'N/A' }}</p>
-                                            <p><strong>Address:</strong> {{ $invoice->order->delivery->delivery_address }}</p>
+                                            <p><strong>Phone:</strong> <?php echo e($invoice->order->delivery->recipient_phone ?? 'N/A'); ?></p>
+                                            <p><strong>Address:</strong> <?php echo e($invoice->order->delivery->delivery_address); ?></p>
                                             <p><strong>Status:</strong> 
-                                                @php
+                                                <?php
                                                     $deliveryStatus = $invoice->order->delivery->status ?? $invoice->order->order_status ?? 'pending';
-                                                @endphp
-                                                <span class="badge badge-info">{{ ucfirst($deliveryStatus) }}</span>
+                                                ?>
+                                                <span class="badge badge-info"><?php echo e(ucfirst($deliveryStatus)); ?></span>
                                             </p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
 
                         <!-- Payment Summary -->
@@ -293,7 +319,7 @@
                                             <p><strong>Subtotal:</strong></p>
                                         </div>
                                         <div class="col-6 text-right">
-                                            <p>₱{{ number_format($invoice->subtotal, 2) }}</p>
+                                            <p>₱<?php echo e(number_format($invoice->subtotal, 2)); ?></p>
                                         </div>
                                     </div>
                                     <div class="row">
@@ -301,7 +327,7 @@
                                             <p><strong>Shipping Fee:</strong></p>
                                         </div>
                                         <div class="col-6 text-right">
-                                            <p>₱{{ number_format($invoice->shipping_fee, 2) }}</p>
+                                            <p>₱<?php echo e(number_format($invoice->shipping_fee, 2)); ?></p>
                                         </div>
                                     </div>
                                     <hr>
@@ -310,36 +336,42 @@
                                             <p><strong>Total Amount:</strong></p>
                                         </div>
                                         <div class="col-6 text-right">
-                                            <p class="text-success font-weight-bold">₱{{ number_format($invoice->total_amount, 2) }}</p>
+                                            <p class="text-success font-weight-bold">₱<?php echo e(number_format($invoice->total_amount, 2)); ?></p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Payment History -->
-                            @if($invoice->payments->count() > 0)
+                            <?php if($invoice->payments->count() > 0): ?>
                             <div class="card mt-3">
                                 <div class="card-header" style="background: #e6f4ea;">
                                     <h5>Payment History</h5>
                                 </div>
                                 <div class="card-body">
-                                    @foreach($invoice->payments as $payment)
+                                    <?php $__currentLoopData = $invoice->payments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $payment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <div class="border-bottom pb-2 mb-2">
                                         <div class="d-flex justify-content-between">
-                                            <span><strong>{{ ucfirst($payment->mode_of_payment) }}</strong></span>
-                                            <span class="text-success">₱{{ number_format($payment->amount, 2) }}</span>
+                                            <span><strong><?php echo e(ucfirst($payment->mode_of_payment)); ?></strong></span>
+                                            <span class="text-success">₱<?php echo e(number_format($payment->amount, 2)); ?></span>
                                         </div>
                                         <small class="text-muted">
-                                            {{ $payment->payment_date->format('M d, Y') }}
-                                            @if($payment->memo)
-                                                - {{ $payment->memo }}
-                                            @endif
+                                            <?php echo e($payment->payment_date->format('M d, Y')); ?>
+
+                                            <?php if($payment->memo): ?>
+                                                - <?php echo e($payment->memo); ?>
+
+                                            <?php endif; ?>
+                                            <?php if($payment->processedBy): ?>
+                                                <br>Processed by: <?php echo e($payment->processedBy->name); ?>
+
+                                            <?php endif; ?>
                                         </small>
                                     </div>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
                             </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -348,106 +380,35 @@
     </div>
 </div>
 
-<!-- Payment Wizard Modal -->
-<div class="modal fade" id="paymentWizardModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Register Payment</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="paymentForm">
-                    @csrf
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="mode_of_payment">Mode of Payment <span class="text-danger">*</span></label>
-                                <select class="form-control" id="mode_of_payment" name="mode_of_payment" required>
-                                    <option value="">Select Payment Mode</option>
-                                    <option value="cash">Cash</option>
-                                    <option value="gcash">GCash</option>
-                                    <option value="bank">Bank Transfer</option>
-                                    <option value="card">Card Payment</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="amount">Amount <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="amount" name="amount" 
-                                       step="0.01" min="0.01" value="{{ $invoice->total_amount }}" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="payment_date">Payment Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="payment_date" name="payment_date" 
-                                       value="{{ date('Y-m-d') }}" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="memo">Memo (Optional)</label>
-                                <input type="text" class="form-control" id="memo" name="memo" 
-                                       placeholder="Payment reference or notes">
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="validatePayment()">
-                    <i class="fas fa-check"></i> Validate Payment
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
+<!-- SweetAlert Success Message -->
+<?php if(session('success')): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '<?php echo e(session('success')); ?>',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        });
+    </script>
+<?php endif; ?>
 
-@section('scripts')
-<script>
-// No opener needed: using data-bs-toggle="modal" on the button
+<?php if(session('error')): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: '<?php echo e(session('error')); ?>',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        });
+    </script>
+<?php endif; ?>
 
-function validatePayment() {
-    const formData = new FormData(document.getElementById('paymentForm'));
-    
-    // Show loading state
-    const validateBtn = document.querySelector('button[onclick="validatePayment()"]');
-    const originalText = validateBtn.innerHTML;
-    validateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-    validateBtn.disabled = true;
+<?php $__env->stopSection(); ?>
 
-    fetch(`/clerk/invoices/{{ $invoice->id }}/register-payment`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Payment registered successfully!');
-            $('#paymentWizardModal').modal('hide');
-            location.reload();
-        } else {
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while registering payment');
-    })
-    .finally(() => {
-        validateBtn.innerHTML = originalText;
-        validateBtn.disabled = false;
-    });
-}
-</script>
-@endsection
+<?php echo $__env->make('layouts.admin_app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\JJ_Flowershop_Capstone\resources\views/admin/invoices/show.blade.php ENDPATH**/ ?>

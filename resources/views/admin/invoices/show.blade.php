@@ -150,9 +150,7 @@
                                             @if($email)
                                                 <p><strong>Email:</strong> {{ $email }}</p>
                                             @endif
-                                            @if($phone)
-                                                <p><strong>Phone:</strong> {{ $phone }}</p>
-                                            @endif
+                                            <p><strong>Phone:</strong> {{ $phone ?? 'N/A' }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -293,10 +291,13 @@
                                             <p><strong>Recipient:</strong> {{ $invoice->order->delivery->recipient_name }}</p>
                                         </div>
                                         <div class="col-md-6">
-                                            <p><strong>Phone:</strong> {{ $invoice->order->delivery->recipient_phone }}</p>
+                                            <p><strong>Phone:</strong> {{ $invoice->order->delivery->recipient_phone ?? 'N/A' }}</p>
                                             <p><strong>Address:</strong> {{ $invoice->order->delivery->delivery_address }}</p>
                                             <p><strong>Status:</strong> 
-                                                <span class="badge badge-info">{{ ucfirst($invoice->order->delivery->status) }}</span>
+                                                @php
+                                                    $deliveryStatus = $invoice->order->delivery->status ?? $invoice->order->order_status ?? 'pending';
+                                                @endphp
+                                                <span class="badge badge-info">{{ ucfirst($deliveryStatus) }}</span>
                                             </p>
                                         </div>
                                     </div>

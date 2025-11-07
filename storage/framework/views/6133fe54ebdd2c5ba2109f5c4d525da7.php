@@ -84,24 +84,172 @@
   #productModal .star { color:#d3d7d4; }
   #productModal .star.filled { color:#f3c04b; }
 
-  /* Mobile optimization for 480x1000 and below */
-  @media (max-width: 480px) {
-    #productModal .modal-dialog { max-width: 92vw; margin: 0 auto; }
-    #productModal .modal-content { border-radius: 14px; }
-    #productModal .modal-body { padding: 14px !important; }
-    #productModal .modal-body > .d-flex { align-items: center !important; }
-    #productModal .modal-body [style*="min-width: 260px"] { min-width: 0 !important; max-width: 100% !important; }
-    #productModal img#modalProductImage { max-width: 220px !important; }
-    #productModal #modalProductDescription { font-size: 0.82rem !important; }
-    #productModal #modalProductName { font-size: 1.05rem !important; }
-    #productModal #modalProductPrice { font-size: 0.95rem !important; }
-    #productModal [id^="modalQty"] { width: 28px !important; height: 28px !important; font-size: 1rem !important; }
-    #productModal #modalProductQty { width: 42px !important; font-size: 0.95rem !important; }
-    #productModal #modalProductTotal { font-size: 1rem !important; }
-    #productModal .btn { padding: 6px 10px !important; font-size: 0.85rem !important; }
-    #productModal #modalReviewsSection { padding: 8px !important; }
-    #productModal #modalReviewsSection h6 { font-size: 0.95rem !important; }
-    #productModal #modalReviewsList { max-height: 100px !important; }
+  /* Mobile optimization for 650px and below */
+  @media (max-width: 650px) {
+    #productModal .modal-dialog { 
+      max-width: 95vw; 
+      margin: 10px auto;
+      max-height: 90vh;
+    }
+    #productModal .modal-content { 
+      border-radius: 12px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+    #productModal .modal-body { 
+      padding: 12px !important;
+      overflow-y: auto;
+      flex: 1;
+      gap: 8px !important;
+    }
+    #productModal .modal-body > .d-flex { 
+      flex-direction: column !important;
+      gap: 12px !important;
+      align-items: center !important;
+    }
+    #productModal .modal-body [style*="min-width: 260px"] { 
+      min-width: 0 !important; 
+      max-width: 100% !important;
+      width: 100%;
+    }
+    /* Center the image */
+    #productModal .modal-body > .d-flex > div:first-child {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    #productModal img#modalProductImage { 
+      max-width: 180px !important;
+      width: 180px !important;
+      height: 180px !important;
+      margin: 0 auto;
+      display: block;
+    }
+    /* Reduce all text sizes */
+    #productModal .modal-body > .d-flex > div:last-child {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #productModal .modal-body > .d-flex > div:last-child > div:first-child {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    #productModal #modalProductName { 
+      font-size: 0.9rem !important;
+      text-align: center !important;
+      margin-bottom: 4px !important;
+      width: 100%;
+    }
+    #productModal #modalProductPrice { 
+      font-size: 0.8rem !important;
+      padding: 4px 8px !important;
+      margin-top: 4px;
+    }
+    #productModal label.form-label { 
+      font-size: 0.75rem !important;
+      margin-bottom: 4px !important;
+    }
+    #productModal #modalProductDescription { 
+      font-size: 0.7rem !important;
+      padding: 6px !important;
+      min-height: 40px !important;
+    }
+    #productModal [id^="modalQty"] { 
+      width: 24px !important; 
+      height: 24px !important; 
+      font-size: 0.85rem !important;
+      padding: 0 !important;
+    }
+    #productModal #modalProductQty { 
+      width: 36px !important; 
+      font-size: 0.8rem !important;
+    }
+    #productModal #modalProductTotal { 
+      font-size: 0.85rem !important;
+    }
+    #productModal .fw-semibold { 
+      font-size: 0.75rem !important;
+    }
+    #productModal .btn { 
+      padding: 5px 8px !important; 
+      font-size: 0.75rem !important;
+    }
+    #productModal #modalReviewsSection { 
+      padding: 6px !important;
+      margin-top: 4px !important;
+    }
+    #productModal #modalReviewsSection h6 { 
+      font-size: 0.8rem !important;
+      margin-bottom: 4px !important;
+    }
+    #productModal #modalRatingText {
+      font-size: 0.7rem !important;
+    }
+    #productModal #modalReviewsCount {
+      font-size: 0.7rem !important;
+      padding: 2px 6px !important;
+    }
+    #productModal #modalReviewsList { 
+      max-height: 80px !important;
+    }
+    #productModal .review-item {
+      padding: 6px 0 !important;
+    }
+    #productModal .review-item .fw-semibold {
+      font-size: 0.7rem !important;
+    }
+    #productModal .review-item .text-muted {
+      font-size: 0.65rem !important;
+    }
+    #productModal .review-item .rating-stars {
+      font-size: 0.7rem !important;
+    }
+    #productModal hr {
+      margin: 6px 0 !important;
+    }
+    #productModal .mb-3 {
+      margin-bottom: 8px !important;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #productModal .mb-3 > label {
+      width: 100%;
+      text-align: center;
+    }
+    #productModal .mb-3 > .d-flex {
+      justify-content: center;
+    }
+    #productModal .d-flex.justify-content-between {
+      justify-content: center !important;
+      gap: 8px;
+    }
+    #productModal .mt-3 {
+      margin-top: 8px !important;
+    }
+    /* Reduce gap between elements */
+    #productModal .d-flex[style*="gap: 20px"] {
+      gap: 8px !important;
+    }
+    #productModal .d-flex[style*="gap: 10px"] {
+      gap: 6px !important;
+    }
+    /* Center action buttons */
+    #productModal .d-flex.gap-2 {
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    #productModal .d-flex.gap-2 .btn {
+      min-width: 100px;
+    }
   }
 </style>
 <script>

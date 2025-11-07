@@ -400,7 +400,7 @@ class OrderStatusService
             // Issue loyalty stamp if eligible once order is completed/received
             try {
                 $loyaltyService = new \App\Services\LoyaltyService();
-                $loyaltyService->issueStampIfEligible($order->fresh(['products']));
+                $loyaltyService->issueStampIfEligible($order->fresh(['products', 'customBouquets']));
             } catch (\Throwable $e) {
                 Log::error("Loyalty issuance on completion failed for order {$order->id}: {$e->getMessage()}");
             }

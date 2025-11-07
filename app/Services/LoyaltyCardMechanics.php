@@ -73,8 +73,8 @@ class LoyaltyCardMechanics
         $category = strtolower((string)($product->category ?? ''));
         $name = strtolower((string)($product->name ?? ''));
 
-        // Must be bouquet category
-        if ($category !== 'bouquet') {
+        // Must be bouquet category (accepts both "bouquet" and "bouquets")
+        if ($category !== 'bouquet' && $category !== 'bouquets') {
             return false;
         }
 

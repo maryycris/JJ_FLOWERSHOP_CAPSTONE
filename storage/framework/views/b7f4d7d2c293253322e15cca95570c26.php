@@ -8,7 +8,11 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
-    <title><?php echo e(config('app.name', 'JJ Flowershop')); ?></title>
+    <title>JJ Flowershop Customer</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="<?php echo e(asset('images/logo.png')); ?>">
+    <link rel="shortcut icon" type="image/png" href="<?php echo e(asset('images/logo.png')); ?>">
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -712,87 +716,6 @@
                     }
                 });
             }, 2000);
-
-            // Product search and filter functionality for customer dashboard
-            const searchInput = document.getElementById('productSearchInput');
-            const filterBtn = document.getElementById('productFilterBtn');
-            const filterPanel = document.getElementById('productFilterPanel');
-            const filterMin = document.getElementById('productFilterMin');
-            const filterMax = document.getElementById('productFilterMax');
-            const filterApply = document.getElementById('productFilterApply');
-            const filterClear = document.getElementById('productFilterClear');
-
-            function performSearch() {
-                const searchTerm = searchInput ? searchInput.value : '';
-                // preserve current category from URL (default to 'all')
-                const currentUrl = new URL(window.location.href);
-                const category = (currentUrl.searchParams.get('category') || 'all');
-                const minPrice = filterMin && filterMin.value ? filterMin.value : '';
-                const maxPrice = filterMax && filterMax.value ? filterMax.value : '';
-
-                // Build URL with search parameters
-                const url = new URL(window.location.href);
-                url.searchParams.set('search', searchTerm);
-                url.searchParams.set('category', category);
-                if (minPrice) url.searchParams.set('min_price', minPrice);
-                if (maxPrice) url.searchParams.set('max_price', maxPrice);
-
-                // Redirect to the same page with search parameters
-                window.location.href = url.toString();
-            }
-
-            function clearFilters() {
-                if (searchInput) searchInput.value = '';
-                if (filterMin) filterMin.value = '';
-                if (filterMax) filterMax.value = '';
-                
-                // Redirect to clean URL
-                const url = new URL(window.location.href);
-                url.searchParams.delete('search');
-                url.searchParams.delete('min_price');
-                url.searchParams.delete('max_price');
-                window.location.href = url.toString();
-            }
-
-            // Event listeners
-            if (filterBtn && filterPanel) {
-                filterBtn.addEventListener('click', function() {
-                    filterPanel.style.display = (filterPanel.style.display === 'none' || !filterPanel.style.display) ? 'block' : 'none';
-                });
-                
-                // Close filter panel when clicking outside
-                document.addEventListener('click', function(e){
-                    if (filterPanel.style.display === 'block') {
-                        const within = filterPanel.contains(e.target) || filterBtn.contains(e.target);
-                        if (!within) filterPanel.style.display = 'none';
-                    }
-                });
-            }
-
-            if (searchInput) {
-                searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        performSearch();
-                    }
-                });
-                // Remove live typing search - only search on Enter key press
-                // clearTimeout(searchInput.__t);
-                // searchInput.addEventListener('input', function(){
-                //     clearTimeout(searchInput.__t);
-                //     searchInput.__t = setTimeout(performSearch, 400);
-                // });
-            }
-
-            if (filterApply) {
-                filterApply.addEventListener('click', function(){
-                    performSearch();
-                    if (filterPanel) filterPanel.style.display = 'none';
-                });
-            }
-
-            if (filterClear) {
-                filterClear.addEventListener('click', clearFilters);
-            }
         });
         
         // Auto-dismiss success alert

@@ -24,7 +24,7 @@ class FixLoyaltyStamps extends Command
             $query->where('user_id', $userId);
         }
         
-        $orders = $query->with('products')->get();
+        $orders = $query->with(['products', 'customBouquets'])->get();
         
         $this->info("Found {$orders->count()} completed orders");
         

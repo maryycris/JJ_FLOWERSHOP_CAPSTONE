@@ -1178,6 +1178,82 @@ document.addEventListener('DOMContentLoaded', function() {
             height: 350px !important;
         }
     }
+    
+    /* Mobile optimization for 650px and below - Make modal smaller and more compact */
+    @media (max-width: 650px) {
+        .custom-bouquet-modal .modal-dialog {
+            width: 95vw !important;
+            max-width: 95vw !important;
+            margin: 10px auto !important;
+            max-height: 90vh;
+        }
+        
+        .custom-bouquet-modal .modal-content {
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            border-radius: 10px !important;
+        }
+        
+        .custom-bouquet-modal .modal-header {
+            padding: 8px 12px !important;
+        }
+        
+        .custom-bouquet-modal .modal-title {
+            font-size: 0.85rem !important;
+        }
+        
+        .custom-bouquet-modal .modal-body {
+            padding: 12px !important;
+            max-height: calc(90vh - 100px) !important;
+        }
+        
+        /* Reduce bouquet preview image size */
+        .custom-bouquet-modal .modal-body img {
+            max-width: 180px !important;
+            max-height: 180px !important;
+        }
+        
+        .custom-bouquet-modal .component-preview-container {
+            width: 180px !important;
+            height: 180px !important;
+        }
+        
+        /* Reduce text sizes - keep original table design */
+        .custom-bouquet-modal .modal-body h6 {
+            font-size: 0.8rem !important;
+            margin-bottom: 10px !important;
+            padding-bottom: 5px !important;
+        }
+        
+        .custom-bouquet-modal .table {
+            font-size: 0.75rem !important;
+        }
+        
+        .custom-bouquet-modal .table th {
+            font-size: 0.7rem !important;
+            padding: 0.4rem 0.3rem !important;
+        }
+        
+        .custom-bouquet-modal .table td {
+            font-size: 0.75rem !important;
+            padding: 0.4rem 0.3rem !important;
+        }
+        
+        .custom-bouquet-modal .table tfoot td {
+            font-size: 0.75rem !important;
+            padding: 0.5rem 0.3rem !important;
+        }
+        
+        .custom-bouquet-modal .modal-footer {
+            padding: 8px 12px !important;
+        }
+        
+        .custom-bouquet-modal .modal-footer .btn {
+            padding: 6px 14px !important;
+            font-size: 0.8rem !important;
+        }
+    }
 }
 </style>
     </div>
@@ -1285,7 +1361,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="modal-content" style="border-radius: 12px;">
                     <div class="modal-header" style="border-bottom: 1px solid #e9ecef;">
                         <h6 class="modal-title" id="customBouquetModalLabel{{ $modalId }}" style="font-weight: 600; color: #222; font-size: 1rem;">Custom Bouquet Details</h6>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body" style="max-height: 65vh; overflow-y: auto;">
                         <!-- Bouquet Preview Image -->
@@ -1438,9 +1513,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </table>
                             </div>
                         </div>
-                    </div>
-                    <div class="modal-footer" style="border-top: 1px solid #e9ecef;">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>

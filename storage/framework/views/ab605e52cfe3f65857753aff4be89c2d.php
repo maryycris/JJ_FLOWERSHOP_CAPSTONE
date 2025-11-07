@@ -203,9 +203,34 @@
 
                     <!-- Driver Assignment Section -->
                     <?php
-                        $drivers = \App\Models\Driver::with('user')->where('is_active', true)->get()->filter(function($driver) {
-                            return $driver->user !== null;
-                        });
+                        // Get only Mochi Boy driver (filter by username or name)
+                        $mochiBoyUser = \App\Models\User::where('role', 'driver')
+                            ->where(function($query) {
+                                $query->where('username', 'Mochi')
+                                      ->orWhere('name', 'like', '%Mochi%');
+                            })
+                            ->first();
+                        
+                        // If Mochi Boy exists, get only his driver record
+                        if ($mochiBoyUser) {
+                            $drivers = \App\Models\Driver::with('user')
+                                ->where('user_id', $mochiBoyUser->id)
+                                ->where('is_active', true)
+                                ->get()
+                                ->filter(function($driver) {
+                                    return $driver->user !== null;
+                                })
+                                ->unique('user_id'); // Remove duplicates by user_id
+                        } else {
+                            // Fallback: get all drivers but remove duplicates
+                            $drivers = \App\Models\Driver::with('user')
+                                ->where('is_active', true)
+                                ->get()
+                                ->filter(function($driver) {
+                                    return $driver->user !== null;
+                                })
+                                ->unique('user_id'); // Remove duplicates by user_id
+                        }
                     ?>
                     <?php if($order->assigned_driver_id): ?>
                     <div style="border-top: 1px solid #e0e0e0; padding-top: 1rem;">

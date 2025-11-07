@@ -81,11 +81,19 @@ class LoyaltyService
         // Choose the most expensive eligible bouquet item and apply 50%
         $eligibleMax = 0.0;
         foreach ($cartItems as $item) {
+            // Check for custom bouquets - they always qualify
+            if (($item->item_type ?? null) === 'custom_bouquet' && isset($item->customBouquet)) {
+                $customBouquetPrice = (float)($item->customBouquet->unit_price ?? $item->customBouquet->total_price ?? $item->customBouquet->price ?? 0);
+                $eligibleMax = max($eligibleMax, $customBouquetPrice);
+                continue;
+            }
+            
+            // Check for regular bouquet products
             $product = $item->product ?? null;
             if (!$product) { continue; }
-            // Eligible if category is Bouquet and not Mini Bouquet
+            // Eligible if category is Bouquet/Bouquets and not Mini Bouquet
             $category = strtolower((string)($product->category ?? ''));
-            if ($category !== 'bouquet' || str_contains($category, 'mini')) {
+            if (($category !== 'bouquet' && $category !== 'bouquets') || str_contains($category, 'mini')) {
                 continue;
             }
             $linePrice = (float)$product->price; // 50% applies to bouquet price only
@@ -124,8 +132,8 @@ class LoyaltyService
         foreach ($order->products as $product) {
             $category = strtolower((string)($product->category ?? ''));
             
-            // Must be bouquet category
-            if ($category !== 'bouquet') {
+            // Must be bouquet category (accepts both "bouquet" and "bouquets")
+            if ($category !== 'bouquet' && $category !== 'bouquets') {
                 continue;
             }
             
@@ -135,6 +143,13 @@ class LoyaltyService
             }
             
             // If we find at least one qualifying bouquet, this order earns a stamp
+            return true;
+        }
+        
+        // Also check for custom bouquets - they qualify for stamps too
+        $order->load('customBouquets');
+        if ($order->customBouquets->count() > 0) {
+            // Custom bouquets always qualify (they are bouquets by definition)
             return true;
         }
         

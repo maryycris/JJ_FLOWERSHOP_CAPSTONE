@@ -500,6 +500,7 @@ Route::post('/deliveries/{delivery}/delivered', [\App\Http\Controllers\DeliveryC
 Route::middleware(['web', 'auth', \App\Http\Middleware\CustomerMiddleware::class])->prefix('customer')->name('customer.')->group(function () {
     // Main customer dashboard route with both names
     Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/search-suggestions', [CustomerController::class, 'searchSuggestions'])->name('search-suggestions');
     Route::post('/save-location', [CustomerController::class, 'saveLocation'])->name('saveLocation');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
