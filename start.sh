@@ -37,11 +37,17 @@ php artisan view:clear 2>&1 || echo "View clear failed (non-critical)" >&2
 # Run migrations if database is configured
 if [ -n "$DB_CONNECTION" ] && [ "$DB_CONNECTION" != "sqlite" ]; then
     echo "Running database migrations..." >&2
-    # Run all migrations - Laravel will skip already migrated ones
-    php artisan migrate --force 2>&1 || echo "Migration check completed" >&2
-    # Ensure sessions table exists (run specific migration if needed)
-    echo "Ensuring sessions table exists..." >&2
-    php artisan migrate --path=database/migrations/2024_06_14_000000_create_sessions_table.php --force 2>&1 || echo "Sessions table check completed" >&2
+    # Run all migrations - continue even if some fail
+    php artisan migrate --force 2>&1 || echo "Migration attempt completed" >&2
+    
+    # Create critical tables if they don't exist (bypass migrations table check)
+    echo "Ensuring critical tables exist..." >&2
+    
+    # Create sessions table if missing
+    php artisan tinker --execute="try { DB::statement('CREATE TABLE IF NOT EXISTS sessions (id VARCHAR(255) PRIMARY KEY, user_id BIGINT UNSIGNED NULL, ip_address VARCHAR(45) NULL, user_agent TEXT NULL, payload TEXT NOT NULL, last_activity INT NOT NULL, INDEX idx_user_id (user_id), INDEX idx_last_activity (last_activity))'); echo 'Sessions table OK'; } catch (Exception \$e) { echo 'Sessions: ' . \$e->getMessage(); }" 2>&1 | grep -q "OK" && echo "Sessions table verified" >&2 || echo "Sessions table check completed" >&2
+    
+    # Create cache table if missing
+    php artisan tinker --execute="try { DB::statement('CREATE TABLE IF NOT EXISTS cache (key VARCHAR(255) PRIMARY KEY, value MEDIUMTEXT NOT NULL, expiration INT NOT NULL)'); DB::statement('CREATE TABLE IF NOT EXISTS cache_locks (key VARCHAR(255) PRIMARY KEY, owner VARCHAR(255) NOT NULL, expiration INT NOT NULL)'); echo 'Cache tables OK'; } catch (Exception \$e) { echo 'Cache: ' . \$e->getMessage(); }" 2>&1 | grep -q "OK" && echo "Cache tables verified" >&2 || echo "Cache tables check completed" >&2
 fi
 
 # If APP_KEY is not set, try to generate one (only if .env exists)
