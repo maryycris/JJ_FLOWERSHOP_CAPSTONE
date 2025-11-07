@@ -34,6 +34,12 @@ fi
 php artisan route:clear 2>&1 || echo "Route clear failed (non-critical)" >&2
 php artisan view:clear 2>&1 || echo "View clear failed (non-critical)" >&2
 
+# Run migrations if database is configured
+if [ -n "$DB_CONNECTION" ] && [ "$DB_CONNECTION" != "sqlite" ]; then
+    echo "Running database migrations..." >&2
+    php artisan migrate --force 2>&1 || echo "Migration failed (non-critical, may already be migrated)" >&2
+fi
+
 # If APP_KEY is not set, try to generate one (only if .env exists)
 if [ -z "$APP_KEY" ]; then
     if [ -f ".env" ]; then
