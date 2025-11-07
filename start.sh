@@ -1,5 +1,5 @@
 #!/bin/bash
-php artisan config:clear
-php artisan config:cache
+set -e
+php artisan config:clear || true
 php artisan serve --host=0.0.0.0 --port=$PORT
 
