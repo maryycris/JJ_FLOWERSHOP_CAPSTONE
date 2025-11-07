@@ -37,17 +37,25 @@ php artisan view:clear 2>&1 || echo "View clear failed (non-critical)" >&2
 # Run migrations if database is configured
 if [ -n "$DB_CONNECTION" ] && [ "$DB_CONNECTION" != "sqlite" ]; then
     echo "Running database migrations..." >&2
-    # Run all migrations - continue even if some fail
-    php artisan migrate --force 2>&1 || echo "Migration attempt completed" >&2
     
-    # Create critical tables if they don't exist (bypass migrations table check)
-    echo "Ensuring critical tables exist..." >&2
-    
-    # Create sessions table if missing
-    php artisan tinker --execute="try { DB::statement('CREATE TABLE IF NOT EXISTS sessions (id VARCHAR(255) PRIMARY KEY, user_id BIGINT UNSIGNED NULL, ip_address VARCHAR(45) NULL, user_agent TEXT NULL, payload TEXT NOT NULL, last_activity INT NOT NULL, INDEX idx_user_id (user_id), INDEX idx_last_activity (last_activity))'); echo 'Sessions table OK'; } catch (Exception \$e) { echo 'Sessions: ' . \$e->getMessage(); }" 2>&1 | grep -q "OK" && echo "Sessions table verified" >&2 || echo "Sessions table check completed" >&2
-    
-    # Create cache table if missing
-    php artisan tinker --execute="try { DB::statement('CREATE TABLE IF NOT EXISTS cache (key VARCHAR(255) PRIMARY KEY, value MEDIUMTEXT NOT NULL, expiration INT NOT NULL)'); DB::statement('CREATE TABLE IF NOT EXISTS cache_locks (key VARCHAR(255) PRIMARY KEY, owner VARCHAR(255) NOT NULL, expiration INT NOT NULL)'); echo 'Cache tables OK'; } catch (Exception \$e) { echo 'Cache: ' . \$e->getMessage(); }" 2>&1 | grep -q "OK" && echo "Cache tables verified" >&2 || echo "Cache tables check completed" >&2
+    # Check if critical tables exist, if not, reset migrations and run fresh
+    php artisan tinker --execute="
+        \$missing = [];
+        if (!Schema::hasTable('users')) \$missing[] = 'users';
+        if (!Schema::hasTable('sessions')) \$missing[] = 'sessions';
+        if (!Schema::hasTable('cache')) \$missing[] = 'cache';
+        if (count(\$missing) > 0) {
+            echo 'MISSING: ' . implode(', ', \$missing);
+        } else {
+            echo 'ALL_TABLES_EXIST';
+        }
+    " 2>&1 | grep -q "MISSING" && {
+        echo "Critical tables missing, resetting migrations table and running fresh..." >&2
+        php artisan migrate:fresh --force --seed 2>&1 || echo "Migration fresh completed" >&2
+    } || {
+        echo "Running pending migrations..." >&2
+        php artisan migrate --force 2>&1 || echo "Migration check completed" >&2
+    }
 fi
 
 # If APP_KEY is not set, try to generate one (only if .env exists)
