@@ -18,21 +18,35 @@ echo "Checking storage directories..." >&2
 mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs bootstrap/cache 2>&1
 chmod -R 775 storage bootstrap/cache 2>&1 || echo "Warning: chmod failed (may not be critical)" >&2
 
-# Clear all caches to ensure fresh environment variables are loaded
-echo "Clearing all caches..." >&2
+# Clear config cache first (this doesn't require database)
+echo "Clearing config cache..." >&2
 php artisan config:clear 2>&1 || echo "Config clear failed (non-critical)" >&2
-php artisan cache:clear 2>&1 || echo "Cache clear failed (non-critical)" >&2
+
+# Only clear other caches if database is configured (to avoid SQLite errors)
+if [ -n "$DB_CONNECTION" ] && [ "$DB_CONNECTION" != "sqlite" ]; then
+    echo "Clearing application caches..." >&2
+    php artisan cache:clear 2>&1 || echo "Cache clear failed (non-critical)" >&2
+fi
+
+# Clear route and view caches (these don't require database)
 php artisan route:clear 2>&1 || echo "Route clear failed (non-critical)" >&2
 php artisan view:clear 2>&1 || echo "View clear failed (non-critical)" >&2
 
-# If APP_KEY is not set, generate one
+# If APP_KEY is not set, try to generate one (only if .env exists)
 if [ -z "$APP_KEY" ]; then
-    echo "WARNING: APP_KEY not set, generating new key..." >&2
-    php artisan key:generate --force 2>&1 || {
-        echo "ERROR: Failed to generate APP_KEY!" >&2
+    if [ -f ".env" ]; then
+        echo "WARNING: APP_KEY not set, generating new key..." >&2
+        php artisan key:generate --force 2>&1 || {
+            echo "ERROR: Failed to generate APP_KEY!" >&2
+            exit 1
+        }
+        echo "APP_KEY generated successfully" >&2
+    else
+        echo "ERROR: APP_KEY is not set and .env file does not exist!" >&2
+        echo "Please set APP_KEY as an environment variable in Railway." >&2
+        echo "You can generate one locally with: php artisan key:generate --show" >&2
         exit 1
-    }
-    echo "APP_KEY generated successfully" >&2
+    fi
 fi
 
 # Start the server
