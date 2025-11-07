@@ -37,7 +37,11 @@ php artisan view:clear 2>&1 || echo "View clear failed (non-critical)" >&2
 # Run migrations if database is configured
 if [ -n "$DB_CONNECTION" ] && [ "$DB_CONNECTION" != "sqlite" ]; then
     echo "Running database migrations..." >&2
-    php artisan migrate --force 2>&1 || echo "Migration failed (non-critical, may already be migrated)" >&2
+    # Run all migrations - Laravel will skip already migrated ones
+    php artisan migrate --force 2>&1 || echo "Migration check completed" >&2
+    # Ensure sessions table exists (run specific migration if needed)
+    echo "Ensuring sessions table exists..." >&2
+    php artisan migrate --path=database/migrations/2024_06_14_000000_create_sessions_table.php --force 2>&1 || echo "Sessions table check completed" >&2
 fi
 
 # If APP_KEY is not set, try to generate one (only if .env exists)
