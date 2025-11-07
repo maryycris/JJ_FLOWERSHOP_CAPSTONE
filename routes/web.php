@@ -391,7 +391,7 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\ClerkMiddleware::class])-
     Route::get('sales-orders/{order}', [\App\Http\Controllers\Admin\SalesOrdersController::class, 'show'])->name('sales-orders.show');
     Route::post('sales-orders/{order}/confirm', [\App\Http\Controllers\Admin\SalesOrdersController::class, 'confirm'])->name('sales-orders.confirm');
 
-    Route::resource('orders', OrderController::class)->except(['index','create']);
+    Route::resource('orders', OrderController::class)->except(['index','create','store']);
     Route::post('orders/{order}/approve', [OrderController::class, 'approve'])->name('orders.approve');
     Route::post('orders/{order}/validate', [OrderController::class, 'validateOrder'])->name('orders.validate');
     Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
@@ -461,7 +461,7 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\ClerkMiddleware::class])-
             Route::get('{order}/walkin/pending', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinPending'])->name('walkin.pending');
             Route::get('{order}/walkin/quotation', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinQuotation'])->name('walkin.quotation');
             Route::get('{order}/walkin/create-invoice', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinCreateInvoice'])->name('walkin.create_invoice');
-            Route::post('{order}/walkin/invoice', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinInvoice'])->name('walkin.invoice');
+            Route::post('{order}/walkin/invoice', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinInvoice'])->name('walkin.invoice.post');
             Route::get('{order}/walkin/validate', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinValidate'])->name('walkin.validate');
             Route::get('{order}/walkin/validate-confirmation', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinValidateConfirmation'])->name('walkin.validate_confirmation');
             Route::post('{order}/walkin/validate/confirm', [\App\Http\Controllers\Clerk\OrderFlowController::class, 'walkinValidateConfirm'])->name('walkin.validate.confirm');
@@ -542,7 +542,6 @@ Route::middleware(['web', 'auth', \App\Http\Middleware\CustomerMiddleware::class
 
     // Notifications
     Route::get('/notifications', [CustomerNotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/index', [CustomerNotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/list', [CustomerNotificationController::class, 'list'])->name('notifications.list');
     Route::post('/notifications/mark-all-as-read', [CustomerNotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
     Route::delete('/notifications/delete-all', [CustomerNotificationController::class, 'destroyAll'])->name('notifications.deleteAll');
