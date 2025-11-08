@@ -157,6 +157,12 @@ class AuthController extends Controller
         }
         
         if ($provider === 'google') {
+            // Check if Google credentials are configured
+            $clientId = env('GOOGLE_CLIENT_ID', config('services.google.client_id'));
+            if (empty($clientId)) {
+                return redirect('/login')->withErrors(['message' => 'Google login is not configured. Please contact the administrator.']);
+            }
+            
             // For localhost, use default Socialite. For Railway/production, set redirect URL
             $appUrl = config('app.url');
             if (str_contains($appUrl, 'localhost') || str_contains($appUrl, '127.0.0.1')) {
