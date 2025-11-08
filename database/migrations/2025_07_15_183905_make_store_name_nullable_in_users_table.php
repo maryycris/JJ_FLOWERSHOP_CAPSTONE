@@ -12,7 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('store_name')->nullable()->change();
+            // Check if column exists, if not add it, if yes make it nullable
+            if (Schema::hasColumn('users', 'store_name')) {
+                $table->string('store_name')->nullable()->change();
+            } else {
+                $table->string('store_name')->nullable()->after('role');
+            }
         });
     }
 
