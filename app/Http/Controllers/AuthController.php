@@ -137,7 +137,11 @@ class AuthController extends Controller
         if ($provider === 'facebook') {
             // Use environment variables or fallback to config
             $clientId = env('FACEBOOK_CLIENT_ID', config('services.facebook.client_id', '769015785952499'));
-            $redirectUri = env('FACEBOOK_REDIRECT_URI', config('services.facebook.redirect', url('/auth/facebook/callback')));
+            // Get redirect URI from env, config, or generate from APP_URL
+            $redirectUri = env('FACEBOOK_REDIRECT_URI', config('services.facebook.redirect'));
+            if (!$redirectUri) {
+                $redirectUri = rtrim(config('app.url'), '/') . '/auth/facebook/callback';
+            }
             $state = csrf_token();
             
             $url = "https://www.facebook.com/v18.0/dialog/oauth?" . http_build_query([
@@ -153,7 +157,10 @@ class AuthController extends Controller
         
         if ($provider === 'google') {
             // Set redirect URI explicitly for Google
-            $redirectUri = env('GOOGLE_REDIRECT_URI', config('services.google.redirect', url('/auth/google/callback')));
+            $redirectUri = env('GOOGLE_REDIRECT_URI', config('services.google.redirect'));
+            if (!$redirectUri) {
+                $redirectUri = rtrim(config('app.url'), '/') . '/auth/google/callback';
+            }
             
             // Request additional scopes for Google login
             return Socialite::driver('google')
@@ -393,7 +400,11 @@ class AuthController extends Controller
             // Exchange code for access token
             $clientId = env('FACEBOOK_CLIENT_ID', config('services.facebook.client_id', '769015785952499'));
             $clientSecret = env('FACEBOOK_CLIENT_SECRET', config('services.facebook.client_secret', 'e3751172c5bf6451c8f2ed10656abfb0'));
-            $redirectUri = env('FACEBOOK_REDIRECT_URI', config('services.facebook.redirect', url('/auth/facebook/callback')));
+            // Get redirect URI from env, config, or generate from APP_URL
+            $redirectUri = env('FACEBOOK_REDIRECT_URI', config('services.facebook.redirect'));
+            if (!$redirectUri) {
+                $redirectUri = rtrim(config('app.url'), '/') . '/auth/facebook/callback';
+            }
             $code = $request->get('code');
 
             $tokenResponse = \Http::post('https://graph.facebook.com/v18.0/oauth/access_token', [
