@@ -127,17 +127,6 @@ class AuthController extends Controller
         return redirect('/');
     }
 
-    // Helper method to get Facebook redirect URI consistently
-    private function getFacebookRedirectUri()
-    {
-        $appUrl = config('app.url');
-        if (str_contains($appUrl, 'localhost') || str_contains($appUrl, '127.0.0.1')) {
-            return 'http://localhost:8000/auth/facebook/callback';
-        } else {
-            return env('FACEBOOK_REDIRECT_URI', rtrim($appUrl, '/') . '/auth/facebook/callback');
-        }
-    }
-
     // Social Login: Redirect to provider
     public function redirectToProvider($provider)
     {
@@ -148,19 +137,20 @@ class AuthController extends Controller
         if ($provider === 'facebook') {
             // Use the new app ID
             $clientId = '769015785952499';
-            // Get redirect URI using helper method for consistency
-            $redirectUri = $this->getFacebookRedirectUri();
+            // For localhost, use hardcoded URL. For Railway/production, use APP_URL
+            $appUrl = config('app.url');
+            if (str_contains($appUrl, 'localhost') || str_contains($appUrl, '127.0.0.1')) {
+                $redirectUri = 'http://localhost:8000/auth/facebook/callback';
+            } else {
+                $redirectUri = env('FACEBOOK_REDIRECT_URI', rtrim($appUrl, '/') . '/auth/facebook/callback');
+            }
             $state = csrf_token();
-            
-            // Store redirect URI in session for callback verification
-            session(['facebook_redirect_uri' => $redirectUri]);
             
             $url = "https://www.facebook.com/v18.0/dialog/oauth?" . http_build_query([
                 'client_id' => $clientId,
                 'redirect_uri' => $redirectUri,
                 'state' => $state,
-                'response_type' => 'code',
-                'scope' => 'email,public_profile'
+                'response_type' => 'code'
             ]);
             
             return redirect($url);
@@ -421,14 +411,14 @@ class AuthController extends Controller
             // Exchange code for access token
             $clientId = '769015785952499';
             $clientSecret = 'e3751172c5bf6451c8f2ed10656abfb0';
-            // Use the same redirect URI from session (stored during initial redirect) or generate it
-            $redirectUri = session('facebook_redirect_uri', $this->getFacebookRedirectUri());
+            // For localhost, use hardcoded URL. For Railway/production, use APP_URL
+            $appUrl = config('app.url');
+            if (str_contains($appUrl, 'localhost') || str_contains($appUrl, '127.0.0.1')) {
+                $redirectUri = 'http://localhost:8000/auth/facebook/callback';
+            } else {
+                $redirectUri = env('FACEBOOK_REDIRECT_URI', rtrim($appUrl, '/') . '/auth/facebook/callback');
+            }
             $code = $request->get('code');
-            
-            \Log::info('Facebook callback processing', [
-                'redirect_uri' => $redirectUri,
-                'has_code' => !empty($code)
-            ]);
 
             $tokenResponse = \Http::post('https://graph.facebook.com/v18.0/oauth/access_token', [
                 'client_id' => $clientId,
@@ -506,27 +496,7 @@ class AuthController extends Controller
             // Log in the user
             \Auth::login($user, true);
             
-            // Clear the stored redirect URI from session
-            session()->forget('facebook_redirect_uri');
-            
-            // Ensure session is saved
-            session()->save();
-            
-            \Log::info('User logged in via Facebook', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'role' => $user->role,
-                'is_authenticated' => \Auth::check(),
-                'auth_user_id' => \Auth::id()
-            ]);
-            
-            // Verify user is authenticated before redirecting
-            if (!\Auth::check()) {
-                \Log::error('User authentication failed after Facebook login', ['user_id' => $user->id]);
-                return redirect('/login')->withErrors(['message' => 'Authentication failed. Please try again.']);
-            }
-            
-            // Redirect to customer dashboard
+            \Log::info('User logged in via Facebook', ['user_id' => $user->id]);
             return redirect()->route('customer.dashboard')->with('success', 'Successfully logged in with Facebook!');
 
         } catch (\Exception $e) {
