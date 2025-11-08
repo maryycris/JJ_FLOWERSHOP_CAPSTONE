@@ -102,12 +102,14 @@ class AuthController extends Controller
         if ($verificationChannel === 'email' && $email) {
             // Send code via email
             try {
-                Mail::raw("Your JJ Flowershop verification code is: $verificationCode", function ($message) use ($email) {
+                \Mail::send([], [], function ($message) use ($email, $verificationCode) {
                     $message->to($email)
-                        ->subject('JJ Flowershop Registration Verification Code');
+                        ->subject('JJ Flowershop Registration Verification Code')
+                        ->html("Your JJ Flowershop verification code is: <strong>$verificationCode</strong><br><br>This code will expire in 10 minutes.");
                 });
             } catch (\Exception $e) {
-                return back()->withErrors(['email' => 'Failed to send verification code to your email. Please try again.'])->withInput();
+                \Log::error('Email sending failed', ['error' => $e->getMessage(), 'email' => $email]);
+                return back()->withErrors(['email' => 'Failed to send verification code to your email. Please check your email configuration or try again.'])->withInput();
             }
         } else if ($verificationChannel === 'phone' && $phone) {
             // REAL SMS sending via Semaphore
@@ -133,24 +135,29 @@ class AuthController extends Controller
             abort(404);
         }
         if ($provider === 'facebook') {
-            // Use the new app ID
-            $clientId = '769015785952499';
-            $redirectUri = 'http://localhost:8000/auth/facebook/callback';
+            // Use environment variables or fallback to config
+            $clientId = env('FACEBOOK_CLIENT_ID', config('services.facebook.client_id', '769015785952499'));
+            $redirectUri = env('FACEBOOK_REDIRECT_URI', config('services.facebook.redirect', url('/auth/facebook/callback')));
             $state = csrf_token();
             
             $url = "https://www.facebook.com/v18.0/dialog/oauth?" . http_build_query([
                 'client_id' => $clientId,
                 'redirect_uri' => $redirectUri,
                 'state' => $state,
-                'response_type' => 'code'
+                'response_type' => 'code',
+                'scope' => 'email,public_profile'
             ]);
             
             return redirect($url);
         }
         
         if ($provider === 'google') {
+            // Set redirect URI explicitly for Google
+            $redirectUri = env('GOOGLE_REDIRECT_URI', config('services.google.redirect', url('/auth/google/callback')));
+            
             // Request additional scopes for Google login
             return Socialite::driver('google')
+                ->redirectUrl($redirectUri)
                 ->scopes(['email', 'profile', 'https://www.googleapis.com/auth/user.phonenumbers.read'])
                 ->redirect();
         }
@@ -302,9 +309,10 @@ class AuthController extends Controller
         $user->save();
         
         // Send email
-        \Mail::raw("Your JJ Flowershop verification code is: $verificationCode\n\nThis code will expire in 10 minutes.", function ($message) use ($user) {
+        \Mail::send([], [], function ($message) use ($user, $verificationCode) {
             $message->to($user->email)
-                ->subject('JJ Flowershop Verification Code (Resent)');
+                ->subject('JJ Flowershop Verification Code (Resent)')
+                ->html("Your JJ Flowershop verification code is: <strong>$verificationCode</strong><br><br>This code will expire in 10 minutes.");
         });
         
         return redirect()->route('social.verify.form')->with('success', 'Verification code has been resent to your email!');
@@ -383,9 +391,9 @@ class AuthController extends Controller
 
         try {
             // Exchange code for access token
-            $clientId = '769015785952499';
-            $clientSecret = 'e3751172c5bf6451c8f2ed10656abfb0';
-            $redirectUri = 'http://localhost:8000/auth/facebook/callback';
+            $clientId = env('FACEBOOK_CLIENT_ID', config('services.facebook.client_id', '769015785952499'));
+            $clientSecret = env('FACEBOOK_CLIENT_SECRET', config('services.facebook.client_secret', 'e3751172c5bf6451c8f2ed10656abfb0'));
+            $redirectUri = env('FACEBOOK_REDIRECT_URI', config('services.facebook.redirect', url('/auth/facebook/callback')));
             $code = $request->get('code');
 
             $tokenResponse = \Http::post('https://graph.facebook.com/v18.0/oauth/access_token', [
@@ -591,12 +599,14 @@ class AuthController extends Controller
         // Resend code
         if ($pending['verification_channel'] === 'email' && $pending['email']) {
             try {
-                Mail::raw("Your JJ Flowershop verification code is: $verificationCode", function ($message) use ($pending) {
+                \Mail::send([], [], function ($message) use ($pending, $verificationCode) {
                     $message->to($pending['email'])
-                        ->subject('JJ Flowershop Registration Verification Code');
+                        ->subject('JJ Flowershop Registration Verification Code')
+                        ->html("Your JJ Flowershop verification code is: <strong>$verificationCode</strong><br><br>This code will expire in 10 minutes.");
                 });
             } catch (\Exception $e) {
-                return back()->withErrors(['email' => 'Failed to resend verification code to your email. Please try again.']);
+                \Log::error('Email resend failed', ['error' => $e->getMessage(), 'email' => $pending['email']]);
+                return back()->withErrors(['email' => 'Failed to resend verification code to your email. Please check your email configuration or try again.']);
             }
         } else if ($pending['verification_channel'] === 'phone' && $pending['contact_number']) {
             // REAL SMS sending via Semaphore
