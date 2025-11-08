@@ -135,12 +135,14 @@ class AuthController extends Controller
             abort(404);
         }
         if ($provider === 'facebook') {
-            // Use environment variables or fallback to config
-            $clientId = env('FACEBOOK_CLIENT_ID', config('services.facebook.client_id', '769015785952499'));
-            // Get redirect URI from env, config, or generate from APP_URL
-            $redirectUri = env('FACEBOOK_REDIRECT_URI', config('services.facebook.redirect'));
-            if (!$redirectUri) {
-                $redirectUri = rtrim(config('app.url'), '/') . '/auth/facebook/callback';
+            // Use the new app ID
+            $clientId = '769015785952499';
+            // For localhost, use hardcoded URL. For Railway/production, use APP_URL
+            $appUrl = config('app.url');
+            if (str_contains($appUrl, 'localhost') || str_contains($appUrl, '127.0.0.1')) {
+                $redirectUri = 'http://localhost:8000/auth/facebook/callback';
+            } else {
+                $redirectUri = env('FACEBOOK_REDIRECT_URI', rtrim($appUrl, '/') . '/auth/facebook/callback');
             }
             $state = csrf_token();
             
@@ -148,25 +150,28 @@ class AuthController extends Controller
                 'client_id' => $clientId,
                 'redirect_uri' => $redirectUri,
                 'state' => $state,
-                'response_type' => 'code',
-                'scope' => 'email,public_profile'
+                'response_type' => 'code'
             ]);
             
             return redirect($url);
         }
         
         if ($provider === 'google') {
-            // Set redirect URI explicitly for Google
-            $redirectUri = env('GOOGLE_REDIRECT_URI', config('services.google.redirect'));
-            if (!$redirectUri) {
-                $redirectUri = rtrim(config('app.url'), '/') . '/auth/google/callback';
+            // For localhost, use default Socialite. For Railway/production, set redirect URL
+            $appUrl = config('app.url');
+            if (str_contains($appUrl, 'localhost') || str_contains($appUrl, '127.0.0.1')) {
+                // Localhost - use default behavior (no redirectUrl set)
+                return Socialite::driver('google')
+                    ->scopes(['email', 'profile', 'https://www.googleapis.com/auth/user.phonenumbers.read'])
+                    ->redirect();
+            } else {
+                // Railway/Production - set redirect URL explicitly
+                $redirectUri = env('GOOGLE_REDIRECT_URI', rtrim($appUrl, '/') . '/auth/google/callback');
+                return Socialite::driver('google')
+                    ->redirectUrl($redirectUri)
+                    ->scopes(['email', 'profile', 'https://www.googleapis.com/auth/user.phonenumbers.read'])
+                    ->redirect();
             }
-            
-            // Request additional scopes for Google login
-            return Socialite::driver('google')
-                ->redirectUrl($redirectUri)
-                ->scopes(['email', 'profile', 'https://www.googleapis.com/auth/user.phonenumbers.read'])
-                ->redirect();
         }
         
         return Socialite::driver($provider)->redirect();
@@ -398,12 +403,14 @@ class AuthController extends Controller
 
         try {
             // Exchange code for access token
-            $clientId = env('FACEBOOK_CLIENT_ID', config('services.facebook.client_id', '769015785952499'));
-            $clientSecret = env('FACEBOOK_CLIENT_SECRET', config('services.facebook.client_secret', 'e3751172c5bf6451c8f2ed10656abfb0'));
-            // Get redirect URI from env, config, or generate from APP_URL
-            $redirectUri = env('FACEBOOK_REDIRECT_URI', config('services.facebook.redirect'));
-            if (!$redirectUri) {
-                $redirectUri = rtrim(config('app.url'), '/') . '/auth/facebook/callback';
+            $clientId = '769015785952499';
+            $clientSecret = 'e3751172c5bf6451c8f2ed10656abfb0';
+            // For localhost, use hardcoded URL. For Railway/production, use APP_URL
+            $appUrl = config('app.url');
+            if (str_contains($appUrl, 'localhost') || str_contains($appUrl, '127.0.0.1')) {
+                $redirectUri = 'http://localhost:8000/auth/facebook/callback';
+            } else {
+                $redirectUri = env('FACEBOOK_REDIRECT_URI', rtrim($appUrl, '/') . '/auth/facebook/callback');
             }
             $code = $request->get('code');
 
