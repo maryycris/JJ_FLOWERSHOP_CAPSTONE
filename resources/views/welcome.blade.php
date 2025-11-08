@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J & J Flower Shop</title>
+    <title>J'J FLOWERSHOP</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('images/logo.png') }}">
@@ -590,7 +590,7 @@
     <div class="container">
         <a class="navbar-brand" href="#">
             <img src="/images/logo.png" alt="Logo" class="logo">
-            J & J FLOWER SHOP <span>Est. 2023</span>
+            J'J FLOWERSHOP <span>Est. 2023</span>
         </a>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto d-none d-lg-flex">
@@ -661,7 +661,7 @@
                 <h2>Blooms,</h2>
                 <div class="subtitle">Beautifully arranged flowers,<br>delivered fresh — just when you need them.</div>
                 <hr>
-                <p>J & J Flower Shop offers handcrafted bouquets and floral gifts perfect for any occasion. We deliver love across Cebu City and nearby provinces fresh, fast, and always with care.</p>
+                <p>J'J FLOWERSHOP offers handcrafted bouquets and floral gifts perfect for any occasion. We deliver love across Cebu City and nearby provinces fresh, fast, and always with care.</p>
                 <a href="{{ route('customer.login') }}" class="btn btn-shop">Shop Now</a>
                 </div>
                 </div>
@@ -707,7 +707,7 @@
                         </ul>
                     </div>
                     <div style="background:transparent; border-radius:0; box-shadow:none; padding:16px 0 0 0; color:#000; font-size:0.98rem;">
-                        J & J Flower Shop was founded by partners Clair Joy Dang and Joshua Vinhard Ng-Aso in 2023.<br><br>
+                        J'J FLOWERSHOP was founded by partners Clair Joy Dang and Joshua Vinhard Ng-Aso in 2023.<br><br>
                         Located in Pardo, Cebu, the shop offers fresh and artificial flowers, gift and event packages, and more.<br><br>
                         We proudly serve customers all over Cebu City, adding a touch of floral magic to every special moment.
                     </div>
