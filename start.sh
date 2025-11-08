@@ -38,24 +38,31 @@ php artisan view:clear 2>&1 || echo "View clear failed (non-critical)" >&2
 if [ -n "$DB_CONNECTION" ] && [ "$DB_CONNECTION" != "sqlite" ]; then
     echo "Running database migrations..." >&2
     
-    # Check if critical tables exist, if not, reset migrations and run fresh
-    php artisan tinker --execute="
-        \$missing = [];
-        if (!Schema::hasTable('users')) \$missing[] = 'users';
-        if (!Schema::hasTable('sessions')) \$missing[] = 'sessions';
-        if (!Schema::hasTable('cache')) \$missing[] = 'cache';
-        if (count(\$missing) > 0) {
-            echo 'MISSING: ' . implode(', ', \$missing);
-        } else {
-            echo 'ALL_TABLES_EXIST';
+    # Check if migrations table exists by trying migrate:status
+    # If it fails or returns empty, the database is likely empty
+    MIGRATION_STATUS=$(php artisan migrate:status --force 2>&1)
+    MIGRATION_EXIT_CODE=$?
+    
+    # If migrate:status fails or shows no migrations, run fresh
+    if [ $MIGRATION_EXIT_CODE -ne 0 ] || echo "$MIGRATION_STATUS" | grep -qE "No migrations found|Nothing to migrate|migrations table doesn't exist|Base table or view not found" || [ -z "$MIGRATION_STATUS" ]; then
+        echo "Database appears empty or migrations table missing. Running fresh migrations with seeding..." >&2
+        php artisan migrate:fresh --force --seed 2>&1 || {
+            echo "ERROR: Failed to run fresh migrations!" >&2
+            exit 1
         }
-    " 2>&1 | grep -q "MISSING" && {
-        echo "Critical tables missing, resetting migrations table and running fresh..." >&2
-        php artisan migrate:fresh --force --seed 2>&1 || echo "Migration fresh completed" >&2
-    } || {
+        echo "Fresh migrations and seeding completed successfully" >&2
+    else
         echo "Running pending migrations..." >&2
-        php artisan migrate --force 2>&1 || echo "Migration check completed" >&2
-    }
+        php artisan migrate --force 2>&1 || {
+            echo "WARNING: Migration failed, attempting fresh migration..." >&2
+            php artisan migrate:fresh --force --seed 2>&1 || {
+                echo "ERROR: Failed to run fresh migrations!" >&2
+                exit 1
+            }
+            echo "Fresh migrations completed successfully" >&2
+        }
+        echo "Migrations completed successfully" >&2
+    fi
 fi
 
 # If APP_KEY is not set, try to generate one (only if .env exists)
