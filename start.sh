@@ -38,31 +38,41 @@ php artisan view:clear 2>&1 || echo "View clear failed (non-critical)" >&2
 if [ -n "$DB_CONNECTION" ] && [ "$DB_CONNECTION" != "sqlite" ]; then
     echo "Running database migrations..." >&2
     
-    # Check if migrations table exists by trying migrate:status
-    # If it fails or returns empty, the database is likely empty
+    # Try to check migration status (this will fail if database is empty or connection fails)
     MIGRATION_STATUS=$(php artisan migrate:status --force 2>&1)
     MIGRATION_EXIT_CODE=$?
     
-    # If migrate:status fails or shows no migrations, run fresh
-    if [ $MIGRATION_EXIT_CODE -ne 0 ] || echo "$MIGRATION_STATUS" | grep -qE "No migrations found|Nothing to migrate|migrations table doesn't exist|Base table or view not found" || [ -z "$MIGRATION_STATUS" ]; then
-        echo "Database appears empty or migrations table missing. Running fresh migrations with seeding..." >&2
-        php artisan migrate:fresh --force --seed 2>&1 || {
-            echo "ERROR: Failed to run fresh migrations!" >&2
-            exit 1
-        }
-        echo "Fresh migrations and seeding completed successfully" >&2
-    else
-        echo "Running pending migrations..." >&2
-        php artisan migrate --force 2>&1 || {
-            echo "WARNING: Migration failed, attempting fresh migration..." >&2
+    # Check if error is due to missing migrations table (database is empty)
+    if [ $MIGRATION_EXIT_CODE -ne 0 ]; then
+        if echo "$MIGRATION_STATUS" | grep -qE "Base table or view not found.*migrations|migrations.*doesn't exist|SQLSTATE\[42S02\]"; then
+            echo "Migrations table not found. Database appears empty. Running fresh migrations with seeding..." >&2
             php artisan migrate:fresh --force --seed 2>&1 || {
-                echo "ERROR: Failed to run fresh migrations!" >&2
-                exit 1
+                echo "ERROR: Failed to run fresh migrations! Check database connection and credentials." >&2
+                echo "Continuing anyway - server will start but may show database errors." >&2
             }
-            echo "Fresh migrations completed successfully" >&2
-        }
-        echo "Migrations completed successfully" >&2
+        else
+            echo "WARNING: Could not check migration status. Error: $MIGRATION_STATUS" >&2
+            echo "Attempting to run migrations anyway..." >&2
+            php artisan migrate --force 2>&1 || {
+                echo "WARNING: Normal migration failed. Attempting fresh migration..." >&2
+                php artisan migrate:fresh --force --seed 2>&1 || {
+                    echo "ERROR: All migration attempts failed! Check database connection." >&2
+                    echo "Continuing anyway - server will start but may show database errors." >&2
+                }
+            }
+        fi
+    else
+        # Migration status succeeded, check if there are pending migrations
+        if echo "$MIGRATION_STATUS" | grep -qE "Pending|No migrations found"; then
+            echo "Running pending migrations..." >&2
+            php artisan migrate --force 2>&1 || {
+                echo "WARNING: Migration failed, but continuing..." >&2
+            }
+        else
+            echo "All migrations are up to date." >&2
+        fi
     fi
+    echo "Migration process completed." >&2
 fi
 
 # If APP_KEY is not set, try to generate one (only if .env exists)
