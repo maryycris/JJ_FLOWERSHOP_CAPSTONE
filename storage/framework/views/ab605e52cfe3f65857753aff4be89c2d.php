@@ -176,7 +176,10 @@
                     
                     <!-- Products Table -->
                     <div class="mb-4" style="border-top: 1px solid #e0e0e0; padding-top: 1rem;">
-                        <h6>Products to be Delivered (<?php echo e($order->products->count()); ?> items)</h6>
+                        <?php
+                            $totalItems = $order->products->count() + $order->customBouquets->count();
+                        ?>
+                        <h6>Products to be Delivered (<?php echo e($totalItems); ?> items)</h6>
                         <div class="table-responsive">
                             <table class="table table-sm table-bordered">
                                 <thead>
@@ -196,6 +199,22 @@
                                         <td>₱<?php echo e(number_format($product->pivot->quantity * $product->price, 2)); ?></td>
                                     </tr>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    <?php $__currentLoopData = $order->customBouquets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $bouquet): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-success me-1">Custom</span>
+                                            Custom Bouquet
+                                        </td>
+                                        <td><?php echo e($bouquet->pivot->quantity); ?></td>
+                                        <td>₱<?php echo e(number_format($bouquet->unit_price ?? $bouquet->total_price ?? 0, 2)); ?></td>
+                                        <td>₱<?php echo e(number_format(($bouquet->unit_price ?? $bouquet->total_price ?? 0) * $bouquet->pivot->quantity, 2)); ?></td>
+                                    </tr>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    <?php if($order->products->isEmpty() && $order->customBouquets->isEmpty()): ?>
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No items in this order.</td>
+                                    </tr>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -263,7 +282,19 @@
                                         <span class="badge bg-secondary"><?php echo e(ucfirst($order->order_status)); ?></span>
                                     <?php endif; ?>
                                 </p>
-                                <p><strong>Assigned:</strong> <?php echo e($order->on_delivery_at ? \Carbon\Carbon::parse($order->on_delivery_at)->format('M d, Y g:i A') : 'Not assigned yet'); ?></p>
+                                <p><strong>Assigned:</strong> 
+                                    <?php if($order->order_status === 'on_delivery' && $order->on_delivery_at): ?>
+                                        <?php echo e(\Carbon\Carbon::parse($order->on_delivery_at)->format('M d, Y g:i A')); ?>
+
+                                    <?php elseif($order->order_status === 'assigned' && $order->assigned_driver_id && $order->delivery): ?>
+                                        <?php echo e(\Carbon\Carbon::parse($order->delivery->updated_at)->format('M d, Y g:i A')); ?>
+
+                                    <?php elseif($order->assigned_driver_id): ?>
+                                        Assigned (pending driver acceptance)
+                                    <?php else: ?>
+                                        Not assigned yet
+                                    <?php endif; ?>
+                                </p>
                                 <?php if($order->assignedDriver && $order->assignedDriver->driver): ?>
                                     <p><strong>Driver Status:</strong> 
                                         <span class="badge <?php echo e($order->assignedDriver->driver->getAvailabilityBadgeClass()); ?>">

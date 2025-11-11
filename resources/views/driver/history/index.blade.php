@@ -30,7 +30,17 @@
                 <div class="row mb-2">
                     <div class="col-6">
                         <small class="text-muted">Customer:</small><br>
-                        <strong>{{ $order->user->name ?? 'N/A' }}</strong>
+                        @php
+                            // For walk-in orders, try to get customer name from notes if user is admin/clerk
+                            $customerName = $order->user->name ?? 'N/A';
+                            if ($order->type === 'walk-in' && ($order->user->role === 'admin' || $order->user->role === 'clerk')) {
+                                // Extract customer name from notes (format: "Customer: [Name]")
+                                if ($order->notes && preg_match('/Customer:\s*(.+)/', $order->notes, $matches)) {
+                                    $customerName = trim($matches[1]);
+                                }
+                            }
+                        @endphp
+                        <strong>{{ $customerName }}</strong>
                     </div>
                     <div class="col-6">
                         <small class="text-muted">Completed:</small><br>

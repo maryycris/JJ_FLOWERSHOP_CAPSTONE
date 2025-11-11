@@ -13,22 +13,44 @@ class NotificationController extends Controller
         // Get only notifications for the current admin user
         $query = auth()->user()->notifications();
         
-        // Exclude notifications that are not for admin
+        // Exclude customer-specific notifications (they have different processes/flows)
+        // Customer-only notifications to exclude:
+        // - order_placed, order_approved, payment_validated, order_delivered, order_completed
+        // - order_status, return_approved, refund_processed, loyalty_stamp_reach
         // - driver_assigned_order: Only for drivers
-        // - order_approved: Only for customers
-        // Filter by both notification class type and data->type
-        $query->where(function($q) {
-            $q->where(function($subQ) {
-                // Exclude by data->type
-                $subQ->where(function($sq) {
-                    $sq->whereJsonDoesntContain('data->type', 'driver_assigned_order')
-                       ->whereJsonDoesntContain('data->type', 'order_approved');
-                });
-            })
-            // Also exclude by notification class type
-            ->where('type', '!=', 'App\\Notifications\\DriverAssignedOrderNotification')
-            ->where('type', '!=', 'App\\Notifications\\OrderApprovedNotification');
-        });
+        
+        // Filter by notification class type (exclude customer notification classes)
+        $customerNotificationClasses = [
+            'App\\Notifications\\OrderPlacedNotification',
+            'App\\Notifications\\OrderApprovedNotification',
+            'App\\Notifications\\OrderPaymentValidatedNotification',
+            'App\\Notifications\\OrderDeliveredNotification',
+            'App\\Notifications\\OrderCompletedNotification',
+            'App\\Notifications\\OrderStatusNotification',
+            'App\\Notifications\\ReturnApprovedNotification',
+            'App\\Notifications\\DriverAssignedOrderNotification', // Driver-only
+        ];
+        
+        foreach ($customerNotificationClasses as $class) {
+            $query->where('type', '!=', $class);
+        }
+        
+        // Also filter by data->type to catch any notifications that might have customer types
+        $customerNotificationTypes = [
+            'order_placed',
+            'order_approved',
+            'payment_validated',
+            'order_delivered',
+            'order_completed',
+            'order_status',
+            'return_approved',
+            'refund_processed',
+            'driver_assigned_order',
+        ];
+        
+        foreach ($customerNotificationTypes as $type) {
+            $query->whereJsonDoesntContain('data->type', $type);
+        }
         
         // Simple search functionality
         if ($request->filled('search')) {

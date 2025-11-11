@@ -681,17 +681,27 @@ class OrderFlowController extends Controller
     public function storeWalkinOrder(Request $request)
     {
         // Validate the request
-        $request->validate([
+        $validationRules = [
             'customer_name' => 'required|string|max:255',
             'order_date' => 'required|date',
             'order_method' => 'required|in:delivery,picked_up',
             'payment_method' => 'required|string',
             'invoice_address' => 'required|string',
-            'delivery_address' => 'required|string',
             'products' => 'required|array|min:1',
             'products.*.product_id' => 'required|exists:products,id',
             'products.*.quantity' => 'required|integer|min:1',
-        ]);
+        ];
+
+        // Add delivery-specific validations
+        if ($request->order_method === 'delivery') {
+            $validationRules['delivery_address'] = 'required|string';
+            $validationRules['delivery_date'] = 'required|date';
+            $validationRules['delivery_time'] = 'required|string';
+            $validationRules['recipient_name'] = 'required|string|max:255';
+            $validationRules['recipient_phone'] = 'required|string|max:20';
+        }
+
+        $request->validate($validationRules);
 
         // Calculate total price
         $totalPrice = 0;
@@ -705,9 +715,25 @@ class OrderFlowController extends Controller
         }
         $totalPrice += $shippingFee;
 
-        // Create the order
+        // Create or get customer user for walk-in orders
+        $customerUser = null;
+        if (!empty($request->customer_name)) {
+            // Create a customer user for walk-in orders
+            $customerEmail = 'walkin_' . str_replace(' ', '_', strtolower($request->customer_name)) . '_' . time() . '@example.com';
+            $customerUser = \App\Models\User::firstOrCreate(
+                ['email' => $customerEmail],
+                [
+                    'name' => $request->customer_name,
+                    'password' => \Hash::make(\Str::random(10)),
+                    'role' => 'customer',
+                    'contact_number' => $request->recipient_phone ?? 'N/A',
+                ]
+            );
+        }
+
+        // Create the order with customer user ID (not clerk/admin ID)
         $order = Order::create([
-            'user_id' => auth()->id(), // Clerk creates the order
+            'user_id' => $customerUser ? $customerUser->id : auth()->id(), // Use customer user ID, fallback to clerk if no customer name
             'total_price' => $totalPrice,
             'status' => 'quotation', // Start at quotation stage
             'order_status' => 'pending', // Add missing order_status field
@@ -734,11 +760,16 @@ class OrderFlowController extends Controller
         if ($request->order_method === 'delivery') {
             \App\Models\Delivery::create([
                 'order_id' => $order->id,
-                'recipient_name' => $request->customer_name,
+                'recipient_name' => $request->recipient_name ?? $request->customer_name,
                 'delivery_address' => $request->delivery_address,
-                'recipient_phone' => 'N/A', // Walk-in customers might not provide phone
+                'recipient_phone' => $request->recipient_phone ?? 'N/A',
+                'delivery_date' => $request->delivery_date ?? $request->order_date,
+                'delivery_time' => $request->delivery_time ?? '09:00 AM',
                 'shipping_fee' => $shippingFee,
                 'status' => 'pending',
+                'special_instructions' => $request->recipient_instructions ?? '',
+                'delivery_message' => $request->delivery_message ?? '',
+                'recipient_relationship' => $request->recipient_relationship ?? '',
             ]);
         }
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Login - J & J Flower Shop</title>
+    <title>Customer Login - J'J FLOWERSHOP</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="<?php echo e(asset('images/logo.png')); ?>">
     <link rel="shortcut icon" type="image/png" href="<?php echo e(asset('images/logo.png')); ?>">
@@ -42,7 +42,7 @@
     <div class="container">
         <a class="navbar-brand" href="/">
             <img src="/images/logo.png" alt="Logo" class="logo">
-            J & J FLOWER SHOP <span>Est. 2023</span>
+            J'J FLOWERSHOP <span>Est. 2023</span>
         </a>
         <div class="navbar-icons ms-auto">
             <a href="<?php echo e(route('customer.login')); ?>" title="View Cart (Login Required)"><i class="bi bi-cart3"></i></a>

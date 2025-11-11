@@ -793,6 +793,9 @@ class CheckoutController extends Controller
             $inventoryService = new \App\Services\InventoryService();
             $inventoryService->updateInventoryOnOrder($order);
 
+            // Get checkout data from session for additional recipient information
+            $checkoutData = session('checkout_data', []);
+
             // Create delivery record with enhanced recipient information
             $delivery = new Delivery([
                 'order_id' => $order->id,
@@ -807,7 +810,20 @@ class CheckoutController extends Controller
                 'delivery_message' => $checkoutData['delivery_message'] ?? '',
                 'recipient_relationship' => $checkoutData['recipient_relationship'] ?? '',
             ]);
+            
+            \Log::info('Saving delivery record', [
+                'order_id' => $order->id,
+                'delivery_address' => $deliveryAddress,
+                'recipient_name' => $recipientName,
+                'recipient_phone' => $recipientPhone,
+            ]);
+            
             $delivery->save();
+            
+            \Log::info('Delivery record saved', [
+                'delivery_id' => $delivery->id,
+                'delivery_address' => $delivery->delivery_address,
+            ]);
 
             // Clear only the purchased items from cart after order is placed
             // Only clear cart if this is not a "Buy now" flow (product_id, catalog_product_id, or custom_bouquet_id)
@@ -926,6 +942,15 @@ class CheckoutController extends Controller
             // Get checkout data from session for additional recipient information
             $checkoutData = session('checkout_data', []);
 
+            \Log::info('Creating delivery record (payment gateway)', [
+                'order_id' => $order->id,
+                'delivery_address' => $deliveryAddress,
+                'recipient_name' => $recipientName,
+                'recipient_phone' => $recipientPhone,
+                'delivery_date' => $deliveryDate,
+                'delivery_time' => $deliveryTime,
+            ]);
+
             $delivery = new \App\Models\Delivery([
                 'order_id' => $order->id,
                 'delivery_date' => $deliveryDate,
@@ -939,7 +964,14 @@ class CheckoutController extends Controller
                 'delivery_message' => $checkoutData['delivery_message'] ?? '',
                 'recipient_relationship' => $checkoutData['recipient_relationship'] ?? '',
             ]);
+            
             $delivery->save();
+            
+            \Log::info('Delivery record saved (payment gateway)', [
+                'delivery_id' => $delivery->id,
+                'delivery_address' => $delivery->delivery_address,
+                'saved_correctly' => !empty($delivery->delivery_address),
+            ]);
 
             // DON'T clear cart yet - wait for successful payment
             // Cart will be cleared in payment callback when payment is confirmed

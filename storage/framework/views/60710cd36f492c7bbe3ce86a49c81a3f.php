@@ -293,12 +293,46 @@
                                         </div>
                                         <div class="col-md-6">
                                             <p><strong>Phone:</strong> <?php echo e($invoice->order->delivery->recipient_phone ?? 'N/A'); ?></p>
-                                            <p><strong>Address:</strong> <?php echo e($invoice->order->delivery->delivery_address); ?></p>
+                                            <p><strong>Address:</strong> 
+                                                <?php
+                                                    // Try to get address from delivery record first
+                                                    $address = $invoice->order->delivery->delivery_address ?? null;
+                                                    
+                                                    // If empty, try to get from user's default address
+                                                    if (empty($address)) {
+                                                        $defaultAddress = $invoice->order->user->addresses()->where('is_default', true)->first();
+                                                        if ($defaultAddress) {
+                                                            $address = trim(collect([
+                                                                $defaultAddress->street_address,
+                                                                $defaultAddress->barangay,
+                                                                $defaultAddress->municipality ?: $defaultAddress->city,
+                                                                'Cebu, Philippines'
+                                                            ])->filter()->implode(', '));
+                                                        }
+                                                    }
+                                                    
+                                                    // If still empty, show N/A
+                                                    echo $address ?: 'N/A';
+                                                ?>
+                                            </p>
                                             <p><strong>Status:</strong> 
                                                 <?php
+                                                    // Get delivery status, fallback to order status, then to 'pending'
                                                     $deliveryStatus = $invoice->order->delivery->status ?? $invoice->order->order_status ?? 'pending';
+                                                    
+                                                    // Map status to badge color
+                                                    $badgeClass = match($deliveryStatus) {
+                                                        'pending' => 'badge-warning',
+                                                        'assigned' => 'badge-info',
+                                                        'on_delivery' => 'badge-primary',
+                                                        'delivered' => 'badge-success',
+                                                        'completed' => 'badge-success',
+                                                        'approved' => 'badge-info',
+                                                        'cancelled' => 'badge-danger',
+                                                        default => 'badge-secondary'
+                                                    };
                                                 ?>
-                                                <span class="badge badge-info"><?php echo e(ucfirst($deliveryStatus)); ?></span>
+                                                <span class="badge <?php echo e($badgeClass); ?>"><?php echo e(ucfirst(str_replace('_', ' ', $deliveryStatus))); ?></span>
                                             </p>
                                         </div>
                                     </div>

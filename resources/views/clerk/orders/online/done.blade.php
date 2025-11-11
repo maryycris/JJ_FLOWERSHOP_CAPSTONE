@@ -175,7 +175,10 @@
                     
                     <!-- Products Table -->
                     <div class="mb-4" style="border-top: 1px solid #e0e0e0; padding-top: 1rem;">
-                        <h6>Products to be Delivered ({{ $order->products->count() }} items)</h6>
+                        @php
+                            $totalItems = $order->products->count() + $order->customBouquets->count();
+                        @endphp
+                        <h6>Products to be Delivered ({{ $totalItems }} items)</h6>
                         <div class="table-responsive">
                             <table class="table table-sm table-bordered">
                                 <thead>
@@ -195,6 +198,22 @@
                                         <td>₱{{ number_format($product->pivot->quantity * $product->price, 2) }}</td>
                                     </tr>
                                     @endforeach
+                                    @foreach($order->customBouquets as $bouquet)
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-success me-1">Custom</span>
+                                            Custom Bouquet
+                                        </td>
+                                        <td>{{ $bouquet->pivot->quantity }}</td>
+                                        <td>₱{{ number_format($bouquet->unit_price ?? $bouquet->total_price ?? 0, 2) }}</td>
+                                        <td>₱{{ number_format(($bouquet->unit_price ?? $bouquet->total_price ?? 0) * $bouquet->pivot->quantity, 2) }}</td>
+                                    </tr>
+                                    @endforeach
+                                    @if($order->products->isEmpty() && $order->customBouquets->isEmpty())
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No items in this order.</td>
+                                    </tr>
+                                    @endif
                                 </tbody>
                             </table>
                         </div>
@@ -256,7 +275,17 @@
                                         <span class="badge bg-secondary">{{ ucfirst($order->order_status) }}</span>
                                     @endif
                                 </p>
-                                <p><strong>Assigned:</strong> {{ $order->on_delivery_at ? \Carbon\Carbon::parse($order->on_delivery_at)->format('M d, Y g:i A') : 'Not assigned yet' }}</p>
+                                <p><strong>Assigned:</strong> 
+                                    @if($order->order_status === 'on_delivery' && $order->on_delivery_at)
+                                        {{ \Carbon\Carbon::parse($order->on_delivery_at)->format('M d, Y g:i A') }}
+                                    @elseif($order->order_status === 'assigned' && $order->assigned_driver_id && $order->delivery)
+                                        {{ \Carbon\Carbon::parse($order->delivery->updated_at)->format('M d, Y g:i A') }}
+                                    @elseif($order->assigned_driver_id)
+                                        Assigned (pending driver acceptance)
+                                    @else
+                                        Not assigned yet
+                                    @endif
+                                </p>
                                 @if($order->assignedDriver && $order->assignedDriver->driver)
                                     <p><strong>Driver Status:</strong> 
                                         <span class="badge {{ $order->assignedDriver->driver->getAvailabilityBadgeClass() }}">
