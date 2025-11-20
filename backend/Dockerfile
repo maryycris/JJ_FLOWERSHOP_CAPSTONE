@@ -23,9 +23,6 @@ WORKDIR /app
 # Copy composer files
 COPY composer.json composer.lock ./
 
-# Copy artisan file (needed for composer scripts)
-COPY artisan ./
-
 # Install dependencies (skip scripts to avoid artisan errors)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
@@ -33,7 +30,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 COPY . .
 
 # Run composer scripts now that all files are in place
-RUN composer dump-autoload --optimize --no-interaction
+RUN composer dump-autoload --optimize --no-interaction --no-scripts || true
 
 # Set permissions
 RUN chmod -R 775 storage bootstrap/cache || true
