@@ -23,19 +23,25 @@ WORKDIR /app
 # Copy composer files
 COPY composer.json composer.lock ./
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Copy artisan file (needed for composer scripts)
+COPY artisan ./
+
+# Install dependencies (skip scripts to avoid artisan errors)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Copy application files
 COPY . .
 
+# Run composer scripts now that all files are in place
+RUN composer dump-autoload --optimize --no-interaction
+
 # Set permissions
-RUN chmod -R 775 storage bootstrap/cache
+RUN chmod -R 775 storage bootstrap/cache || true
 
 # Create storage symlink
 RUN php artisan storage:link || true
 
-# Cache configuration
+# Cache configuration (skip if database not available)
 RUN php artisan config:cache || true
 RUN php artisan route:cache || true
 RUN php artisan view:cache || true
