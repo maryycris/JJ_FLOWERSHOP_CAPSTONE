@@ -17,8 +17,14 @@ fi
 
 # Ensure storage directories exist and are writable
 echo "Checking storage directories..." >&2
-mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs bootstrap/cache 2>&1
+mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs bootstrap/cache storage/app/public 2>&1
 chmod -R 775 storage bootstrap/cache 2>&1 || echo "Warning: chmod failed (may not be critical)" >&2
+
+# Create storage symlink if it doesn't exist
+if [ ! -L public/storage ]; then
+    echo "Creating storage symlink..." >&2
+    php artisan storage:link --force 2>&1 || echo "Warning: storage:link failed (may not be critical)" >&2
+fi
 
 # Clear config cache first (this doesn't require database)
 echo "Clearing config cache..." >&2

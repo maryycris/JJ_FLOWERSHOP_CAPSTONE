@@ -1,0 +1,47 @@
+# Railway ignore file - files to exclude from deployment
+
+# Development files
+.env
+.env.backup
+.env.local
+.env.*.local
+*.log
+*.cache
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing
+phpunit.xml
+tests/
+.phpunit.result.cache
+
+# Documentation
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+
+# Node modules (if any)
+node_modules/
+npm-debug.log
+
+# Build artifacts
+public/hot
+public/storage
+storage/*.key
+
+# Temporary files
+*.tmp
+*.temp
+
