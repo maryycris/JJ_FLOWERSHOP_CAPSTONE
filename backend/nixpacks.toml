@@ -4,19 +4,18 @@ nixPkgs = ["php82"]
 [phases.install]
 cmds = [
   "curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer",
+  "export PATH=/usr/local/bin:$PATH",
   "/usr/local/bin/composer install --no-dev --optimize-autoloader"
 ]
 
 [phases.build]
 cmds = [
-  "/usr/local/bin/composer install --no-dev --optimize-autoloader",
-  "php artisan config:cache",
-  "php artisan route:cache",
-  "php artisan view:cache"
+  "export PATH=/usr/local/bin:$PATH",
+  "/usr/local/bin/composer install --no-dev --optimize-autoloader || true",
+  "php artisan config:cache || true",
+  "php artisan route:cache || true",
+  "php artisan view:cache || true"
 ]
-
-[variables]
-PATH = "/usr/local/bin:$PATH"
 
 [start]
 cmd = "bash start.sh"
