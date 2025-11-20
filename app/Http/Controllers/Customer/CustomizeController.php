@@ -28,6 +28,7 @@ class CustomizeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            
             'bouquet_type' => 'required|in:regular,money',
             'quantity' => 'required|integer|min:1|max:10',
             'wrapper' => 'nullable|string',
